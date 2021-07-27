@@ -34,7 +34,7 @@ public class ForkFarmer {
 	private static void startGUI() {
 		Collections.sort(Transaction.LIST);
 		
-		FRAME = new JFrame("Fork Farmer 21.07.26");
+		FRAME = new JFrame("Fork Farmer 21.07.27");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 

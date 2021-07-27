@@ -1,8 +1,6 @@
 package util.swing.jfuntable;
 
 import java.util.List;
-import util.swing.jfuntable.Col;
-import util.swing.jfuntable.TableListModel;
 
 @SuppressWarnings("serial")
 public class TableFieldModel extends TableListModel<TField>
