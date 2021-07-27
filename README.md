@@ -1,5 +1,13 @@
 # ForkFarmer
-Java GUI Frontend for XCH Forks
+Java GUI Frontend for XCH Forks.
+
+Only tested on Windows, will probably work on linux with minor tweaking.
+
+Requires JRE 1.8 or greater to run
+
+Uses JTatto look-and-feel: http://jtattoo.net/
+
+![ff_3](https://user-images.githubusercontent.com/66434789/127091378-5e3bfb45-de61-4995-8da3-e2718f6aadf7.png)
 
 # Donations
 xch1r60uccv33w26qrzws57zqx9nrvt9gw5n2jdycjkqujc68n7rkvuqec8twe
