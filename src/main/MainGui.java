@@ -88,10 +88,12 @@ public class MainGui extends JPanel {
 		Fork.factory("WHEAT","Wheat");
 		Fork.factory("XMX","Melati");
 		Fork.factory("TAD","Tad");
-		Fork.factory("CAN", "Cannabis");
+		Fork.factory("CANS", "Cannabis");
 		Fork.factory("XSC","Sector");
 		Fork.factory("CAC","Cactus");
 		Fork.factory("Chives","Chives");
+		Fork.factory("Apple","Apple");
+		Fork.factory("XMZ","Maize");
 		
 		numForks = Fork.LIST.size();
 		FV.setBorder(new TitledBorder(numForks + " Forks Intalled" ));

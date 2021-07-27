@@ -3,6 +3,7 @@ package transaction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.Icon;
 
@@ -102,20 +103,21 @@ public class Transaction implements Comparable<Transaction> {
 					rcvAddress =  address;
 				if (symbol.equals("XCR") && firstWord.contentEquals("25"))
 					rcvAddress =  address;
+				if (symbol.equals("CANS") && firstWord.contentEquals("16"))
+					rcvAddress =  address;
 				if (firstWord.contentEquals("0.25"))
 					rcvAddress =  address;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		Collections.sort(LIST);
 		
 		return rcvAddress;
 	}
 
 	private synchronized static void  newTransaction(Transaction t) {
 		LIST.add(t);
-		Collections.sort(LIST);
-		
 	}
 
 	@Override
