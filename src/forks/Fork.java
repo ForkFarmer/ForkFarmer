@@ -9,10 +9,8 @@ import java.util.concurrent.Executors;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.table.AbstractTableModel;
 
 import main.ForkFarmer;
-import main.MainGui;
 import transaction.Transaction;
 import util.Ico;
 import util.Util;
@@ -74,8 +72,6 @@ public class Fork {
 		if (addr.startsWith("Connection"))
 			return;
 		
-		//System.out.println("Address: " + addr);
-		
 		String[] lines = addr.split(System.getProperty("line.separator"));
 		
 		if (lines.length < 6)
@@ -113,18 +109,23 @@ public class Fork {
 		});
 	}
 	
+	public void generate() {
+		SVC.submit(() -> {
+			addr = ProcessPiper.run(exePath,"wallet","get_address").replace("\n", "").replace("\r", "");
+			updateView();
+		});
+	}
+	
 
 	public static void factory(String symbol, String name) {
 		String basePath = System.getProperty("user.home") + "\\AppData\\Local\\";
 		String forkBase = basePath + name.toLowerCase() + "-blockchain\\";
-		MainGui.pBar.setString("Base: " + forkBase);
 		String appPath;
 		try {
 			appPath = Util.getDir(forkBase, "app");
 			String exePath = forkBase + appPath + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
 			
 			LIST.add(new Fork(symbol, name, exePath));
-			MainGui.pBar.setString("Done add");
 		} catch (IOException e) {
 			// failed to load fork for whatever reason
 		}
@@ -139,7 +140,7 @@ public class Fork {
 	}
 
 	public void sendTX(String address, String amt, String fee) {
-		String ret = ProcessPiper.run(exePath,"wallet","send","-i","1","-a",amt,"-m","0","-t",addr,"--override");
+		String ret = ProcessPiper.run(exePath,"wallet","send","-i","1","-a",amt,"-m",fee,"-t",addr);
 		ForkFarmer.showMsg("Send Transaction", ret);
 	}
 

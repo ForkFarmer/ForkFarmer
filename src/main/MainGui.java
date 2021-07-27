@@ -3,11 +3,12 @@ package main;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
@@ -15,15 +16,11 @@ import forks.Fork;
 import forks.ForkView;
 import transaction.Transaction;
 import transaction.TransactionView;
-import util.process.ProcessPiper;
 
 @SuppressWarnings("serial")
 public class MainGui extends JPanel {
 	public static int numForks;
 	public static ForkView FV = new ForkView();
-	// *** Process Panel ***
-	public static JProgressBar pBar = new JProgressBar();
-	JButton refreshBtn = new JButton("Refresh");
 	
 	// *** Transaction Panel ***
 	static JTextField targetAddress = new JTextField(20);
@@ -36,14 +33,6 @@ public class MainGui extends JPanel {
 	public MainGui() {
 		setLayout(new BorderLayout());
 	
-		// ** Progress Panel ***
-		//JPanel progPannel = new JPanel(new BorderLayout());
-		//ProgPannel.add(pBar, BorderLayout.CENTER);
-		//progPannel.add(refreshBtn,BorderLayout.LINE_END);
-		//pBar.setStringPainted(true);
-		
-		refreshBtn.addActionListener(e -> new Thread(() -> refresh()).start());
-		
 		// *** Transaction Panel ***
 		JPanel tPanel = new JPanel();
 		tPanel.setLayout(new GridBagLayout());
@@ -73,11 +62,9 @@ public class MainGui extends JPanel {
         PEPanel.add(tPanel,BorderLayout.CENTER);
         PEPanel.add(new TransactionView(),BorderLayout.PAGE_END);
      	
-        //add(progPannel,BorderLayout.PAGE_START);
 		add(FV, BorderLayout.CENTER);
 		add(PEPanel, BorderLayout.PAGE_END);
 		
-		pBar.setString("Detecting Installed Forks...");
 		Fork.LIST.clear();
 		Fork.factory("XCH","Chia");
 		Fork.factory("XFX","Flax");
@@ -107,16 +94,15 @@ public class MainGui extends JPanel {
 		Fork.factory("Chives","Chives");
 		
 		numForks = Fork.LIST.size();
-		pBar.setString(numForks + " forks installed");
 		FV.setBorder(new TitledBorder(numForks + " Forks Intalled" ));
-		refresh();
-		pBar.setMaximum(numForks);
+		
+		ScheduledExecutorService SVC = Executors.newSingleThreadScheduledExecutor();
+		SVC.scheduleAtFixedRate(MainGui::refresh, 0, 60, TimeUnit.SECONDS);
 	}
 	
 	private void sendTx() {
 		String address = targetAddress.getText();
 		
-		Fork target = null;
 		for (Fork f : Fork.LIST) {
 			if (address.startsWith(f.getSymbol().toLowerCase())) {
 				f.sendTX(address,targetAmt.getText(),targetFee.getText());
@@ -125,14 +111,11 @@ public class MainGui extends JPanel {
 		}
 		
 		ForkFarmer.showMsg("Error", "No suitable fork found for address prefix");
-		
 	}
 
-	public void refresh() {
+	private static void refresh() {
 		Transaction.LIST.clear();
 		for (Fork f : Fork.LIST)
 			Fork.SVC.submit(() -> f.loadWallet());
 	}
-	
-
 }

@@ -10,7 +10,6 @@ public class ProcessPiper {
 	public static String run(String... pArgs) {
 		 ByteArrayOutputStream baos =  new ByteArrayOutputStream();
 		 
-		 
 		  try {
 	            ProcessBuilder pb = new ProcessBuilder(pArgs);
 	            pb.redirectError();
@@ -32,7 +31,7 @@ public class ProcessPiper {
 	           
 	            return baos.toString();
 	        } catch (IOException | InterruptedException exp) {
-	        	//exp.printStackTrace();
+	        	exp.printStackTrace();
 	        }
 		  return null;
 	}

@@ -82,11 +82,25 @@ public class Transaction implements Comparable<Transaction> {
 				newTransaction(t);
 				
 				TransactionView.updateView();
-				
+				if (null != rcvAddress)
+					continue;
 				String firstWord = amount.substring(0, amount.indexOf(' '));
+				
+				if (symbol.equals("XFL") && firstWord.contentEquals("0.5"))
+					rcvAddress =  address;
+				if (symbol.equals("SPARE") && firstWord.contentEquals("0.5"))
+					rcvAddress =  address;
 				if (symbol.equals("CGN") && firstWord.contentEquals("62.5"))
 					rcvAddress =  address;
-				if (symbol.equals("XFL") && firstWord.contentEquals("0.5"))
+				if (symbol.equals("CAN") && firstWord.contentEquals("16"))
+					rcvAddress =  address;
+				if (symbol.equals("GDOG") && firstWord.contentEquals("12.5"))
+					rcvAddress =  address;
+				if (symbol.equals("GDOG") && firstWord.contentEquals("12.5"))
+					rcvAddress =  address;
+				if (symbol.equals("XCD") && firstWord.contentEquals("2500"))
+					rcvAddress =  address;
+				if (symbol.equals("XCR") && firstWord.contentEquals("25"))
 					rcvAddress =  address;
 				if (firstWord.contentEquals("0.25"))
 					rcvAddress =  address;

@@ -69,18 +69,14 @@ public class ForkView extends JPanel {
 		JSP.setPreferredSize(new Dimension(650,300));
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
-		POPUP_MENU.add(new SwingEX.JMI("Copy", 		Ico.CLIPBOARD,  () -> copy(ForkView.getSelectedForks())));
-			POPUP_MENU.add(new SwingEX.JMI("Start", Ico.START, () -> start(ForkView.getSelectedForks())));
-			POPUP_MENU.add(new SwingEX.JMI("Stop", 	Ico.STOP,  () -> stop(ForkView.getSelectedForks())));
-			
+			POPUP_MENU.add(new SwingEX.JMI("Generate", 	Ico.GEAR, 		() -> generate(ForkView.getSelectedForks())));
+			POPUP_MENU.add(new SwingEX.JMI("Copy", 		Ico.CLIPBOARD,  () -> copy(ForkView.getSelectedForks())));
+			POPUP_MENU.add(new SwingEX.JMI("Start", 	Ico.START, 		() -> start(ForkView.getSelectedForks())));
+			POPUP_MENU.add(new SwingEX.JMI("Stop", 		Ico.STOP,  		() -> stop(ForkView.getSelectedForks())));
 	}
 	
-	public void start(List<Fork> fList) {
-		fList.forEach(Fork::start);
-	}
-	
-	public void stop(List<Fork> fList) {
-		fList.forEach(Fork::stop);
+	private void generate(List<Fork> fList) {
+		fList.forEach(Fork::generate);
 	}
 	
 	public void copy(List<Fork> fList) {
@@ -95,6 +91,16 @@ public class ForkView extends JPanel {
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
 	}
+	
+	private void start(List<Fork> fList) {
+		fList.forEach(Fork::start);
+	}
+	
+	private void stop(List<Fork> fList) {
+		fList.forEach(Fork::stop);
+	}
+	
+	
 	
 	public static List<Fork> getSelectedForks() {
 		return SwingUtil.getSelected(TABLE, Fork.LIST);
