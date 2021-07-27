@@ -29,7 +29,6 @@ public class Fork {
 	private static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");
 	private static final ImageIcon RED 		= Ico.loadIcon("icons/circles/red.png");
 	private static final ImageIcon GRAY		= Ico.loadIcon("icons/circles/gray.png");
-	private static final ImageIcon COMPLETE = Ico.loadIcon("icons/check.png");
 	
 	private	final String symbol;
 	public final String exePath;
@@ -66,12 +65,6 @@ public class Fork {
 	public double getType() {
 		return balance;
 	};
-	
-	
-	public void completedSuccess() {
-		sIco = COMPLETE;
-		((AbstractTableModel)ForkView.MODEL).fireTableDataChanged();
-	}
 	
 	public void loadWallet () {
 		String addr = ProcessPiper.run(exePath,"wallet","show");
