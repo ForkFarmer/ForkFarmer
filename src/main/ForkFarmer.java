@@ -30,7 +30,7 @@ public class ForkFarmer {
 	
 	
 	private static void startGUI() {
-		FRAME = new JFrame("Fork Farmer 0.4a");
+		FRAME = new JFrame("Fork Farmer 0.5a");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 

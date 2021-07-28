@@ -30,7 +30,7 @@ public class ForkView extends JPanel {
 	public static Col<?> cols[] = new Col[] {
 			new Col<>("",   			22,	Icon.class,		Fork::getIcon),
 			new Col<>("Symbol",   		50,	String.class, 	Fork::getSymbol),
-			new Col<>("Balance",		65,	String.class, 	Fork::getType),
+			new Col<>("Balance",		65,	String.class, 	Fork::getBalanceStr),
 			new Col<>("Address",		-1,	String.class, 	Fork::getAddr),
 			new Col<>("", 		 	 	22, Object.class, 	s -> s)
 		};

@@ -2,7 +2,6 @@ package forks;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -22,7 +21,7 @@ public class Fork {
 	public static ExecutorService SVC = Executors.newFixedThreadPool(NUM_THREADS);
 	
 	public static final List<Fork> LIST = new ArrayList<>();
-	double balance;
+	double balance = -1;
 	
 	private static final String icoPath = "icons/forks/";
 	private static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");
@@ -61,8 +60,12 @@ public class Fork {
 		return addr;
 	}
 	
-	public double getType() {
+	public double getBalance() {
 		return balance;
+	};
+	
+	public String getBalanceStr() {
+		return (-1 == balance) ? "" : Double.toString(balance);
 	};
 	
 	public void loadWallet () {

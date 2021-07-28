@@ -85,23 +85,25 @@ public class Transaction implements Comparable<Transaction> {
 				
 				if (symbol.equals("XFL") && firstWord.contentEquals("0.5"))
 					rcvAddress =  address;
-				if (symbol.equals("SPARE") && firstWord.contentEquals("0.5"))
+				else if (symbol.equals("SPARE") && firstWord.contentEquals("0.5"))
 					rcvAddress =  address;
-				if (symbol.equals("CGN") && firstWord.contentEquals("62.5"))
+				else if (symbol.equals("CGN") && firstWord.contentEquals("62.5"))
 					rcvAddress =  address;
-				if (symbol.equals("CAN") && firstWord.contentEquals("16"))
+				else if (symbol.equals("CAN") && firstWord.contentEquals("16"))
 					rcvAddress =  address;
-				if (symbol.equals("GDOG") && firstWord.contentEquals("12.5"))
+				else if (symbol.equals("GDOG") && firstWord.contentEquals("12.5"))
 					rcvAddress =  address;
-				if (symbol.equals("GDOG") && firstWord.contentEquals("12.5"))
+				else if (symbol.equals("GDOG") && firstWord.contentEquals("12.5"))
 					rcvAddress =  address;
-				if (symbol.equals("XCD") && firstWord.contentEquals("2500"))
+				else if (symbol.equals("XCD") && firstWord.contentEquals("2500"))
 					rcvAddress =  address;
-				if (symbol.equals("XCR") && firstWord.contentEquals("25"))
+				else if (symbol.equals("XCR") && firstWord.contentEquals("25"))
 					rcvAddress =  address;
-				if (symbol.equals("CANS") && firstWord.contentEquals("16"))
+				else if (symbol.equals("CANS") && firstWord.contentEquals("16"))
 					rcvAddress =  address;
-				if (firstWord.contentEquals("0.25"))
+				else if (symbol.equals("COV") && firstWord.contentEquals("10"))
+					rcvAddress =  address;
+				else if (firstWord.contentEquals("0.25"))
 					rcvAddress =  address;
 			}
 		} catch (Exception e) {

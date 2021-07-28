@@ -15,7 +15,6 @@ import javax.swing.border.TitledBorder;
 
 import forks.Fork;
 import forks.ForkView;
-import transaction.Transaction;
 import transaction.TransactionView;
 
 @SuppressWarnings("serial")
@@ -67,7 +66,6 @@ public class MainGui extends JPanel {
         	splitPane.setTopComponent(FV);
         	splitPane.setBottomComponent(PEPanel);
         add (splitPane);
-        
         			
 		Fork.LIST.clear();
 		Fork.factory("XCH","Chia");
