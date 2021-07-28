@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
@@ -56,15 +57,18 @@ public class MainGui extends JPanel {
         tPanel.add(sendBtn,c);
         
         sendBtn.addActionListener(e -> sendTx());
-        
-
+        		
         JPanel PEPanel = new JPanel(new BorderLayout());
-        PEPanel.add(tPanel,BorderLayout.CENTER);
-        PEPanel.add(new TransactionView(),BorderLayout.PAGE_END);
-     	
-		add(FV, BorderLayout.CENTER);
-		add(PEPanel, BorderLayout.PAGE_END);
-		
+        PEPanel.add(tPanel,BorderLayout.PAGE_START);
+        PEPanel.add(new TransactionView(),BorderLayout.CENTER);
+
+        
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        	splitPane.setTopComponent(FV);
+        	splitPane.setBottomComponent(PEPanel);
+        add (splitPane);
+        
+        			
 		Fork.LIST.clear();
 		Fork.factory("XCH","Chia");
 		Fork.factory("XFX","Flax");
@@ -94,6 +98,7 @@ public class MainGui extends JPanel {
 		Fork.factory("Chives","Chives");
 		Fork.factory("Apple","Apple");
 		Fork.factory("XMZ","Maize");
+		Fork.factory("COV","Covid");
 		
 		numForks = Fork.LIST.size();
 		FV.setBorder(new TitledBorder(numForks + " Forks Intalled" ));
@@ -116,8 +121,9 @@ public class MainGui extends JPanel {
 	}
 
 	private static void refresh() {
-		Transaction.LIST.clear();
 		for (Fork f : Fork.LIST)
 			Fork.SVC.submit(() -> f.loadWallet());
+		TransactionView.updateView();
+		
 	}
 }

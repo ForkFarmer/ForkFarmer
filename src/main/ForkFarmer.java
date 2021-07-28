@@ -1,6 +1,5 @@
 package main;
 
-import java.util.Collections;
 import java.util.Properties;
 
 import javax.swing.JFrame;
@@ -9,7 +8,6 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
-import transaction.Transaction;
 import util.Ico;
 import util.jtattoo.hifi.HiFiLookAndFeel;
 
@@ -32,9 +30,7 @@ public class ForkFarmer {
 	
 	
 	private static void startGUI() {
-		Collections.sort(Transaction.LIST);
-		
-		FRAME = new JFrame("Fork Farmer 0.4-alpha");
+		FRAME = new JFrame("Fork Farmer 0.4a");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 

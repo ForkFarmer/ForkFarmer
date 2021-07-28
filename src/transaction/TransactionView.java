@@ -3,6 +3,11 @@ package transaction;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.swing.Icon;
 import javax.swing.JPanel;
@@ -16,6 +21,7 @@ import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
 public class TransactionView extends JPanel {
+	public static List<Transaction> LIST = new ArrayList<>();
 	
 	public static Col<?> cols[] = new Col[] {
 		new Col<>("",   		22,		Icon.class,		Transaction::getIconR),
@@ -32,8 +38,8 @@ public class TransactionView extends JPanel {
 	static class SensorTableModel extends JFunTableModel {
 		public SensorTableModel() {
 			super(cols);
-			onGetRowCount(() -> Transaction.LIST.size());
-			onGetValueAt((r, c) -> cols[c].apply(Transaction.LIST.get(r)));
+			onGetRowCount(() -> LIST.size());
+			onGetValueAt((r, c) -> cols[c].apply(LIST.get(r)));
 			onisCellEditable((r, c) -> false);
 		}
 	}
@@ -62,6 +68,11 @@ public class TransactionView extends JPanel {
 	}
 
 	public static void updateView() {
+		LIST = Transaction.TMAP.entrySet().stream()
+			    .sorted(Comparator.comparing(Map.Entry::getValue, Comparator.reverseOrder()))
+			    .map(Map.Entry::getValue)
+			    .collect(Collectors.toList());
+		
 		MODEL.fireTableDataChanged();
 	}
 	

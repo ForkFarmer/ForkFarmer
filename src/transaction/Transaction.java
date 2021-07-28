@@ -1,18 +1,14 @@
 package transaction;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.Icon;
-
 import forks.Fork;
 import util.Ico;
 import util.process.ProcessPiper;
 
 public class Transaction implements Comparable<Transaction> {
-	public static final List<Transaction> LIST = new ArrayList<>();
+	public static final Map<String,Transaction> TMAP = new HashMap<>();
 	
 	String hash;
 	String type;
@@ -80,7 +76,7 @@ public class Transaction implements Comparable<Transaction> {
 				String date    = lines[i+4].replace("Created at: ", "");
 				
 				Transaction t = new Transaction(symbol,tHash,status,amount,address,date);
-				newTransaction(t);
+				TMAP.put(t.hash, t);
 				
 				TransactionView.updateView();
 				if (null != rcvAddress)
@@ -111,17 +107,13 @@ public class Transaction implements Comparable<Transaction> {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		Collections.sort(LIST);
-		
+
 		return rcvAddress;
 	}
-
-	private synchronized static void  newTransaction(Transaction t) {
-		LIST.add(t);
-	}
+	
 
 	@Override
 	public int compareTo(Transaction t) {
-		return t.date.compareTo(this.date);
+		return this.date.compareTo(t.date);
 	}
 }

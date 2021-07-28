@@ -2,6 +2,7 @@ package forks;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -82,9 +83,8 @@ public class Fork {
 		str = str.substring(0,str.indexOf(" "));
 		balance = Double.parseDouble(str);
 		
-		updateView();
 		this.addr = Transaction.load(symbol,exePath);
-		updateView();
+		updateView();		
 		
 		sIco = GREEN;
 	}
