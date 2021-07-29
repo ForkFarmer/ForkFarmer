@@ -9,6 +9,7 @@ import util.process.ProcessPiper;
 
 public class Transaction implements Comparable<Transaction> {
 	public static final Map<String,Transaction> TMAP = new HashMap<>();
+	public static boolean newTX = false;
 	
 	String hash;
 	String type;
@@ -76,9 +77,9 @@ public class Transaction implements Comparable<Transaction> {
 				String date    = lines[i+4].replace("Created at: ", "");
 				
 				Transaction t = new Transaction(symbol,tHash,status,amount,address,date);
-				TMAP.put(t.hash, t);
+				if (null == TMAP.put(t.hash, t))
+					newTX = true;
 				
-				TransactionView.updateView();
 				if (null != rcvAddress)
 					continue;
 				String firstWord = amount.substring(0, amount.indexOf(' '));
@@ -110,6 +111,7 @@ public class Transaction implements Comparable<Transaction> {
 			e.printStackTrace();
 		}
 
+		TransactionView.refresh();
 		return rcvAddress;
 	}
 	

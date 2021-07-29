@@ -68,35 +68,35 @@ public class MainGui extends JPanel {
         add (splitPane);
         			
 		Fork.LIST.clear();
-		Fork.factory("XCH","Chia");
-		Fork.factory("XFX","Flax");
+		Fork.factory("XCH","Chia","Chia");
+		Fork.factory("XFX","Flax","Flax");
 		
-		Fork.factory("XFL","Flora");
-		Fork.factory("CGN","Chaingreen");
-		Fork.factory("XGJ","Goji");
-		Fork.factory("XSE","Seno");
-		Fork.factory("AVO","Avocado");
-		Fork.factory("XKA","Kale");
-		Fork.factory("XTX","Taco");
-		Fork.factory("XDG","DogeChia");
+		Fork.factory("XFL","Flora","Flora");
+		Fork.factory("CGN","Chaingreen","Chaingreen");
+		Fork.factory("XGJ","Goji","goji-blockchain");
+		Fork.factory("XSE","Seno","seno2");
+		Fork.factory("AVO","Avocado","Avocado");
+		Fork.factory("XKA","Kale","Kale");
+		Fork.factory("XTX","Taco","Taco");
+		Fork.factory("XDG","DogeChia","DogeChia");
 		
-		Fork.factory("SPARE","Spare");
-		Fork.factory("XCR","Chiarose");
-		Fork.factory("SIT","Silicoin");
-		Fork.factory("XCD","Chiadoge");
+		Fork.factory("SPARE","Spare","Spare");
+		Fork.factory("XCR","Chiarose","Chiarose");
+		Fork.factory("SIT","Silicoin","Silicoin");
+		Fork.factory("XCD","Chiadoge","Chiadoge");
 		
-		Fork.factory("XEQ","Equality");
-		Fork.factory("SOCK","Socks");
-		Fork.factory("WHEAT","Wheat");
-		Fork.factory("XMX","Melati");
-		Fork.factory("TAD","Tad");
-		Fork.factory("CANS", "Cannabis");
-		Fork.factory("XSC","Sector");
-		Fork.factory("CAC","Cactus");
-		Fork.factory("Chives","Chives");
-		Fork.factory("Apple","Apple");
-		Fork.factory("XMZ","Maize");
-		Fork.factory("COV","Covid");
+		Fork.factory("XEQ","Equality","Equality");
+		Fork.factory("SOCK","Socks", "Socks");
+		Fork.factory("WHEAT","Wheat", "Wheat");
+		Fork.factory("XMX","Melati", "Melati");
+		Fork.factory("TAD","Tad", "Tad");
+		Fork.factory("CANS", "Cannabis", "Cannabis");
+		Fork.factory("XSC","Sector", "Sector");
+		Fork.factory("CAC","Cactus", "Cactus");
+		Fork.factory("Chives","Chives", "Chives");
+		Fork.factory("Apple","Apple", "Apple");
+		Fork.factory("XMZ","Maize", "Maize");
+		Fork.factory("COV","Covid", "Covid");
 		
 		numForks = Fork.LIST.size();
 		FV.setBorder(new TitledBorder(numForks + " Forks Intalled" ));
@@ -121,7 +121,5 @@ public class MainGui extends JPanel {
 	private static void refresh() {
 		for (Fork f : Fork.LIST)
 			Fork.SVC.submit(() -> f.loadWallet());
-		TransactionView.updateView();
-		
 	}
 }

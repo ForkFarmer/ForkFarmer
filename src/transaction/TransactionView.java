@@ -3,6 +3,7 @@ package transaction;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -48,7 +49,13 @@ public class TransactionView extends JPanel {
 		  public Component getTableCellRendererComponent(JTable table, Object value,
 		                                                 boolean isSelected, boolean hasFocus, 
 		                                                 int row, int column) {
-		    //Fork s = (Fork)value;
+
+			  super.getTableCellRendererComponent(table, value, isSelected, hasFocus,
+		                row, column);
+		      Font f = new Font("Courier New",Font.BOLD,12); 
+			  setFont(f);
+		        
+			  //Fork s = (Fork)value;
 		    //setIcon(s.sIco);
 		    //setToolTipText(s.getDetails());
 		    return this;
@@ -60,14 +67,16 @@ public class TransactionView extends JPanel {
 		setBorder(new TitledBorder("Transactions:"));
 		add(JSP,BorderLayout.CENTER);
 		Col.adjustWidths(TABLE,cols);
-		//TABLE.getColumnModel().getColumn(4).setCellRenderer(new MyRenderer());
+		//TABLE.getColumnModel().getColumn(2).setCellRenderer(new MyRenderer());
 		//SwingUtil.addDoubleClickAction(TABLE, MSG_QUEUE, LogEvent::view);
 		JSP.setPreferredSize(new Dimension(750,200));
-		
-		
 	}
 
-	public static void updateView() {
+	public static void refresh() {
+		if (false == Transaction.newTX)
+			return;
+		Transaction.newTX = false;
+		
 		LIST = Transaction.TMAP.entrySet().stream()
 			    .sorted(Comparator.comparing(Map.Entry::getValue, Comparator.reverseOrder()))
 			    .map(Map.Entry::getValue)

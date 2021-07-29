@@ -32,6 +32,7 @@ public class ForkView extends JPanel {
 			new Col<>("Symbol",   		50,	String.class, 	Fork::getSymbol),
 			new Col<>("Balance",		65,	String.class, 	Fork::getBalanceStr),
 			new Col<>("Address",		-1,	String.class, 	Fork::getAddr),
+			new Col<>("Time",			50,	String.class, 	Fork::getReadTime),
 			new Col<>("", 		 	 	22, Object.class, 	s -> s)
 		};
 	
@@ -64,20 +65,30 @@ public class ForkView extends JPanel {
 		setBorder(new TitledBorder("Installed Forks:"));
 		add(JSP,BorderLayout.CENTER);
 		Col.adjustWidths(TABLE,cols);
-		TABLE.getColumnModel().getColumn(4).setCellRenderer(new MyRenderer());
+		TABLE.getColumnModel().getColumn(5).setCellRenderer(new MyRenderer());
 
 		JSP.setPreferredSize(new Dimension(650,300));
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
-			POPUP_MENU.add(new SwingEX.JMI("Generate", 	Ico.GEAR, 		() -> generate(ForkView.getSelectedForks())));
-			POPUP_MENU.add(new SwingEX.JMI("Copy", 		Ico.CLIPBOARD,  () -> copy(ForkView.getSelectedForks())));
-			POPUP_MENU.add(new SwingEX.JMI("Start", 	Ico.START, 		() -> start(ForkView.getSelectedForks())));
-			POPUP_MENU.add(new SwingEX.JMI("Stop", 		Ico.STOP,  		() -> stop(ForkView.getSelectedForks())));
+		POPUP_MENU.add(new SwingEX.JMI("Start", 	Ico.START, 		() -> start(ForkView.getSelectedForks())));
+		POPUP_MENU.add(new SwingEX.JMI("Stop", 		Ico.STOP,  		() -> stop(ForkView.getSelectedForks())));
+		POPUP_MENU.addSeparator();
+		POPUP_MENU.add(new SwingEX.JMI("View Log", 	Ico.EYE,  		() -> viewLog(ForkView.getSelectedForks())));
+		POPUP_MENU.add(new SwingEX.JMI("New Addr", 	Ico.GEAR, 		() -> generate(ForkView.getSelectedForks())));
+		POPUP_MENU.add(new SwingEX.JMI("Copy", 		Ico.CLIPBOARD,  () -> copy(ForkView.getSelectedForks())));
+		
+			
 	}
 	
+	private void viewLog(List<Fork> fList) {
+		fList.forEach(Fork::viewLog);
+	}
+
 	private void generate(List<Fork> fList) {
 		fList.forEach(Fork::generate);
 	}
+	
+	
 	
 	public void copy(List<Fork> fList) {
 		StringWriter sw = new StringWriter();

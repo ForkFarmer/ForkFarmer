@@ -16,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -47,7 +48,12 @@ public class Util {
 	}
 	
 	public static String getDir(String base, String target) throws IOException {
+		try {
 		 return Files.list(new File(base).toPath()).map(p -> p.getFileName().toString()).filter(s->s.startsWith(target)).findAny().get();
+		} catch (NoSuchElementException e) {
+			System.out.println("Base: " + " Target: " + target);
+			throw new IOException("Couldn't get directory: ");
+		}
 	}
 	
 	public static String byteToHex(final byte b)
