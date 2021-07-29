@@ -5,7 +5,7 @@ Discord: https://discord.gg/Mx9ZNHta
 
 Requires JRE 1.8 or greater to run: https://www.oracle.com/java/technologies/javase-jre8-downloads.html
 
-Currently only avaialbe for Windows, linux client coming soon.
+Currently only available for Windows, linux client coming soon.
 
 Uses JTatto look-and-feel: http://jtattoo.net/
 
