@@ -3,11 +3,11 @@ Java GUI Frontend for XCH Forks.
 
 Only tested on Windows, will probably work on linux with minor tweaking.
 
-Requires JRE 1.8 or greater to run
+Requires JRE 1.8 or greater to run: https://www.oracle.com/java/technologies/javase-jre8-downloads.html
 
 Uses JTatto look-and-feel: http://jtattoo.net/
 
-![ff_3](https://user-images.githubusercontent.com/66434789/127091378-5e3bfb45-de61-4995-8da3-e2718f6aadf7.png)
+![ff6](https://user-images.githubusercontent.com/66434789/127431377-55303bb8-a35e-4788-8768-c41f953ec232.png)
 
 # Donations
 xch1r60uccv33w26qrzws57zqx9nrvt9gw5n2jdycjkqujc68n7rkvuqec8twe
