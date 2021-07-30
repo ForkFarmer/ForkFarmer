@@ -65,8 +65,15 @@ public class Transaction implements Comparable<Transaction> {
 		if (lines.length < 5)
 			return null;
 
+		int i = 0;
+		
+		// skip the choose a wallet prompt.
+		for (;i < lines.length; i++)
+			if (lines[i].contains("Transaction"))
+				break;
+		
 		try {
-			for (int i = 0; i < lines.length; i+=6) {
+			for (; i < lines.length; i+=6) {
 				if (lines[i].startsWith("Press q"))
 					i++;
 				

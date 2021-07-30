@@ -61,42 +61,44 @@ public class MainGui extends JPanel {
         PEPanel.add(tPanel,BorderLayout.PAGE_START);
         PEPanel.add(new TransactionView(),BorderLayout.CENTER);
 
-        
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         	splitPane.setTopComponent(FV);
         	splitPane.setBottomComponent(PEPanel);
         add (splitPane);
         			
 		Fork.LIST.clear();
-		Fork.factory("XCH","Chia","Chia");
-		Fork.factory("XFX","Flax","Flax");
+		Fork.factory("XCH","Chia");
+		Fork.factory("XFX","Flax");
 		
-		Fork.factory("XFL","Flora","Flora");
+		Fork.factory("XFL","Flora");
 		Fork.factory("CGN","Chaingreen","Chaingreen");
 		Fork.factory("XGJ","Goji","goji-blockchain");
 		Fork.factory("XSE","Seno","seno2");
-		Fork.factory("AVO","Avocado","Avocado");
-		Fork.factory("XKA","Kale","Kale");
-		Fork.factory("XTX","Taco","Taco");
-		Fork.factory("XDG","DogeChia","DogeChia");
+		Fork.factory("AVO","Avocado");
+		Fork.factory("XKA","Kale");
+		Fork.factory("XTX","Taco");
+		Fork.factory("XDG","DogeChia");
 		
-		Fork.factory("SPARE","Spare","Spare");
-		Fork.factory("XCR","Chiarose","Chiarose");
-		Fork.factory("SIT","Silicoin","Silicoin");
-		Fork.factory("XCD","Chiadoge","Chiadoge");
+		Fork.factory("SPARE","Spare");
+		Fork.factory("XCR","Chiarose","Chiarose","chia-rosechain");
+		Fork.factory("SIT","Silicoin");
+		Fork.factory("XCD","Chiadoge");
+		Fork.factory("GDOG","Greendoge");
+		Fork.factory("HDD","Hddcoin");
 		
-		Fork.factory("XEQ","Equality","Equality");
-		Fork.factory("SOCK","Socks", "Socks");
-		Fork.factory("WHEAT","Wheat", "Wheat");
-		Fork.factory("XMX","Melati", "Melati");
-		Fork.factory("TAD","Tad", "Tad");
-		Fork.factory("CANS", "Cannabis", "Cannabis");
-		Fork.factory("XSC","Sector", "Sector");
-		Fork.factory("CAC","Cactus", "Cactus");
-		Fork.factory("Chives","Chives", "Chives");
-		Fork.factory("Apple","Apple", "Apple");
-		Fork.factory("XMZ","Maize", "Maize");
-		Fork.factory("COV","Covid", "Covid");
+		Fork.factory("XEQ","Equality");
+		Fork.factory("SOCK","Socks");
+		Fork.factory("WHEAT","Wheat");
+		Fork.factory("XMX","Melati");
+		Fork.factory("TAD","Tad", "tad-coin");
+		Fork.factory("CANS", "Cannabis");
+		Fork.factory("XSC","Sector");
+		Fork.factory("CAC","Cactus");
+		Fork.factory("CHIVES","Chives");
+		Fork.factory("APPLE","Apple");
+		Fork.factory("XMZ","Maize");
+		Fork.factory("COV","Covid");
+		Fork.factory("SRN","Shamrock");
 		
 		numForks = Fork.LIST.size();
 		FV.setBorder(new TitledBorder(numForks + " Forks Intalled" ));
@@ -109,7 +111,7 @@ public class MainGui extends JPanel {
 		String address = targetAddress.getText();
 		
 		for (Fork f : Fork.LIST) {
-			if (address.startsWith(f.getSymbol().toLowerCase())) {
+			if (address.startsWith(f.symbol.toLowerCase())) {
 				f.sendTX(address,targetAmt.getText(),targetFee.getText());
 				return;
 			}

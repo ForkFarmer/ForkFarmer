@@ -1,5 +1,8 @@
 package forks;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
@@ -9,24 +12,20 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.io.File;
 import main.ForkFarmer;
-import util.apache.ReversedLinesFileReader;
 import transaction.Transaction;
 import util.Ico;
 import util.Util;
+import util.apache.ReversedLinesFileReader;
 import util.process.ProcessPiper;
 
 public class Fork {
-	static int NUM_THREADS = 20;
+	static int NUM_THREADS = 10;
 	public static ExecutorService SVC = Executors.newFixedThreadPool(NUM_THREADS);
 	
 	public static final List<Fork> LIST = new ArrayList<>();
@@ -38,15 +37,15 @@ public class Fork {
 	private static final ImageIcon YELLOW	= Ico.loadIcon("icons/circles/yellow.png");
 	private static final ImageIcon GRAY		= Ico.loadIcon("icons/circles/gray.png");
 	
-	private	final String symbol;
+	public final String symbol;
 	public final String exePath;
 	private final String logPath;
 	public final String name;
-	private ImageIcon ico;
+	public ImageIcon ico;
+	public ImageIcon statusIcon = GRAY;
 	private double readTime;
+	public String netspace = "";
 	
-	
-	public ImageIcon sIco = GRAY;
 	public String addr;
 		
 	public Fork(String symbol, String name, String exePath, String logPath) {
@@ -62,66 +61,70 @@ public class Fork {
 		} 
 	}
 	
-	public String getSymbol() {
-		return symbol;
-	}
-	
-	public Icon getIcon() {
-		return ico;
-	}
-	
-	public String getAddr() {
-		return addr;
-	}
-	
-	public double getBalance() {
-		return balance;
-	};
-	
 	public String getReadTime() {
 		if (0 == readTime)
 			return "";
+		if (-2 == readTime)
+			return "Timeout";
 		DecimalFormat df = new DecimalFormat("###.##");
 		return df.format(readTime);
 	};
 	
-	public String getBalanceStr() {
+	public String getBalance() {
 		return (-1 == balance) ? "" : Double.toString(balance);
 	};
 	
 	public void loadWallet () {
-		String addr = ProcessPiper.run(exePath,"wallet","show");
-		
-		if (null == addr)
-			return;
-		if (addr.startsWith("Connection"))
-			return;
-		
-		String[] lines = addr.split(System.getProperty("line.separator"));
-		
-		if (lines.length < 6)
-			return;
-		
-		String str = lines[5];
-		str = str.substring(str.indexOf("Total Balance: ") + 15);
-		str = str.substring(0,str.indexOf(" "));
-		balance = Double.parseDouble(str);
-		
-		this.addr = Transaction.load(symbol,exePath);
-		readLog();
-		
-		updateView();		
-		
-		sIco = (0 == readTime || readTime > 5) ? YELLOW : GREEN; 
+		try {
+			String addr = ProcessPiper.run(exePath,"wallet","show");
+			
+			if (null == addr)
+				return;
+			if (addr.startsWith("Connection"))
+				return;
+	
+			String[] lines = addr.split(System.getProperty("line.separator"));
+			
+			if (lines.length < 6)
+				return;
+			for (String l : lines) {
+				if (l.contains("Total Balance: ")) {
+					String balanceStr = Util.getWordAfter(l, "Total Balance: ");
+					balance = Double.parseDouble(balanceStr);
+					break;
+				}
+			}
+			
+			this.addr = Transaction.load(symbol,exePath);
+			//loadSummary();
+			readLog();
+			updateView();		
+			
+			statusIcon = (readTime <= 0 || readTime > 5) ? YELLOW : GREEN;
+		} catch (Exception e) {
+			statusIcon = RED;
+		}
 	}
 	
+	@SuppressWarnings("unused")
+	private void loadSummary() {
+		String summary = ProcessPiper.run(exePath,"farm","summary");
+		String[] lines = summary.split(System.getProperty("line.separator"));
+		
+		for (String l : lines) {
+			if (l.contains("Estimated network space: "))
+				netspace = l.substring("Estimated network space: ".length());
+		}
+		
+	}
+
 	private void readLog() {
 		
 		File f = new File(logPath);
 		ReversedLinesFileReader lr = null;
 		try {
 			lr = new ReversedLinesFileReader(f,Charset.defaultCharset());
-			List<String> SL = lr.readLines(30);
+			List<String> SL = lr.readLines(60);
 			readTime = 0;
 			for (String s : SL) {
 				if (s.contains("Time: ")) {
@@ -135,6 +138,9 @@ public class Fork {
 					if (s.endsWith("."))
 						s = s.substring(0, s.length()-1);
 					updateReadTime(Double.parseDouble(s));
+					break;
+				} else if (s.contains("WARNING  Respond plots came too late")) {
+					updateReadTime(-2);
 					break;
 				}
 			}
@@ -164,7 +170,7 @@ public class Fork {
 	public void stop() {
 		SVC.submit(() -> {
 			ProcessPiper.run(exePath,"stop","farmer");
-			sIco = RED;
+			statusIcon = RED;
 			updateView();
 		});
 	}
@@ -199,19 +205,33 @@ public class Fork {
 		
 	}
 	
+	public static void factory(String symbol, String name) {
+		factory(symbol, name, name, name.toLowerCase() + "-blockchain");
+	}
 
 	public static void factory(String symbol, String name, String installName) {
-		String basePath = System.getProperty("user.home") + "\\AppData\\Local\\";
+		factory(symbol, name, installName, name.toLowerCase() + "-blockchain");
+	}
+	
+	public static void factory(String symbol, String name, String installName, String appDataName) {
+		String exePath;
+		String forkBase = System.getProperty("user.home") + "\\AppData\\Local\\" + appDataName + "\\";
 		String logPath = System.getProperty("user.home") + "\\." + installName + "\\mainnet\\log\\debug.log";
-		String forkBase = basePath + name.toLowerCase() + "-blockchain\\";
 		String appPath;
 		try {
+			File f = new File(logPath);
 			appPath = Util.getDir(forkBase, "app");
-			String exePath = forkBase + appPath + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
+			if (name.equals("Chiarose"))
+				exePath = forkBase + appPath + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
+			else
+				exePath = forkBase + appPath + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
 			
-			LIST.add(new Fork(symbol, name, exePath,logPath));
+			
+			LIST.add(new Fork(symbol, name, exePath, logPath));
+			if (!f.exists())
+				System.out.println("WARNING: Could not read log: " + logPath);
 		} catch (IOException e) {
-			// failed to load fork for whatever reason
+			//e.printStackTrace();
 		}
 		
 	}
@@ -227,5 +247,7 @@ public class Fork {
 		String ret = ProcessPiper.run(exePath,"wallet","send","-i","1","-a",amt,"-m",fee,"-t",addr);
 		ForkFarmer.showMsg("Send Transaction", ret);
 	}
+
+	
 
 }

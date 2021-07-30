@@ -229,4 +229,9 @@ public class Util {
 		return System.getProperty("os.name").contains("Win");
 	}
 	
+	public static String getWordAfter(String str, String target) {
+		str = str.substring(str.indexOf(target) + target.length());
+		return str.substring(0,str.indexOf(" "));
+	}
+	
 }

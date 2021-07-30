@@ -1,12 +1,10 @@
 package forks;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.io.StringWriter;
 import java.util.List;
 
 import javax.swing.Icon;
@@ -15,7 +13,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 
 import util.Ico;
 import util.swing.SwingEX;
@@ -25,93 +22,77 @@ import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
 public class ForkView extends JPanel {
-	private static final JPopupMenu POPUP_MENU 			= new JPopupMenu();
+
+	@SuppressWarnings("unchecked")
+	public static Col<Fork> cols[] = new Col[] {
+		new Col<Fork>("",   		22,	Icon.class,		f->f.ico),
+		new Col<Fork>("Symbol",   	50,	String.class, 	f->f.symbol),
+		new Col<Fork>("Balance",	65,	String.class, 	Fork::getBalance),
+		//new Col<Fork>("Netspace",	80, String.class, 	f->f.netspace),
+		new Col<Fork>("Address",	-1,	String.class, 	f->f.addr),
+		new Col<Fork>("Time",		50,	String.class, 	Fork::getReadTime),
+		new Col<Fork>("", 		 	22, Icon.class, 	f->f.statusIcon)
+	};
 	
-	public static Col<?> cols[] = new Col[] {
-			new Col<>("",   			22,	Icon.class,		Fork::getIcon),
-			new Col<>("Symbol",   		50,	String.class, 	Fork::getSymbol),
-			new Col<>("Balance",		65,	String.class, 	Fork::getBalanceStr),
-			new Col<>("Address",		-1,	String.class, 	Fork::getAddr),
-			new Col<>("Time",			50,	String.class, 	Fork::getReadTime),
-			new Col<>("", 		 	 	22, Object.class, 	s -> s)
-		};
-	
-	final static SensorTableModel MODEL = new SensorTableModel();
+	final static ForkTableModel MODEL = new ForkTableModel();	
 	private static final JTable TABLE = new JTable(MODEL);
-	private final JScrollPane JSP = new JScrollPane(TABLE);
+	private static final JScrollPane JSP = new JScrollPane(TABLE);
+	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
 	
-	static class SensorTableModel extends JFunTableModel {
-		public SensorTableModel() {
+	static class ForkTableModel extends JFunTableModel {
+		public ForkTableModel() {
 			super(cols);
 			onGetRowCount(() -> Fork.LIST.size());
 			onGetValueAt((r, c) -> cols[c].apply(Fork.LIST.get(r)));
 			onisCellEditable((r, c) -> false);
 		}
 	}
-	
-	public class MyRenderer extends DefaultTableCellRenderer {
-		  public Component getTableCellRendererComponent(JTable table, Object value,
-		                                                 boolean isSelected, boolean hasFocus, 
-		                                                 int row, int column) {
-		    Fork s = (Fork)value;
-		    setIcon(s.sIco);
-		    setToolTipText(s.getAddr());
-		    return this;
-		  }
-		}
-	
+
 	public ForkView() {
 		setLayout(new BorderLayout());
 		setBorder(new TitledBorder("Installed Forks:"));
 		add(JSP,BorderLayout.CENTER);
 		Col.adjustWidths(TABLE,cols);
-		TABLE.getColumnModel().getColumn(5).setCellRenderer(new MyRenderer());
 
 		JSP.setPreferredSize(new Dimension(650,300));
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
-		POPUP_MENU.add(new SwingEX.JMI("Start", 	Ico.START, 		() -> start(ForkView.getSelectedForks())));
-		POPUP_MENU.add(new SwingEX.JMI("Stop", 		Ico.STOP,  		() -> stop(ForkView.getSelectedForks())));
+		POPUP_MENU.add(new SwingEX.JMI("Start", 	Ico.START, 		() -> getSelectedForks().forEach(Fork::start)));
+		POPUP_MENU.add(new SwingEX.JMI("Stop", 		Ico.STOP,  		() -> getSelectedForks().forEach(Fork::stop)));
 		POPUP_MENU.addSeparator();
-		POPUP_MENU.add(new SwingEX.JMI("View Log", 	Ico.EYE,  		() -> viewLog(ForkView.getSelectedForks())));
-		POPUP_MENU.add(new SwingEX.JMI("New Addr", 	Ico.GEAR, 		() -> generate(ForkView.getSelectedForks())));
-		POPUP_MENU.add(new SwingEX.JMI("Copy", 		Ico.CLIPBOARD,  () -> copy(ForkView.getSelectedForks())));
+		POPUP_MENU.add(new SwingEX.JMI("View Log", 	Ico.EYE,  		ForkView::viewLog));
+		POPUP_MENU.add(new SwingEX.JMI("New Addr", 	Ico.GEAR, 		() -> getSelectedForks().forEach(Fork::generate)));
+		POPUP_MENU.add(new SwingEX.JMI("Copy", 		Ico.CLIPBOARD,  ForkView::copy));
+		POPUP_MENU.addSeparator();
+		POPUP_MENU.add(new SwingEX.JMI("Hide", 		Ico.HIDE,  		ForkView::removeSelected));
 		
-			
+		//TABLE.setAutoCreateRowSorter(true);
+		
+		//TABLE.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		//TABLE.getTableHeader().setResizingAllowed(true);
 	}
 	
-	private void viewLog(List<Fork> fList) {
-		fList.forEach(Fork::viewLog);
+	static private void removeSelected() {
+		List<Fork> selList = getSelectedForks();
+		Fork.LIST.removeAll(selList);
+		update();
 	}
 
-	private void generate(List<Fork> fList) {
-		fList.forEach(Fork::generate);
+	static private void viewLog() {
+		getSelectedForks().forEach(Fork::viewLog);
 	}
 	
-	
-	
-	public void copy(List<Fork> fList) {
-		StringWriter sw = new StringWriter();
-		for (Fork f: fList) {
-			String a = f.addr;
-			if (null != a)
-				sw.write(a + "\n");
-		}
+	static private void copy() {
+		List<Fork> forkList = getSelectedForks();
+		StringBuilder sb = new StringBuilder();
+		for (Fork f: forkList)
+			if (null != f.addr)
+				sb.append(f.addr + "\n");
 		
-		StringSelection stringSelection = new StringSelection(sw.toString());
+		StringSelection stringSelection = new StringSelection(sb.toString());
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
 	}
-	
-	private void start(List<Fork> fList) {
-		fList.forEach(Fork::start);
-	}
-	
-	private void stop(List<Fork> fList) {
-		fList.forEach(Fork::stop);
-	}
-	
-	
 	
 	public static List<Fork> getSelectedForks() {
 		return SwingUtil.getSelected(TABLE, Fork.LIST);

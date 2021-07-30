@@ -22,7 +22,7 @@ public class InputStreamConsumer extends Thread {
             try {
                 int readLen = -1;
                 while ((readLen = is.read(buf)) != -1) {
-                	//System.out.println("Read");
+                	//System.out.println("Read: " + new String(buf));
                	   	os.write(buf, 0, readLen);
                 }
                 os.close();

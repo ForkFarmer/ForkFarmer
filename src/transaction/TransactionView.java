@@ -5,7 +5,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,6 +57,7 @@ public class TransactionView extends JPanel {
 			  //Fork s = (Fork)value;
 		    //setIcon(s.sIco);
 		    //setToolTipText(s.getDetails());
+			  
 		    return this;
 		  }
 		}
@@ -70,6 +70,8 @@ public class TransactionView extends JPanel {
 		//TABLE.getColumnModel().getColumn(2).setCellRenderer(new MyRenderer());
 		//SwingUtil.addDoubleClickAction(TABLE, MSG_QUEUE, LogEvent::view);
 		JSP.setPreferredSize(new Dimension(750,200));
+		
+		TABLE.setAutoCreateRowSorter(true);
 	}
 
 	public static void refresh() {
@@ -77,11 +79,12 @@ public class TransactionView extends JPanel {
 			return;
 		Transaction.newTX = false;
 		
-		LIST = Transaction.TMAP.entrySet().stream()
+		LIST = Transaction.TMAP.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
+		/*LIST = Transaction.TMAP.entrySet().stream()
 			    .sorted(Comparator.comparing(Map.Entry::getValue, Comparator.reverseOrder()))
 			    .map(Map.Entry::getValue)
 			    .collect(Collectors.toList());
-		
+		*/
 		MODEL.fireTableDataChanged();
 	}
 	
