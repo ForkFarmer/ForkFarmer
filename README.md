@@ -9,7 +9,7 @@ Currently only available for Windows, linux client coming soon.
 
 Uses JTatto look-and-feel: http://jtattoo.net/
 
-![ff6](https://user-images.githubusercontent.com/66434789/127431377-55303bb8-a35e-4788-8768-c41f953ec232.png)
+![ff_7f](https://user-images.githubusercontent.com/66434789/127682362-238a6e91-a557-4ebe-991c-af46dadf92f3.png)
 
 # Donations
 xch1r60uccv33w26qrzws57zqx9nrvt9gw5n2jdycjkqujc68n7rkvuqec8twe
