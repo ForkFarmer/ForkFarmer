@@ -62,14 +62,14 @@ public class MainGui extends JPanel {
         PEPanel.add(tPanel,BorderLayout.PAGE_START);
         PEPanel.add(new TransactionView(),BorderLayout.CENTER);
         
-        JPanel topPanel = new JPanel(new BorderLayout());
-        JLabel plots = new JLabel("Farm Size: " + "200.232 TB");
-        topPanel.add(plots,BorderLayout.LINE_END);
+        //JPanel topPanel = new JPanel(new BorderLayout());
+        //JLabel plots = new JLabel("Farm Size: " + "200.232 TB");
+        //topPanel.add(plots,BorderLayout.LINE_END);
         
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         	splitPane.setTopComponent(FV);
         	splitPane.setBottomComponent(PEPanel);
-        add (topPanel,BorderLayout.PAGE_START);
+        //add (topPanel,BorderLayout.PAGE_START);
         add (splitPane, BorderLayout.CENTER);
         			
 		Fork.LIST.clear();
