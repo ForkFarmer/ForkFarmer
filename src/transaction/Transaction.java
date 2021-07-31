@@ -1,6 +1,8 @@
 package transaction;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.swing.Icon;
 import forks.Fork;
@@ -8,7 +10,8 @@ import util.Ico;
 import util.process.ProcessPiper;
 
 public class Transaction implements Comparable<Transaction> {
-	public static final Map<String,Transaction> TMAP = new HashMap<>();
+	private static final Map<String,Transaction> TMAP = new HashMap<>();
+	public static final List<Transaction> LIST = new ArrayList<>();
 	public static boolean newTX = false;
 	
 	String hash;
@@ -84,8 +87,10 @@ public class Transaction implements Comparable<Transaction> {
 				String date    = lines[i+4].replace("Created at: ", "");
 				
 				Transaction t = new Transaction(symbol,tHash,status,amount,address,date);
-				if (null == TMAP.put(t.hash, t))
+				if (null == TMAP.put(t.hash, t)) {
+					LIST.add(t);
 					newTX = true;
+				}
 				
 				if (null != rcvAddress)
 					continue;
@@ -93,17 +98,35 @@ public class Transaction implements Comparable<Transaction> {
 				
 				if (symbol.equals("XFL") && firstWord.contentEquals("0.5"))
 					rcvAddress =  address;
+				if (symbol.equals("XFL") && firstWord.contentEquals("0,5"))
+					rcvAddress =  address;
 				else if (symbol.equals("SPARE") && firstWord.contentEquals("0.5"))
 					rcvAddress =  address;
+				else if (symbol.equals("SPARE") && firstWord.contentEquals("0,5"))
+					rcvAddress =  address;
 				else if (symbol.equals("CGN") && firstWord.contentEquals("62.5"))
+					rcvAddress =  address;
+				else if (symbol.equals("CGN") && firstWord.contentEquals("62,5"))
 					rcvAddress =  address;
 				else if (symbol.equals("CAN") && firstWord.contentEquals("16"))
 					rcvAddress =  address;
 				else if (symbol.equals("GDOG") && firstWord.contentEquals("12.5"))
 					rcvAddress =  address;
-				else if (symbol.equals("GDOG") && firstWord.contentEquals("12.5"))
+				else if (symbol.equals("GDOG") && firstWord.contentEquals("12,5"))
 					rcvAddress =  address;
 				else if (symbol.equals("XCD") && firstWord.contentEquals("2500"))
+					rcvAddress =  address;
+				else if (symbol.equals("XEQ") && firstWord.contentEquals("3.5"))
+					rcvAddress =  address;
+				else if (symbol.equals("XEQ") && firstWord.contentEquals("3,5"))
+					rcvAddress =  address;
+				else if (symbol.equals("CHIVES") && firstWord.contentEquals("22.5"))
+					rcvAddress =  address;
+				else if (symbol.equals("CHIVES") && firstWord.contentEquals("22,5"))
+					rcvAddress =  address;
+				else if (symbol.equals("TAD") && firstWord.contentEquals("2"))
+					rcvAddress =  address;
+				else if (symbol.equals("TAD") && firstWord.contentEquals("2"))
 					rcvAddress =  address;
 				else if (symbol.equals("XCR") && firstWord.contentEquals("25"))
 					rcvAddress =  address;
@@ -113,12 +136,17 @@ public class Transaction implements Comparable<Transaction> {
 					rcvAddress =  address;
 				else if (firstWord.contentEquals("0.25"))
 					rcvAddress =  address;
+				else if (firstWord.contentEquals("0,25"))
+					rcvAddress =  address;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		TransactionView.refresh();
+		
+		if (newTX) {
+			TransactionView.refresh();
+			newTX = false;
+		}
 		return rcvAddress;
 	}
 	

@@ -14,6 +14,7 @@ import util.jtattoo.hifi.HiFiLookAndFeel;
 
 public class ForkFarmer {
 	private static JFrame FRAME;
+	public static String[] args;
 
 	public static void main(String[] args) {
 		try {
@@ -24,12 +25,14 @@ public class ForkFarmer {
 		} catch (UnsupportedLookAndFeelException e) {
 			e.printStackTrace();
 		}
+		ForkFarmer.args = args;
 		javax.swing.SwingUtilities.invokeLater(ForkFarmer::startGUI);
+		
 	}
 	
 	
 	private static void startGUI() {
-		FRAME = new JFrame("Fork Farmer 0.7f");
+		FRAME = new JFrame("Fork Farmer 0.8");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 

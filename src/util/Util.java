@@ -51,7 +51,7 @@ public class Util {
 		try {
 		 return Files.list(new File(base).toPath()).map(p -> p.getFileName().toString()).filter(s->s.startsWith(target)).findAny().get();
 		} catch (NoSuchElementException e) {
-			System.out.println("Base: " + " Target: " + target);
+			System.out.println("Base: " + base + " Target: " + target);
 			throw new IOException("Couldn't get directory: ");
 		}
 	}

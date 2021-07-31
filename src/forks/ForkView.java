@@ -27,15 +27,15 @@ public class ForkView extends JPanel {
 	public static Col<Fork> cols[] = new Col[] {
 		new Col<Fork>("",   		22,	Icon.class,		f->f.ico),
 		new Col<Fork>("Symbol",   	50,	String.class, 	f->f.symbol),
-		new Col<Fork>("Balance",	65,	String.class, 	Fork::getBalance),
-		//new Col<Fork>("Netspace",	80, String.class, 	f->f.netspace),
+		new Col<Fork>("Balance",	110,String.class, 	Fork::getBalance),
+		new Col<Fork>("Netspace",	80, String.class, 	f->f.netSz),
 		new Col<Fork>("Address",	-1,	String.class, 	f->f.addr),
 		new Col<Fork>("Time",		50,	String.class, 	Fork::getReadTime),
 		new Col<Fork>("", 		 	22, Icon.class, 	f->f.statusIcon)
 	};
 	
 	final static ForkTableModel MODEL = new ForkTableModel();	
-	private static final JTable TABLE = new JTable(MODEL);
+	public static final JTable TABLE = new JTable(MODEL);
 	private static final JScrollPane JSP = new JScrollPane(TABLE);
 	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
 	
@@ -65,11 +65,6 @@ public class ForkView extends JPanel {
 		POPUP_MENU.add(new SwingEX.JMI("Copy", 		Ico.CLIPBOARD,  ForkView::copy));
 		POPUP_MENU.addSeparator();
 		POPUP_MENU.add(new SwingEX.JMI("Hide", 		Ico.HIDE,  		ForkView::removeSelected));
-		
-		//TABLE.setAutoCreateRowSorter(true);
-		
-		//TABLE.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-		//TABLE.getTableHeader().setResizingAllowed(true);
 	}
 	
 	static private void removeSelected() {

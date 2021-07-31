@@ -44,7 +44,8 @@ public class Fork {
 	public ImageIcon ico;
 	public ImageIcon statusIcon = GRAY;
 	private double readTime;
-	public String netspace = "";
+	public String netSz = "";
+	public String plotSz = "";
 	
 	public String addr;
 		
@@ -96,7 +97,7 @@ public class Fork {
 			}
 			
 			this.addr = Transaction.load(symbol,exePath);
-			//loadSummary();
+			loadSummary();
 			readLog();
 			updateView();		
 			
@@ -106,20 +107,21 @@ public class Fork {
 		}
 	}
 	
-	@SuppressWarnings("unused")
 	private void loadSummary() {
 		String summary = ProcessPiper.run(exePath,"farm","summary");
 		String[] lines = summary.split(System.getProperty("line.separator"));
 		
 		for (String l : lines) {
 			if (l.contains("Estimated network space: "))
-				netspace = l.substring("Estimated network space: ".length());
+				netSz = l.substring("Estimated network space: ".length());
+			if (l.contains("Total size of plots: ")) {
+				plotSz = l.substring("Total size of plots: ".length());
+			}
 		}
 		
 	}
 
-	private void readLog() {
-		
+	public void readLog() {
 		File f = new File(logPath);
 		ReversedLinesFileReader lr = null;
 		try {
@@ -146,10 +148,10 @@ public class Fork {
 			}
 			
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			// could not read log;
 		};
 		Util.closeQuietly(lr);
+		updateView();
 	}
 
 	private void updateReadTime(double rt) {
@@ -213,10 +215,19 @@ public class Fork {
 		factory(symbol, name, installName, name.toLowerCase() + "-blockchain");
 	}
 	
-	public static void factory(String symbol, String name, String installName, String appDataName) {
+	public static void factory(String symbol, String name, String dataPath, String daemonPath) {
 		String exePath;
-		String forkBase = System.getProperty("user.home") + "\\AppData\\Local\\" + appDataName + "\\";
-		String logPath = System.getProperty("user.home") + "\\." + installName + "\\mainnet\\log\\debug.log";
+		String forkBase;
+		String logPath;
+		
+		if (System.getProperty("os.name").startsWith("Windows")) {
+			forkBase = System.getProperty("user.home") + "\\AppData\\Local\\" + daemonPath + "\\";
+			logPath = System.getProperty("user.home") + "\\." + dataPath + "\\mainnet\\log\\debug.log";
+		} else {
+			forkBase = System.getProperty("user.home") + "/" + daemonPath + "/";
+			logPath = System.getProperty("user.home") + "/." + dataPath + "/mainnet/log/debug.log";
+		}
+		
 		String appPath;
 		try {
 			File f = new File(logPath);
@@ -225,7 +236,6 @@ public class Fork {
 				exePath = forkBase + appPath + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
 			else
 				exePath = forkBase + appPath + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
-			
 			
 			LIST.add(new Fork(symbol, name, exePath, logPath));
 			if (!f.exists())
@@ -247,7 +257,5 @@ public class Fork {
 		String ret = ProcessPiper.run(exePath,"wallet","send","-i","1","-a",amt,"-m",fee,"-t",addr);
 		ForkFarmer.showMsg("Send Transaction", ret);
 	}
-
-	
 
 }

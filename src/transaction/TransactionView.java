@@ -4,10 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.swing.Icon;
 import javax.swing.JPanel;
@@ -21,8 +17,6 @@ import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
 public class TransactionView extends JPanel {
-	public static List<Transaction> LIST = new ArrayList<>();
-	
 	public static Col<?> cols[] = new Col[] {
 		new Col<>("",   		22,		Icon.class,		Transaction::getIconR),
 		new Col<>("Symbol",   	40,		String.class,	Transaction::getSymbol),
@@ -38,8 +32,8 @@ public class TransactionView extends JPanel {
 	static class SensorTableModel extends JFunTableModel {
 		public SensorTableModel() {
 			super(cols);
-			onGetRowCount(() -> LIST.size());
-			onGetValueAt((r, c) -> cols[c].apply(LIST.get(r)));
+			onGetRowCount(() -> Transaction.LIST.size());
+			onGetValueAt((r, c) -> cols[c].apply(Transaction.LIST.get(r)));
 			onisCellEditable((r, c) -> false);
 		}
 	}
@@ -72,19 +66,11 @@ public class TransactionView extends JPanel {
 		JSP.setPreferredSize(new Dimension(750,200));
 		
 		TABLE.setAutoCreateRowSorter(true);
+		TABLE.getRowSorter().toggleSortOrder(3);
+		TABLE.getRowSorter().toggleSortOrder(3);
 	}
 
 	public static void refresh() {
-		if (false == Transaction.newTX)
-			return;
-		Transaction.newTX = false;
-		
-		LIST = Transaction.TMAP.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
-		/*LIST = Transaction.TMAP.entrySet().stream()
-			    .sorted(Comparator.comparing(Map.Entry::getValue, Comparator.reverseOrder()))
-			    .map(Map.Entry::getValue)
-			    .collect(Collectors.toList());
-		*/
 		MODEL.fireTableDataChanged();
 	}
 	
