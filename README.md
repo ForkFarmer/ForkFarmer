@@ -5,8 +5,6 @@ Discord: https://discord.gg/Mx9ZNHta
 
 Requires JRE 1.8 or greater to run: https://www.java.com/en/download/
 
-Currently only available for Windows, linux client coming soon.
-
 Uses JTatto look-and-feel: http://jtattoo.net/
 
 ![ff_7f](https://user-images.githubusercontent.com/66434789/127682362-238a6e91-a557-4ebe-991c-af46dadf92f3.png)
