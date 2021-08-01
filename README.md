@@ -7,7 +7,7 @@ Requires JRE 1.8 or greater to run: https://www.java.com/en/download/
 
 Uses JTatto look-and-feel: http://jtattoo.net/
 
-![ff_7f](https://user-images.githubusercontent.com/66434789/127682362-238a6e91-a557-4ebe-991c-af46dadf92f3.png)
+![ff_9](https://user-images.githubusercontent.com/66434789/127761473-f50568e4-49f7-4a9f-a6a8-d82083df039b.png)
 
 # Donations
 xch1r60uccv33w26qrzws57zqx9nrvt9gw5n2jdycjkqujc68n7rkvuqec8twe
