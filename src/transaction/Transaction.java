@@ -1,72 +1,52 @@
 package transaction;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import javax.swing.Icon;
+import java.util.Set;
+
+import javax.swing.ImageIcon;
+
 import forks.Fork;
 import util.Ico;
 import util.process.ProcessPiper;
 
-public class Transaction implements Comparable<Transaction> {
-	private static final Map<String,Transaction> TMAP = new HashMap<>();
+public class Transaction {
+	ImageIcon L_ARROW = Ico.loadIcon("icons/arrows/left.png");
+	ImageIcon R_ARROW = Ico.loadIcon("icons/arrows/right.png");
+	
+	private static final Set<String> TSET = new HashSet<>();
 	public static final List<Transaction> LIST = new ArrayList<>();
 	public static boolean newTX = false;
 	
-	String hash;
-	String type;
-	String amount;
-	String target;
-	String date;
-	String symbol;
+	public final Fork   f;
+	public final String hash;
+	public final String amount;
+	public final String target;
+	public final String date;
 	
-	public Transaction(String symbol, String hash, String type, String amount, String target, String date) {
-		this.symbol = symbol;
+	public Transaction(Fork f, String hash, String amount, String target, String date) {
+		this.f = f;
 		this.hash = hash;
-		this.type = type;
 		this.amount = amount;
 		this.target = target;
 		this.date = date;
 	}
 	
-	public String getSymbol() { 
-		return symbol;
-	}
-	
-	public String getAmount() {
-		return amount;
-	}
-	
-	public String getTarget() {
-		return target;
-	}
-	
-	public String getDate() {
-		return date;
-	}
-	
-	public Icon getIconR() {
-		for (Fork f : Fork.LIST) {
-			if (null == f.addr)
-				continue;
+	public ImageIcon getIcon() {
+		if (null != f.addr)
 			if (f.addr.equals(target))
-				return Ico.loadIcon("icons/arrows/right.png");
-		}
-		return Ico.loadIcon("icons/arrows/left.png");
-		
+				return R_ARROW;
+		return L_ARROW;
 	}
-
-	public static String load(String symbol, String exePath) {
-		String rcvAddress = null;
-		String trans = ProcessPiper.run(exePath,"wallet","get_transactions");
-		
-		//System.out.println("Trans: " + trans);
+	
+	public static void load(Fork f) {
+		String trans = ProcessPiper.run(f.exePath,"wallet","get_transactions");
 
 		String[] lines = trans.split(System.getProperty("line.separator"));
 		
 		if (lines.length < 5)
-			return null;
+			return; // no transactions?
 
 		int i = 0;
 		
@@ -80,64 +60,80 @@ public class Transaction implements Comparable<Transaction> {
 				if (lines[i].startsWith("Press q"))
 					i++;
 				
+				/*	Transaction d4a61a26367ef4a548ca5ccad94c5eb5f65b277f258271193199861dea311812
+				    Status: Confirmed
+				    Amount: 400 xtx
+				    To address: xtx1d6ge0nrk8u9j6aammmtspq628pxjge98u2aqxm32key48k49j0csjdm5ch
+				    Created at: 2021-07-25 15:42:07
+				 */
+			
 				String tHash   = lines[i].replace("Transaction ", "");
-				String status  = lines[i+1].replace("Status: ", "");
-				String amount  = lines[i+2].replace("Amount: ", "");
-				String address = lines[i+3].replace("To address: ", "");
-				String date    = lines[i+4].replace("Created at: ", "");
-				
-				Transaction t = new Transaction(symbol,tHash,status,amount,address,date);
-				if (null == TMAP.put(t.hash, t)) {
-					LIST.add(t);
-					newTX = true;
-				}
-				
-				if (null != rcvAddress)
+				if (TSET.contains(tHash)) // stop parsing if we already have this transaction
 					continue;
+				
+//				String status  = lines[i+1].replace("Status: ", "");
+				String amount = lines[i+2].substring(8);
+				String address = lines[i+3].substring(12);
+				String date = lines[i+4].substring(12);
+				
+				Transaction t = new Transaction(f, tHash,amount,address,date); 
+				LIST.add(t);
+				TSET.add(tHash);
+				newTX = true;
+				
+				if (null != f.addr)
+					continue;
+				
 				String firstWord = amount.substring(0, amount.indexOf(' '));
+				String symbol = f.symbol;
 				
 				if (symbol.equals("XFL") && firstWord.contentEquals("0.5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				if (symbol.equals("XFL") && firstWord.contentEquals("0,5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("SPARE") && firstWord.contentEquals("0.5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("SPARE") && firstWord.contentEquals("0,5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("CGN") && firstWord.contentEquals("62.5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("CGN") && firstWord.contentEquals("62,5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("CAN") && firstWord.contentEquals("16"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("GDOG") && firstWord.contentEquals("12.5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("GDOG") && firstWord.contentEquals("12,5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("XCD") && firstWord.contentEquals("2500"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("XEQ") && firstWord.contentEquals("3.5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("XEQ") && firstWord.contentEquals("3,5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("CHIVES") && firstWord.contentEquals("22.5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("CHIVES") && firstWord.contentEquals("22,5"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("TAD") && firstWord.contentEquals("2"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("TAD") && firstWord.contentEquals("2"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("XCR") && firstWord.contentEquals("25"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("CANS") && firstWord.contentEquals("16"))
-					rcvAddress =  address;
+					f.addr =  address;
 				else if (symbol.equals("COV") && firstWord.contentEquals("10"))
-					rcvAddress =  address;
-				else if (firstWord.contentEquals("0.25"))
-					rcvAddress =  address;
-				else if (firstWord.contentEquals("0,25"))
-					rcvAddress =  address;
+					f.addr =  address;
+				else if (symbol.equals("XFK") && firstWord.contentEquals("6.25"))
+					f.addr =  address;
+				else if (symbol.equals("XFK") && firstWord.contentEquals("6,25"))
+					f.addr =  address;
+				else if (firstWord.contentEquals("0.25") || firstWord.contentEquals("0,25"))
+					f.addr =  address;
+				else if (symbol.equals("XCH") && firstWord.contentEquals("1E-10"))
+					f.addr =  address;
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -147,12 +143,6 @@ public class Transaction implements Comparable<Transaction> {
 			TransactionView.refresh();
 			newTX = false;
 		}
-		return rcvAddress;
 	}
-	
 
-	@Override
-	public int compareTo(Transaction t) {
-		return this.date.compareTo(t.date);
-	}
 }

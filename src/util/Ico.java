@@ -20,6 +20,7 @@ public final class Ico {
 	public static final ImageIcon GEAR 		= loadIcon("icons/gear.png");
 	public static final ImageIcon EYE 		= loadIcon("icons/eye.png");
 	public static final ImageIcon HIDE 		= loadIcon("icons/hide.png");
+	public static final ImageIcon REFRESH	= loadIcon("icons/refresh.png");
 		
 	public static ImageIcon getDisabled(ImageIcon i) {
 		final int w = i.getIconWidth();

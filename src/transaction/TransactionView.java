@@ -17,12 +17,14 @@ import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
 public class TransactionView extends JPanel {
-	public static Col<?> cols[] = new Col[] {
-		new Col<>("",   		22,		Icon.class,		Transaction::getIconR),
-		new Col<>("Symbol",   	40,		String.class,	Transaction::getSymbol),
-		new Col<>("To",   		-1,		String.class, 	Transaction::getTarget),
-		new Col<>("Date",   	140,	String.class, 	Transaction::getDate),
-		new Col<>("Amount", 	90,		String.class, 	Transaction::getAmount),
+	
+	@SuppressWarnings("unchecked")
+	public static Col<Transaction> cols[] = new Col[] {
+		new Col<Transaction>("",   		22,		Icon.class,		t->t.getIcon()),
+		new Col<Transaction>("Symbol",  50,		String.class,	t->t.f.symbol),
+		new Col<Transaction>("To",   	-1,		String.class, 	t->t.target),
+		new Col<Transaction>("Date",   	150,	String.class, 	t->t.date),
+		new Col<Transaction>("Amount", 	90,		String.class, 	t->t.amount),
 	};
 	
 	final static SensorTableModel MODEL = new SensorTableModel();
@@ -54,7 +56,7 @@ public class TransactionView extends JPanel {
 			  
 		    return this;
 		  }
-		}
+	}
 	
 	public TransactionView() {
 		setLayout(new BorderLayout());
@@ -63,7 +65,7 @@ public class TransactionView extends JPanel {
 		Col.adjustWidths(TABLE,cols);
 		//TABLE.getColumnModel().getColumn(2).setCellRenderer(new MyRenderer());
 		//SwingUtil.addDoubleClickAction(TABLE, MSG_QUEUE, LogEvent::view);
-		JSP.setPreferredSize(new Dimension(750,200));
+		JSP.setPreferredSize(new Dimension(800,250));
 		
 		TABLE.setAutoCreateRowSorter(true);
 		TABLE.getRowSorter().toggleSortOrder(3);

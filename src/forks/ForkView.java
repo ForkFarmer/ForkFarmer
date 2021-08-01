@@ -15,6 +15,7 @@ import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 
 import util.Ico;
+import util.NetSpace;
 import util.swing.SwingEX;
 import util.swing.SwingUtil;
 import util.swing.jfuntable.Col;
@@ -28,7 +29,7 @@ public class ForkView extends JPanel {
 		new Col<Fork>("",   		22,	Icon.class,		f->f.ico),
 		new Col<Fork>("Symbol",   	50,	String.class, 	f->f.symbol),
 		new Col<Fork>("Balance",	110,String.class, 	Fork::getBalance),
-		new Col<Fork>("Netspace",	80, String.class, 	f->f.netSz),
+		new Col<Fork>("Netspace",	80, NetSpace.class, f->f.ns),
 		new Col<Fork>("Address",	-1,	String.class, 	f->f.addr),
 		new Col<Fork>("Time",		50,	String.class, 	Fork::getReadTime),
 		new Col<Fork>("", 		 	22, Icon.class, 	f->f.statusIcon)
@@ -54,7 +55,7 @@ public class ForkView extends JPanel {
 		add(JSP,BorderLayout.CENTER);
 		Col.adjustWidths(TABLE,cols);
 
-		JSP.setPreferredSize(new Dimension(650,300));
+		JSP.setPreferredSize(new Dimension(700,400));
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
 		POPUP_MENU.add(new SwingEX.JMI("Start", 	Ico.START, 		() -> getSelectedForks().forEach(Fork::start)));
@@ -64,11 +65,17 @@ public class ForkView extends JPanel {
 		POPUP_MENU.add(new SwingEX.JMI("New Addr", 	Ico.GEAR, 		() -> getSelectedForks().forEach(Fork::generate)));
 		POPUP_MENU.add(new SwingEX.JMI("Copy", 		Ico.CLIPBOARD,  ForkView::copy));
 		POPUP_MENU.addSeparator();
+		POPUP_MENU.add(new SwingEX.JMI("Refresh",	Ico.REFRESH,  	ForkView::refresh));
 		POPUP_MENU.add(new SwingEX.JMI("Hide", 		Ico.HIDE,  		ForkView::removeSelected));
+	}
+	
+	static private void refresh() {
+		getSelectedForks().forEach(Fork::refresh);
 	}
 	
 	static private void removeSelected() {
 		List<Fork> selList = getSelectedForks();
+		selList.forEach(f -> f.cancel = true);
 		Fork.LIST.removeAll(selList);
 		update();
 	}

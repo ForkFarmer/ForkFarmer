@@ -7,7 +7,7 @@ import java.io.OutputStream;
 
 public class InputStreamConsumer extends Thread {
 		
-    	private byte[] buf = new byte[128];
+    	private byte[] buf = new byte[8000];
         private BufferedInputStream is;
         private BufferedOutputStream os;
 
@@ -22,7 +22,7 @@ public class InputStreamConsumer extends Thread {
             try {
                 int readLen = -1;
                 while ((readLen = is.read(buf)) != -1) {
-                	//System.out.println("Read: " + new String(buf));
+                	//System.out.println("Read: " + buf.length);
                	   	os.write(buf, 0, readLen);
                 }
                 os.close();

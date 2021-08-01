@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
@@ -17,6 +16,9 @@ import javax.swing.border.TitledBorder;
 import forks.Fork;
 import forks.ForkView;
 import transaction.TransactionView;
+import util.NetSpace;
+import util.Util;
+import util.process.ProcessPiper;
 
 @SuppressWarnings("serial")
 public class MainGui extends JPanel {
@@ -28,6 +30,8 @@ public class MainGui extends JPanel {
 	static JTextField targetAmt = new JTextField(10);
 	static JTextField targetFee = new JTextField(5);
 	static JButton sendBtn = new JButton("Send");
+	private static NetSpace plotSize = new NetSpace("0 TiB");
+	private static final JLabel plotlbl = new JLabel("Farm Size: ?");
 	
 	GridBagConstraints c = new GridBagConstraints();
 	
@@ -62,15 +66,16 @@ public class MainGui extends JPanel {
         PEPanel.add(tPanel,BorderLayout.PAGE_START);
         PEPanel.add(new TransactionView(),BorderLayout.CENTER);
         
-        //JPanel topPanel = new JPanel(new BorderLayout());
-        //JLabel plots = new JLabel("Farm Size: " + "200.232 TB");
-        //topPanel.add(plots,BorderLayout.LINE_END);
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(plotlbl,BorderLayout.LINE_END);
         
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         	splitPane.setTopComponent(FV);
         	splitPane.setBottomComponent(PEPanel);
-        //add (topPanel,BorderLayout.PAGE_START);
+        add (topPanel,BorderLayout.PAGE_START);
         add (splitPane, BorderLayout.CENTER);
+        
+        updatePlotSize(plotSize);
         			
 		Fork.LIST.clear();
 		Fork.factory("XCH","Chia");
@@ -85,7 +90,7 @@ public class MainGui extends JPanel {
 		Fork.factory("XTX","Taco");
 		Fork.factory("XDG","DogeChia");
 		
-		Fork.factory("SPARE","Spare","spare-blockchain");
+		
 		Fork.factory("XCR","Chiarose","Chiarose","chia-rosechain");
 		Fork.factory("SIT","Silicoin");
 		Fork.factory("XCD","Chiadoge","Chiadoge","Chiadoge");
@@ -96,7 +101,10 @@ public class MainGui extends JPanel {
 		Fork.factory("SOCK","Socks");
 		Fork.factory("WHEAT","Wheat");
 		Fork.factory("XMX","Melati");
-		Fork.factory("TAD","Tad", "tad","tadcoin-blockchain");
+		
+		Fork.factory("SPARE","Spare");
+		Fork.factory("TAD","Tad");
+		
 		Fork.factory("CANS", "Cannabis");
 		Fork.factory("XSC","Sector");
 		Fork.factory("CAC","Cactus");
@@ -105,33 +113,40 @@ public class MainGui extends JPanel {
 		Fork.factory("XMZ","Maize");
 		Fork.factory("COV","Covid");
 		Fork.factory("SRN","Shamrock");
+		Fork.factory("XFK","Fork");
+		
+		// compute fork refresh delay
+		
+		long delayStep = (long)(120/Fork.LIST.size());
+		long delay = 0;
+		for (Fork f: Fork.LIST) {
+			Fork.SVC.submit(() -> f.loadWallet());
+			f.future =  Fork.SVC.scheduleAtFixedRate(() -> f.loadWallet(), delay, 120, TimeUnit.SECONDS);
+			delay += delayStep;
+		}
 		
 		numForks = Fork.LIST.size();
 		ForkView.TABLE.setAutoCreateRowSorter(true);
 		FV.setBorder(new TitledBorder(numForks + " Forks Intalled" ));
 		
-		//Fork.SVC.submit(MainGui::argStart);
-		
-		ScheduledExecutorService SVC = Executors.newSingleThreadScheduledExecutor();
-		SVC.scheduleAtFixedRate(MainGui::walletReader, 0, 60, TimeUnit.SECONDS);
-		//ScheduledExecutorService LOG_SVC = Executors.newSingleThreadScheduledExecutor();
-		//LOG_SVC.scheduleAtFixedRate(MainGui::logReader, 0, 2, TimeUnit.SECONDS);
+		if (ForkFarmer.args.length > 0)
+			Executors.newSingleThreadScheduledExecutor().submit(MainGui::argStart);
 	}
 	
-	/*
+	
 	private static void argStart() {
 		for (String s: ForkFarmer.args) {
 			for (Fork f: Fork.LIST) {
 				if (f.symbol.equals(s)) {
+					System.out.println("Launching: " + f.exePath + " start farmer");
 					ProcessPiper.run(f.exePath,"start","farmer");
 					Util.sleep(30000);
 				}
 			}
 		}
-		System.out.println("loaded fork... exiting");
+		System.out.println("done launching forks... exiting");
 		System.exit(0);
-	}	*/
-	
+	}
 	
 	private void sendTx() {
 		String address = targetAddress.getText();
@@ -145,10 +160,11 @@ public class MainGui extends JPanel {
 		
 		ForkFarmer.showMsg("Error", "No suitable fork found for address prefix");
 	}
-
-	private static void walletReader() {
-		for (Fork f : Fork.LIST)
-			Fork.SVC.submit(() -> f.loadWallet());
+	public static void updatePlotSize(NetSpace ps) {
+		if (ps.szTB > plotSize.szTB) {
+			plotSize = ps;
+			plotlbl.setText("Farm Size: " + ps.toString());
+		}
 	}
 	
 	/*

@@ -29,6 +29,7 @@ public class ProcessPiper {
 	            p.waitFor(5, TimeUnit.SECONDS);
           
 	            isc.join();
+	            
 	           
 	            return baos.toString();
 	        } catch (IOException | InterruptedException exp) {
