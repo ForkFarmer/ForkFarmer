@@ -12,6 +12,7 @@ import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
@@ -73,12 +74,19 @@ public class SwingEX {
 	}
 	
 	public static class JMI extends JMenuItem {
-		
 		public JMI(final String title,final ImageIcon ico, Runnable r) {
 			super(title,ico);
 			addActionListener(ae -> r.run());
 		}
 	}
+	
+	public static class JMCI extends JCheckBoxMenuItem {
+		public JMCI(final String title, Runnable r) {
+			super(title);
+			addActionListener(ae -> r.run());
+		}
+	}
+
 
 	public static class Btn extends JButton {
 		public Btn(String title, final ImageIcon ico, Runnable r) {

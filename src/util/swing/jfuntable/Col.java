@@ -8,7 +8,7 @@ import javax.swing.table.TableColumn;
 
 public class Col<T> {
 	public transient final String name;
-	public transient final int width;
+	public transient int width;
 	public transient final Class<T> type;
 	public transient final Function<T, Object> getValue;
 	public transient BiConsumer<T,Object> consumer;
@@ -34,11 +34,14 @@ public class Col<T> {
 		return type;
 	}
 
-	public static void adjustWidths(final JTable table, final Col<?>... cols) {
+	public static void adjustWidths(final JTable table, final Col<?>[] cols) {
 		for (int i = 0; i < cols.length; i++) {
 			if (-1 == cols[i].width)
 				continue;
-			setWidth(table.getColumnModel().getColumn(i),cols[i].width);
+			for (int z = 0; z < cols.length; z++) { // this is annoying
+				if (table.getColumnName(z) == cols[i].name)
+					setWidth(table.getColumnModel().getColumn(z),cols[i].width);
+			}
 		}
 	}
 

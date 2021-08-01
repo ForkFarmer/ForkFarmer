@@ -27,12 +27,12 @@ public class TransactionView extends JPanel {
 		new Col<Transaction>("Amount", 	90,		String.class, 	t->t.amount),
 	};
 	
-	final static SensorTableModel MODEL = new SensorTableModel();
+	final static TxTableModel MODEL = new TxTableModel();
 	private final JTable TABLE = new JTable(MODEL);
 	private final JScrollPane JSP = new JScrollPane(TABLE);
 	
-	static class SensorTableModel extends JFunTableModel {
-		public SensorTableModel() {
+	static class TxTableModel extends JFunTableModel {
+		public TxTableModel() {
 			super(cols);
 			onGetRowCount(() -> Transaction.LIST.size());
 			onGetValueAt((r, c) -> cols[c].apply(Transaction.LIST.get(r)));

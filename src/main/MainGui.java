@@ -109,6 +109,9 @@ public class MainGui extends JPanel {
 		Fork.factory("XSC","Sector");
 		Fork.factory("CAC","Cactus");
 		Fork.factory("CHIVES","Chives");
+		Fork.factory("VAG","Cunt");
+		Fork.factory("XCL","Caldera");
+		
 		Fork.factory("APPLE","Apple");
 		Fork.factory("XMZ","Maize");
 		Fork.factory("COV","Covid");

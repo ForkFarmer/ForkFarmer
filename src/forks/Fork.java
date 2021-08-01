@@ -20,6 +20,7 @@ import javax.swing.JTextArea;
 
 import main.ForkFarmer;
 import main.MainGui;
+import peer.PeerView;
 import transaction.Transaction;
 import util.Ico;
 import util.NetSpace;
@@ -43,11 +44,14 @@ public class Fork {
 	public final String exePath;
 	private final String logPath;
 	public final String name;
+	public String version;
 	public ImageIcon ico;
 	public ImageIcon statusIcon = GRAY;
 	private double readTime;
 	public NetSpace ns;
 	public NetSpace ps;
+	public String etw;
+	public String status;
 	
 	public String addr;
 	public boolean cancel;
@@ -109,6 +113,9 @@ public class Fork {
 				}
 			}
 			
+			if (null == version)
+				version = ProcessPiper.run(exePath,"version");
+			
 			Transaction.load(this);
 			loadSummary();
 			readLog();
@@ -127,10 +134,15 @@ public class Fork {
 		for (String l : lines) {
 			if (l.contains("Estimated network space: "))
 				ns = new NetSpace(l.substring("Estimated network space: ".length()));
-			if (l.contains("Total size of plots: ")) {
+			else if (l.contains("Total size of plots: ")) {
 				ps = new NetSpace(l.substring("Total size of plots: ".length()));
 				MainGui.updatePlotSize(ps);
-			}
+			} else if (l.contains("Expected time to win: ")) {
+				etw = l.substring("Expected time to win: ".length());
+			} else if (l.contains("Farming status: ")) {
+				status = l.substring("Farming status: ".length());
+			} 
+			
 		}
 		
 	}
@@ -200,6 +212,11 @@ public class Fork {
 		});
 	}
 	
+	public void showConnections () {
+		PeerView pv = new PeerView(this);
+		ForkFarmer.showPopup(name + ": Peer Connections", pv);
+	}
+	
 	public void refresh() {
 		SVC.submit(() -> loadWallet());
 	}
@@ -245,7 +262,7 @@ public class Fork {
 			logPath = System.getProperty("user.home") + "\\." + dataPath + "\\mainnet\\log\\debug.log";
 		} else {
 			forkBase = System.getProperty("user.home") + "/" + daemonPath + "/";
-			logPath = System.getProperty("user.home") + "/." + dataPath + "/mainnet/log/debug.log";
+			logPath = System.getProperty("user.home") + "/." + dataPath.toLowerCase() + "/mainnet/log/debug.log";
 		}
 		
 		String appPath;
@@ -253,7 +270,7 @@ public class Fork {
 			File f = new File(logPath);
 
 			if (System.getProperty("os.name").startsWith("Windows")) {
-				if ("Tad" == name || "Spare" == name) {
+				if ("Tad" == name || "Spare" == name || "Caldera" == name) {
 					exePath = forkBase + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
 					if (new File(exePath).exists())
 						LIST.add(new Fork(symbol, name, exePath, logPath));
@@ -268,7 +285,7 @@ public class Fork {
 					exePath = forkBase + appPath + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
 			} else {
 				exePath = forkBase + "/venv/bin/" + name.toLowerCase();
-				if (!new File(exePath).exists());
+				if (!new File(exePath).exists())
 					return;
 			}
 				
@@ -292,5 +309,9 @@ public class Fork {
 		String ret = ProcessPiper.run(exePath,"wallet","send","-i","1","-a",amt,"-m",fee,"-t",address);
 		ForkFarmer.showMsg("Send Transaction", ret);
 	}
+
+	/*public String execute(String... pargs) {
+		return ProcessPiper.run(exePath,pargs);
+	}*/
 
 }
