@@ -70,6 +70,7 @@ public class Transaction {
 				String tHash   = lines[i].replace("Transaction ", "");
 				if (TSET.contains(tHash)) // stop parsing if we already have this transaction
 					continue;
+				TSET.add(tHash);
 				
 //				String status  = lines[i+1].replace("Status: ", "");
 				String amount = lines[i+2].substring(8);
@@ -77,61 +78,22 @@ public class Transaction {
 				String date = lines[i+4].substring(12);
 				
 				Transaction t = new Transaction(f, tHash,amount,address,date); 
-				LIST.add(t);
-				TSET.add(tHash);
+				
+				if (!amount.startsWith("0 "))
+					LIST.add(t);
 				newTX = true;
 				
 				if (null != f.addr)
 					continue;
 				
 				String firstWord = amount.substring(0, amount.indexOf(' '));
-				String symbol = f.symbol;
+				firstWord.replace(",", ".");
 				
-				if (symbol.equals("XFL") && firstWord.contentEquals("0.5"))
+				if (f.rewardTrigger == Double.parseDouble(firstWord))
 					f.addr =  address;
-				if (symbol.equals("XFL") && firstWord.contentEquals("0,5"))
+				else if (firstWord.contentEquals("0.25") || firstWord.contentEquals("0,25")) //default
 					f.addr =  address;
-				else if (symbol.equals("SPARE") && firstWord.contentEquals("0.5"))
-					f.addr =  address;
-				else if (symbol.equals("SPARE") && firstWord.contentEquals("0,5"))
-					f.addr =  address;
-				else if (symbol.equals("CGN") && firstWord.contentEquals("62.5"))
-					f.addr =  address;
-				else if (symbol.equals("CGN") && firstWord.contentEquals("62,5"))
-					f.addr =  address;
-				else if (symbol.equals("CAN") && firstWord.contentEquals("16"))
-					f.addr =  address;
-				else if (symbol.equals("GDOG") && firstWord.contentEquals("12.5"))
-					f.addr =  address;
-				else if (symbol.equals("GDOG") && firstWord.contentEquals("12,5"))
-					f.addr =  address;
-				else if (symbol.equals("XCD") && firstWord.contentEquals("2500"))
-					f.addr =  address;
-				else if (symbol.equals("XEQ") && firstWord.contentEquals("3.5"))
-					f.addr =  address;
-				else if (symbol.equals("XEQ") && firstWord.contentEquals("3,5"))
-					f.addr =  address;
-				else if (symbol.equals("CHIVES") && firstWord.contentEquals("22.5"))
-					f.addr =  address;
-				else if (symbol.equals("CHIVES") && firstWord.contentEquals("22,5"))
-					f.addr =  address;
-				else if (symbol.equals("TAD") && firstWord.contentEquals("2"))
-					f.addr =  address;
-				else if (symbol.equals("TAD") && firstWord.contentEquals("2"))
-					f.addr =  address;
-				else if (symbol.equals("XCR") && firstWord.contentEquals("25"))
-					f.addr =  address;
-				else if (symbol.equals("CANS") && firstWord.contentEquals("16"))
-					f.addr =  address;
-				else if (symbol.equals("COV") && firstWord.contentEquals("10"))
-					f.addr =  address;
-				else if (symbol.equals("XFK") && firstWord.contentEquals("6.25"))
-					f.addr =  address;
-				else if (symbol.equals("XFK") && firstWord.contentEquals("6,25"))
-					f.addr =  address;
-				else if (firstWord.contentEquals("0.25") || firstWord.contentEquals("0,25"))
-					f.addr =  address;
-				else if (symbol.equals("XCH") && firstWord.contentEquals("1E-10"))
+				else if (firstWord.contentEquals("1E-10")) // probably faucet?
 					f.addr =  address;
 
 			}
@@ -143,6 +105,7 @@ public class Transaction {
 			TransactionView.refresh();
 			newTX = false;
 		}
+		
 	}
 
 }

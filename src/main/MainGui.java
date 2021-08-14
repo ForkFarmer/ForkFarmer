@@ -32,6 +32,7 @@ public class MainGui extends JPanel {
 	static JButton sendBtn = new JButton("Send");
 	private static NetSpace plotSize = new NetSpace("0 TiB");
 	private static final JLabel plotlbl = new JLabel("Farm Size: ?");
+	private static final JLabel valuelbl = new JLabel("Value: $0.0");
 	
 	GridBagConstraints c = new GridBagConstraints();
 	
@@ -67,7 +68,10 @@ public class MainGui extends JPanel {
         PEPanel.add(new TransactionView(),BorderLayout.CENTER);
         
         JPanel topPanel = new JPanel(new BorderLayout());
+        
+        topPanel.add(valuelbl,BorderLayout.LINE_START);
         topPanel.add(plotlbl,BorderLayout.LINE_END);
+        
         
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         	splitPane.setTopComponent(FV);
@@ -77,65 +81,29 @@ public class MainGui extends JPanel {
         
         updatePlotSize(plotSize);
         			
-		Fork.LIST.clear();
-		Fork.factory("XCH","Chia");
-		Fork.factory("XFX","Flax");
-		
-		Fork.factory("XFL","Flora");
-		Fork.factory("CGN","Chaingreen","Chaingreen");
-		Fork.factory("XGJ","Goji","goji-blockchain");
-		Fork.factory("XSE","Seno","seno2");
-		Fork.factory("AVO","Avocado");
-		Fork.factory("XKA","Kale");
-		Fork.factory("XTX","Taco");
-		Fork.factory("XDG","DogeChia");
-		
-		
-		Fork.factory("XCR","Chiarose","Chiarose","chia-rosechain");
-		Fork.factory("SIT","Silicoin");
-		Fork.factory("XCD","Chiadoge","Chiadoge","Chiadoge");
-		Fork.factory("GDOG","Greendoge");
-		Fork.factory("HDD","Hddcoin");
-		
-		Fork.factory("XEQ","Equality");
-		Fork.factory("SOCK","Socks");
-		Fork.factory("WHEAT","Wheat");
-		Fork.factory("XMX","Melati");
-		
-		Fork.factory("SPARE","Spare");
-		Fork.factory("TAD","Tad");
-		
-		Fork.factory("CANS", "Cannabis");
-		Fork.factory("XSC","Sector");
-		Fork.factory("CAC","Cactus");
-		Fork.factory("CHIVES","Chives");
-		Fork.factory("VAG","Cunt");
-		Fork.factory("XCL","Caldera");
-		
-		Fork.factory("APPLE","Apple");
-		Fork.factory("XMZ","Maize");
-		Fork.factory("COV","Covid");
-		Fork.factory("SRN","Shamrock");
-		Fork.factory("XFK","Fork");
+		Settings.Load();
+		Fork.LIST.forEach(Fork::loadIcon);
 		
 		// compute fork refresh delay
-		
+		if (Fork.LIST.size() > 0) {
 		long delayStep = (long)(120/Fork.LIST.size());
 		long delay = 0;
 		for (Fork f: Fork.LIST) {
 			Fork.SVC.submit(() -> f.loadWallet());
-			f.future =  Fork.SVC.scheduleAtFixedRate(() -> f.loadWallet(), delay, 120, TimeUnit.SECONDS);
+			Fork.LOG_SVC.submit(() -> f.readLog());
+			f.walletFuture =  Fork.SVC.scheduleAtFixedRate(() -> f.loadWallet(), delay, 120, TimeUnit.SECONDS);
+			f.logFuture =  Fork.LOG_SVC.scheduleAtFixedRate(() -> f.readLog(), delay, 10, TimeUnit.SECONDS);
 			delay += delayStep;
+		}
 		}
 		
 		numForks = Fork.LIST.size();
 		ForkView.TABLE.setAutoCreateRowSorter(true);
-		FV.setBorder(new TitledBorder(numForks + " Forks Intalled" ));
 		
 		if (ForkFarmer.args.length > 0)
 			Executors.newSingleThreadScheduledExecutor().submit(MainGui::argStart);
+		
 	}
-	
 	
 	private static void argStart() {
 		for (String s: ForkFarmer.args) {
@@ -169,11 +137,15 @@ public class MainGui extends JPanel {
 			plotlbl.setText("Farm Size: " + ps.toString());
 		}
 	}
-	
-	/*
-	private static void logReader() {
-		for (Fork f : Fork.LIST)
-			Fork.SVC.submit(() -> f.readLog());
+
+	public static void updateBalance() {
+		double totalValue = 0;
+		
+		for (Fork f : Fork.LIST) {
+			if (f.balance > 0)
+				totalValue += (double)f.price * (double)f.balance;
+		}
+		valuelbl.setText("Value: $" + Util.round(totalValue, 2));
 	}
-	*/
+	
 }

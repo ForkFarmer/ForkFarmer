@@ -65,7 +65,7 @@ public class TransactionView extends JPanel {
 		Col.adjustWidths(TABLE,cols);
 		//TABLE.getColumnModel().getColumn(2).setCellRenderer(new MyRenderer());
 		//SwingUtil.addDoubleClickAction(TABLE, MSG_QUEUE, LogEvent::view);
-		JSP.setPreferredSize(new Dimension(800,250));
+		JSP.setPreferredSize(new Dimension(900,250));
 		
 		TABLE.setAutoCreateRowSorter(true);
 		TABLE.getRowSorter().toggleSortOrder(3);

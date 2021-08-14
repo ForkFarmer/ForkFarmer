@@ -23,6 +23,7 @@ public final class Ico {
 	public static final ImageIcon REFRESH	= loadIcon("icons/refresh.png");
 	public static final ImageIcon MACHINE	= loadIcon("icons/machine.png");
 	public static final ImageIcon PLUS		= loadIcon("icons/plus.png");
+	public static final ImageIcon DOLLAR		= loadIcon("icons/dollar.png");
 		
 	public static ImageIcon getDisabled(ImageIcon i) {
 		final int w = i.getIconWidth();

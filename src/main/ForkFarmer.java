@@ -1,5 +1,7 @@
 package main;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Properties;
 
 import javax.swing.JFrame;
@@ -13,7 +15,7 @@ import util.Ico;
 import util.jtattoo.hifi.HiFiLookAndFeel;
 
 public class ForkFarmer {
-	private static JFrame FRAME;
+	public static JFrame FRAME;
 	public static String[] args;
 
 	public static void main(String[] args) {
@@ -32,7 +34,7 @@ public class ForkFarmer {
 	
 	
 	private static void startGUI() {
-		FRAME = new JFrame("Fork Farmer 0.9c");
+		FRAME = new JFrame("Fork Farmer 1.0");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 
@@ -44,6 +46,12 @@ public class ForkFarmer {
 		FRAME.pack();
 		FRAME.setLocationRelativeTo(null);
 		FRAME.setVisible(true);
+		
+		FRAME.addWindowListener(new WindowAdapter() {
+		    public void windowClosing(WindowEvent e) {
+		        Settings.Save();
+		    }
+		});
 	}
 
 	public static void showMsg(String title,String message) {

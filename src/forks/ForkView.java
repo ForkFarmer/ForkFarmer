@@ -8,15 +8,19 @@ import java.awt.datatransfer.StringSelection;
 import java.util.List;
 
 import javax.swing.Icon;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.border.TitledBorder;
+import javax.swing.JTextArea;
 import javax.swing.table.JTableHeader;
 
+import main.ForkFarmer;
+import main.MainGui;
 import util.Ico;
 import util.NetSpace;
+import util.Util;
 import util.swing.SwingEX;
 import util.swing.SwingEX.JMCI;
 import util.swing.SwingUtil;
@@ -25,16 +29,16 @@ import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
 public class ForkView extends JPanel {
-
 	@SuppressWarnings("unchecked")
 	public static Col<Fork> cols[] = new Col[] {
 		new Col<Fork>("",   		22,	Icon.class,		f->f.ico),
 		new Col<Fork>("Symbol",   	50,	String.class, 	f->f.symbol),
-		new Col<Fork>("Balance",	110,String.class, 	Fork::getBalance),
+		new Col<Fork>("Balance",	140,String.class, 	Fork::getBalance),
+		new Col<Fork>("$",			60, Double.class, 	f->f.price),
 		new Col<Fork>("Netspace",	80, NetSpace.class, f->f.ns),
 		new Col<Fork>("Farm Size",	0,  NetSpace.class, f->f.ps),
 		new Col<Fork>("Version",	0,  String.class,   f->f.version),
-		new Col<Fork>("Status",		0,  String.class,   f->f.status),
+		new Col<Fork>("Status",		80,  String.class,   f->f.status),
 		new Col<Fork>("Estimated Win Time",	0,  String.class,   f->f.etw),
 		new Col<Fork>("Address",	-1,	String.class, 	f->f.addr),
 		new Col<Fork>("Time",		50,	String.class, 	Fork::getReadTime),
@@ -47,6 +51,7 @@ public class ForkView extends JPanel {
 	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
 	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
 	
+	private static final JMCI PRICE_COLUMN_CHECK = new JMCI("$", ForkView::colChanged);
 	private static final JMCI NET_COLUMN_CHECK = new JMCI("Netspace", ForkView::colChanged);
 	private static final JMCI FARM_COLUMN_CHECK = new JMCI("Farm Size", ForkView::colChanged);
 	private static final JMCI VER_COLUMN_CHECK = new JMCI("Version", ForkView::colChanged);
@@ -58,13 +63,21 @@ public class ForkView extends JPanel {
 			super(cols);
 			onGetRowCount(() -> Fork.LIST.size());
 			onGetValueAt((r, c) -> cols[c].apply(Fork.LIST.get(r)));
-			onisCellEditable((r, c) -> false);
+			onisCellEditable((r, c) -> (3 == c));
 		}
+		
+		public void setValueAt(Object value, int row, int col) {
+			double newPrice = (double) value;
+			if (3 == col) {
+				Fork.LIST.get(row).price = newPrice;
+				fireTableCellUpdated(row, col);
+				MainGui.updateBalance();
+			}
+	    }
 	}
 
 	public ForkView() {
 		setLayout(new BorderLayout());
-		setBorder(new TitledBorder("Installed Forks:"));
 		add(JSP,BorderLayout.CENTER);
 		Col.adjustWidths(TABLE,cols);
 
@@ -72,11 +85,14 @@ public class ForkView extends JPanel {
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
 		POPUP_MENU.add(new SwingEX.JMI("Start", 	Ico.START, 		() -> getSelectedForks().forEach(Fork::start)));
+		POPUP_MENU.add(new SwingEX.JMI("Stagger", 	Ico.START,	() -> ForkView.staggerStartDialog()));
 		POPUP_MENU.add(new SwingEX.JMI("Stop", 		Ico.STOP,  		() -> getSelectedForks().forEach(Fork::stop)));
 		POPUP_MENU.addSeparator();
+		
 		POPUP_MENU.add(new SwingEX.JMI("View Log", 	Ico.EYE,  		ForkView::viewLog));
 		POPUP_MENU.add(new SwingEX.JMI("New Addr", 	Ico.GEAR, 		() -> getSelectedForks().forEach(Fork::generate)));
 		POPUP_MENU.add(new SwingEX.JMI("Copy", 		Ico.CLIPBOARD,  ForkView::copy));
+		POPUP_MENU.add(new SwingEX.JMI("Update", 	Ico.DOLLAR,  	ForkView::updatePrices));
 		POPUP_MENU.addSeparator();
 		POPUP_MENU.add(new SwingEX.JMI("Refresh",	Ico.REFRESH,  	ForkView::refresh));
 		POPUP_MENU.add(new SwingEX.JMI("Hide", 		Ico.HIDE,  		ForkView::removeSelected));
@@ -87,6 +103,9 @@ public class ForkView extends JPanel {
 		header.setComponentPopupMenu(HEADER_MENU);
 		
 		NET_COLUMN_CHECK.setSelected(true);
+		STAT_COLUMN_CHECK.setSelected(true);
+		PRICE_COLUMN_CHECK.setSelected(true);
+		HEADER_MENU.add(PRICE_COLUMN_CHECK);
 		HEADER_MENU.add(NET_COLUMN_CHECK);
 		HEADER_MENU.add(FARM_COLUMN_CHECK);
 		HEADER_MENU.add(VER_COLUMN_CHECK);
@@ -95,12 +114,68 @@ public class ForkView extends JPanel {
 		HEADER_MENU.add(ETW_COLUMN_CHECK);
 	}
 	
+	static private void staggerStartDialog() {
+		String delay= JOptionPane.showInputDialog(ForkFarmer.FRAME,"Enter Start Interval (Seconds)", "60");
+		try {
+			int delayInt = Integer.parseInt(delay);
+			new Thread(() -> staggerStart(delayInt)).start();
+		} catch (Exception e) {
+			ForkFarmer.showMsg("Error", "Error parsing delay");
+		}
+	}
+	
+	static private void staggerStart(int delay) {
+		List<Fork> selList = getSelectedForks();
+		
+		for (Fork f : selList) {
+			f.start();
+			Util.sleep(delay * 1000);
+		}
+	}
+	
+	static private void updatePrices() {
+		JPanel logPanel = new JPanel(new BorderLayout());
+		JTextArea jta = new JTextArea();
+		JScrollPane JSP = new JScrollPane(jta);
+		JSP.setPreferredSize(new Dimension(800,600));
+		logPanel.add(JSP,BorderLayout.CENTER);
+		
+		ForkFarmer.showPopup("Paste xchforks.com table", logPanel);
+		
+		String xchForksTable = jta.getText();
+		
+		String[] rows = xchForksTable.split("\n");
+		
+		for (String row : rows) {
+			row = row.replaceAll("\t", " ");
+			row = row.replaceAll("\\s+", " ");
+			String[] cols = row.split(" ");
+			
+			if (cols.length < 9)
+				continue;
+			
+			for (Fork f: Fork.LIST) {
+				
+				
+				if (cols[2].equals(f.symbol)) {
+					if (f.symbol.equals("XCH"))
+						f.price = Double.parseDouble(cols[7]);
+					else
+						f.price = Double.parseDouble(cols[8]);
+				}
+			}
+		
+			update();
+		}
+	}
+	
 	static private void colChanged() {
-		cols[3].width = (NET_COLUMN_CHECK.isSelected()) ? 80 : 0;
-		cols[4].width = (FARM_COLUMN_CHECK.isSelected()) ? 80 : 0;
-		cols[5].width = (VER_COLUMN_CHECK.isSelected()) ? 80 : 0;
-		cols[6].width = (STAT_COLUMN_CHECK.isSelected()) ? 80 : 0;
-		cols[7].width = (ETW_COLUMN_CHECK.isSelected()) ? 160 : 0;
+		cols[3].width = (PRICE_COLUMN_CHECK.isSelected()) ? 60 : 0;
+		cols[4].width = (NET_COLUMN_CHECK.isSelected()) ? 80 : 0;
+		cols[5].width = (FARM_COLUMN_CHECK.isSelected()) ? 80 : 0;
+		cols[6].width = (VER_COLUMN_CHECK.isSelected()) ? 80 : 0;
+		cols[7].width = (STAT_COLUMN_CHECK.isSelected()) ? 80 : 0;
+		cols[8].width = (ETW_COLUMN_CHECK.isSelected()) ? 160 : 0;
 			
 		Col.adjustWidths(TABLE,cols);
 	}
@@ -142,5 +217,10 @@ public class ForkView extends JPanel {
 	
 	public static void fireTableRowUpdated(int row) {
 		MODEL.fireTableRowsUpdated(row, row);
+	}
+	
+	public static void fireTableLogRead(int row) {
+		MODEL.fireTableCellUpdated(row, 10);
+		MODEL.fireTableCellUpdated(row, 11);
 	}
 }
