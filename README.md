@@ -1,7 +1,7 @@
 # ForkFarmer
 Java GUI Frontend for XCH Forks.
 
-Discord: https://discord.gg/Mx9ZNHta
+Discord: https://discord.gg/vhwVg5kKNR
 
 Requires JRE 1.8 or greater to run: https://www.java.com/en/download/
 
