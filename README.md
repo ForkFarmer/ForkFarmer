@@ -1,3 +1,4 @@
+
 # ForkFarmer
 Java GUI Frontend for XCH Forks.
 
@@ -7,7 +8,7 @@ Requires JRE 1.8 or greater to run: https://www.java.com/en/download/
 
 Uses JTatto look-and-feel: http://jtattoo.net/
 
-![ff_9](https://user-images.githubusercontent.com/66434789/127761473-f50568e4-49f7-4a9f-a6a8-d82083df039b.png)
+![ff_1b](https://user-images.githubusercontent.com/66434789/130903066-20765f25-0613-4f43-bdff-1e04d46a3e16.png)
 
 # Donations
 xch1r60uccv33w26qrzws57zqx9nrvt9gw5n2jdycjkqujc68n7rkvuqec8twe
