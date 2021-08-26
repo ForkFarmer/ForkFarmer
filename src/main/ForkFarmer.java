@@ -27,14 +27,13 @@ public class ForkFarmer {
 		} catch (UnsupportedLookAndFeelException e) {
 			e.printStackTrace();
 		}
-		ForkFarmer.args = args;
+		Args.args = args;
 		javax.swing.SwingUtilities.invokeLater(ForkFarmer::startGUI);
-		
 	}
 	
 	
 	private static void startGUI() {
-		FRAME = new JFrame("Fork Farmer 1.0");
+		FRAME = new JFrame("Fork Farmer 1.0b");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 

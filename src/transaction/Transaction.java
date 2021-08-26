@@ -1,5 +1,8 @@
 package transaction;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -9,7 +12,7 @@ import javax.swing.ImageIcon;
 
 import forks.Fork;
 import util.Ico;
-import util.process.ProcessPiper;
+import util.Util;
 
 public class Transaction {
 	ImageIcon L_ARROW = Ico.loadIcon("icons/arrows/left.png");
@@ -41,66 +44,73 @@ public class Transaction {
 	}
 	
 	public static void load(Fork f) {
-		String trans = ProcessPiper.run(f.exePath,"wallet","get_transactions");
-
-		String[] lines = trans.split(System.getProperty("line.separator"));
-		
-		if (lines.length < 5)
-			return; // no transactions?
-
-		int i = 0;
-		
-		// skip the choose a wallet prompt.
-		for (;i < lines.length; i++)
-			if (lines[i].contains("Transaction"))
-				break;
-		
+		Process p = null;
+		PrintWriter pw = null;
+		BufferedReader br = null;
 		try {
-			for (; i < lines.length; i+=6) {
-				if (lines[i].startsWith("Press q"))
-					i++;
-				
-				/*	Transaction d4a61a26367ef4a548ca5ccad94c5eb5f65b277f258271193199861dea311812
-				    Status: Confirmed
-				    Amount: 400 xtx
-				    To address: xtx1d6ge0nrk8u9j6aammmtspq628pxjge98u2aqxm32key48k49j0csjdm5ch
-				    Created at: 2021-07-25 15:42:07
-				 */
+			p = Util.startProcess(f.exePath, "wallet", "get_transactions");
+			pw = new PrintWriter(p.getOutputStream());
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		
+			for (int i = 0; i < 50; i++)
+				pw.println("c");
+			pw.close();
 			
-				String tHash   = lines[i].replace("Transaction ", "");
-				if (TSET.contains(tHash)) // stop parsing if we already have this transaction
-					continue;
-				TSET.add(tHash);
+			String l = null;
+			while ( null != (l = br.readLine())) {
+				if (l.contains("c to continue")) {
+					pw.println("c");
+					pw.flush();
+				}
 				
-//				String status  = lines[i+1].replace("Status: ", "");
-				String amount = lines[i+2].substring(8);
-				String address = lines[i+3].substring(12);
-				String date = lines[i+4].substring(12);
+				if (l.startsWith("Connection error")) {
+					p.destroyForcibly();
+					break;
+				}
 				
-				Transaction t = new Transaction(f, tHash,amount,address,date); 
-				
-				if (!amount.startsWith("0 "))
-					LIST.add(t);
-				newTX = true;
-				
-				if (null != f.addr)
-					continue;
-				
-				String firstWord = amount.substring(0, amount.indexOf(' '));
-				firstWord.replace(",", ".");
-				
-				if (f.rewardTrigger == Double.parseDouble(firstWord))
-					f.addr =  address;
-				else if (firstWord.contentEquals("0.25") || firstWord.contentEquals("0,25")) //default
-					f.addr =  address;
-				else if (firstWord.contentEquals("1E-10")) // probably faucet?
-					f.addr =  address;
+				if (l.startsWith("Transaction ")) {
+					String tHash   = l.replace("Transaction ", "");
+					if (TSET.contains(tHash)) // stop parsing if we already have this transaction
+						continue;
+					TSET.add(tHash);
+					
+					@SuppressWarnings("unused")
+					String status  = br.readLine();
+					String amount = br.readLine().substring(8);
+					String address = br.readLine().substring(12);
+					String date = br.readLine().substring(12);
+					
+					Transaction t = new Transaction(f, tHash,amount,address,date); 
+					
+					if (!amount.startsWith("0 "))
+						LIST.add(t);
+					newTX = true;
+					
+					if (null != f.addr)
+						continue;
+					
+					String firstWord = amount.substring(0, amount.indexOf(' '));
+					firstWord.replace(",", ".");
+					
+					if (f.rewardTrigger == Double.parseDouble(firstWord))
+						f.addr =  address;
+					else if (firstWord.contentEquals("0.25") || firstWord.contentEquals("0,25")) //default
+						f.addr =  address;
+					else if (firstWord.contentEquals("1E-10")) // probably faucet?
+						f.addr =  address;
+
+				}
 
 			}
+				
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
+		Util.closeQuietly(br);
+		Util.closeQuietly(pw);
+		Util.waitForProcess(p);
+
 		if (newTX) {
 			TransactionView.refresh();
 			newTX = false;

@@ -36,6 +36,7 @@ public class ForkView extends JPanel {
 		new Col<Fork>("Balance",	140,String.class, 	Fork::getBalance),
 		new Col<Fork>("$",			60, Double.class, 	f->f.price),
 		new Col<Fork>("Netspace",	80, NetSpace.class, f->f.ns),
+		new Col<Fork>("Height",		0, Integer.class,  f->f.height),
 		new Col<Fork>("Farm Size",	0,  NetSpace.class, f->f.ps),
 		new Col<Fork>("Version",	0,  String.class,   f->f.version),
 		new Col<Fork>("Status",		80,  String.class,   f->f.status),
@@ -53,6 +54,7 @@ public class ForkView extends JPanel {
 	
 	private static final JMCI PRICE_COLUMN_CHECK = new JMCI("$", ForkView::colChanged);
 	private static final JMCI NET_COLUMN_CHECK = new JMCI("Netspace", ForkView::colChanged);
+	private static final JMCI HEIGHT_COLUMN_CHECK = new JMCI("Height", ForkView::colChanged);
 	private static final JMCI FARM_COLUMN_CHECK = new JMCI("Farm Size", ForkView::colChanged);
 	private static final JMCI VER_COLUMN_CHECK = new JMCI("Version", ForkView::colChanged);
 	private static final JMCI STAT_COLUMN_CHECK = new JMCI("Status", ForkView::colChanged);
@@ -107,6 +109,7 @@ public class ForkView extends JPanel {
 		PRICE_COLUMN_CHECK.setSelected(true);
 		HEADER_MENU.add(PRICE_COLUMN_CHECK);
 		HEADER_MENU.add(NET_COLUMN_CHECK);
+		HEADER_MENU.add(HEIGHT_COLUMN_CHECK);
 		HEADER_MENU.add(FARM_COLUMN_CHECK);
 		HEADER_MENU.add(VER_COLUMN_CHECK);
 		HEADER_MENU.add(VER_COLUMN_CHECK);
@@ -172,10 +175,11 @@ public class ForkView extends JPanel {
 	static private void colChanged() {
 		cols[3].width = (PRICE_COLUMN_CHECK.isSelected()) ? 60 : 0;
 		cols[4].width = (NET_COLUMN_CHECK.isSelected()) ? 80 : 0;
-		cols[5].width = (FARM_COLUMN_CHECK.isSelected()) ? 80 : 0;
-		cols[6].width = (VER_COLUMN_CHECK.isSelected()) ? 80 : 0;
-		cols[7].width = (STAT_COLUMN_CHECK.isSelected()) ? 80 : 0;
-		cols[8].width = (ETW_COLUMN_CHECK.isSelected()) ? 160 : 0;
+		cols[5].width = (HEIGHT_COLUMN_CHECK.isSelected()) ? 60 : 0;
+		cols[6].width = (FARM_COLUMN_CHECK.isSelected()) ? 80 : 0;
+		cols[7].width = (VER_COLUMN_CHECK.isSelected()) ? 80 : 0;
+		cols[8].width = (STAT_COLUMN_CHECK.isSelected()) ? 80 : 0;
+		cols[9].width = (ETW_COLUMN_CHECK.isSelected()) ? 160 : 0;
 			
 		Col.adjustWidths(TABLE,cols);
 	}
@@ -220,7 +224,7 @@ public class ForkView extends JPanel {
 	}
 	
 	public static void fireTableLogRead(int row) {
-		MODEL.fireTableCellUpdated(row, 10);
 		MODEL.fireTableCellUpdated(row, 11);
+		MODEL.fireTableCellUpdated(row, 12);
 	}
 }

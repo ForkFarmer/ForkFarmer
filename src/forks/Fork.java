@@ -2,8 +2,10 @@ package forks;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.time.Duration;
@@ -29,7 +31,6 @@ import util.Ico;
 import util.NetSpace;
 import util.Util;
 import util.apache.ReversedLinesFileReader;
-import util.process.ProcessPiper;
 
 public class Fork {
 	transient private static final String NOT_FOUND = "";
@@ -40,12 +41,9 @@ public class Fork {
 	transient  public ScheduledFuture<?> logFuture;
 	public static List<Fork> LIST = new ArrayList<>();
 	public transient double balance = -1;
+	public transient int height = 0;
 	
 	private static final String icoPath = "icons/forks/";
-	private static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");
-	private static final ImageIcon RED 		= Ico.loadIcon("icons/circles/red.png");
-	private static final ImageIcon YELLOW	= Ico.loadIcon("icons/circles/yellow.png");
-	private static final ImageIcon GRAY		= Ico.loadIcon("icons/circles/gray.png");
 	
 	public String symbol;
 	public String exePath;
@@ -53,7 +51,7 @@ public class Fork {
 	public String name;
 	transient public String version;
 	transient public ImageIcon ico;
-	transient public ImageIcon statusIcon = GRAY;
+	transient public ImageIcon statusIcon = Ico.GRAY;
 	transient private double readTime;
 	transient public NetSpace ns;
 	transient public NetSpace ps;
@@ -85,67 +83,86 @@ public class Fork {
 	};
 	
 	public void loadWallet () {
+		boolean killed = false;
 		if (true == cancel) {
 			walletFuture.cancel(true);
 			return;
 		}
-		/*
-		ScheduledThreadPoolExecutor implementation = (ScheduledThreadPoolExecutor) SVC;
-        int size = implementation.getQueue().size();
-		System.out.println("Load Wallet: " + name + " ---- " + size);
-		*/
 		
+		Process p = null, p2 = null;
+		BufferedReader br = null, br2 = null;
 		try {
-			String addr = ProcessPiper.run(exePath,"wallet","show");
+			p = Util.startProcess(exePath, "wallet", "show");
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			
-			if (null == addr)
-				return;
-			if (addr.startsWith("Connection"))
-				return;
-	
-			String[] lines = addr.split(System.getProperty("line.separator"));
-			
-			if (lines.length < 6)
-				return;
-			for (String l : lines) {
-				if (l.contains("Total Balance: ")) {
+			String l = null;
+			while ( null != (l = br.readLine())) {
+				if (l.contains("Connection error")) {
+					p.destroyForcibly();
+					killed = true;
+					break;
+				} else if (l.contains("Total Balance: ")) {
 					String balanceStr = Util.getWordAfter(l, "Total Balance: ");
 					balance = Double.parseDouble(balanceStr);
-					break;
+				} else if (l.contains("Wallet height: ")) {
+					String heightStr = l.substring("Wallet height: ".length());
+					height = Integer.parseInt(heightStr);
 				}
 			}
+			p.waitFor();
+		
+			if (null == version) {
+				p2 = Util.startProcess(exePath, "version");
+				br2 = new BufferedReader(new InputStreamReader(p2.getInputStream()));
+				version = br2.readLine();
+			}
 			
-			if (null == version)
-				version = ProcessPiper.run(exePath,"version");
-			
-			Transaction.load(this);
+			if (!killed)
+				Transaction.load(this);
 			loadSummary();
 		} catch (Exception e) {
-			statusIcon = RED;
+			e.printStackTrace();
+			statusIcon = Ico.RED;
 		}
+		Util.closeQuietly(br);
+		Util.waitForProcess(p);
+		Util.closeQuietly(br2);
+		Util.waitForProcess(p2);
+		
 		updateReadTime(readTime);
 		MainGui.updateBalance();
 		updateView();
 	}
 	
 	private void loadSummary() {
-		String summary = ProcessPiper.run(exePath,"farm","summary");
-		String[] lines = summary.split(System.getProperty("line.separator"));
-		
-		for (String l : lines) {
-			if (l.contains("Estimated network space: "))
-				ns = new NetSpace(l.substring("Estimated network space: ".length()));
-			else if (l.contains("Total size of plots: ")) {
-				ps = new NetSpace(l.substring("Total size of plots: ".length()));
-				MainGui.updatePlotSize(ps);
-			} else if (l.contains("Expected time to win: ")) {
-				etw = l.substring("Expected time to win: ".length());
-			} else if (l.contains("Farming status: ")) {
-				status = l.substring("Farming status: ".length());
-			} 
+		Process p = null;
+		BufferedReader br = null;
+		try {
+			p = Util.startProcess(exePath, "farm", "summary");
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			
+			String l = null;
+			while ( null != (l = br.readLine())) {
+				if (l.contains("Connection error")) {
+					p.destroyForcibly();
+					break;
+				} else if (l.contains("Estimated network space: "))
+					ns = new NetSpace(l.substring("Estimated network space: ".length()));
+				else if (l.contains("Total size of plots: ")) {
+					ps = new NetSpace(l.substring("Total size of plots: ".length()));
+					MainGui.updatePlotSize(ps);
+				} else if (l.contains("Expected time to win: ")) {
+					etw = l.substring("Expected time to win: ".length());
+				} else if (l.contains("Farming status: ")) {
+					status = l.substring("Farming status: ".length());
+				} 
+			}
+		} catch (IOException e) {
+			e.printStackTrace(); 	// TODO Auto-generated catch block
 		}
-		
+
+		Util.waitForProcess(p);
+		Util.closeQuietly(br);
 	}
 
 	public void readLog() {
@@ -217,20 +234,19 @@ public class Fork {
 		if (null == status)
 			return;
 		
-		
 		if (status.startsWith("Farming") && readTime <= 5 && readTime >= 0)
-				statusIcon = GREEN;
+				statusIcon = Ico.GREEN;
 		else if (status.startsWith("Farming") && readTime > 5 && readTime < 30)
-			statusIcon = YELLOW;
+			statusIcon = Ico.YELLOW;
 		else if (status.startsWith("Syncing"))
-			statusIcon = YELLOW;
+			statusIcon = Ico.YELLOW;
 		else
-			statusIcon = RED;
+			statusIcon = Ico.RED;
 	}
 
 	private void updateView() {
 		if (status.startsWith("Not synced"))
-			statusIcon = RED;
+			statusIcon = Ico.RED;
 		getIndex().ifPresent(ForkView::fireTableRowUpdated);
 	}
 	
@@ -240,15 +256,15 @@ public class Fork {
 	
 	public void start() {
 		SVC.submit(() -> {
-			ProcessPiper.run(exePath,"start","farmer");
+			Util.runProcessWait(exePath,"start","farmer");
 			loadWallet();	
 		});
 	}
 	
 	public void stop() {
 		SVC.submit(() -> {
-			ProcessPiper.run(exePath,"stop","farmer");
-			statusIcon = RED;
+			Util.runProcessWait(exePath,"stop","farmer");
+			statusIcon = Ico.RED;
 			status = "";
 			updateView();
 		});
@@ -256,7 +272,8 @@ public class Fork {
 	
 	public void generate() {
 		SVC.submit(() -> {
-			addr = ProcessPiper.run(exePath,"wallet","get_address").replace("\n", "").replace("\r", "");
+			
+			//addr = ProcessPiper.run(exePath,"wallet","get_address").replace("\n", "").replace("\r", "");
 			updateView();
 		});
 	}
@@ -301,8 +318,27 @@ public class Fork {
 	}
 
 	public void sendTX(String address, String amt, String fee) {
-		String ret = ProcessPiper.run(exePath,"wallet","send","-i","1","-a",amt,"-m",fee,"-t",address);
-		ForkFarmer.showMsg("Send Transaction", ret);
+		Process p = null;
+		BufferedReader br = null;
+		
+		try {
+			p = Util.startProcess(exePath,"wallet","send","-i","1","-a",amt,"-m",fee,"-t",address);
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			StringBuilder sb = new StringBuilder();
+			
+			String l = null;
+			while ( null != (l = br.readLine()))
+				sb.append(l + "\n");
+			
+			ForkFarmer.showMsg("Send Transaction", sb.toString());
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	
+		Util.closeQuietly(br);
+		Util.waitForProcess(p);
 	}
 	
 	public void loadIcon() {
@@ -340,7 +376,7 @@ public class Fork {
 		String appPath;
 		try {
 			if (System.getProperty("os.name").startsWith("Windows")) {
-				if ("Tad" == name || "Spare" == name || "Caldera" == name) {
+				if ("Spare" == name || "Caldera" == name) {
 					exePath = forkBase + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
 					if (!new File(exePath).exists())
 						return;

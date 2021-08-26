@@ -23,6 +23,9 @@ public class Settings {
 			Fork.LIST = yaml.load(inputStream);
 		} catch (FileNotFoundException e) {
 			loadDefaults();
+		} catch (Exception e) {
+			System.out.println("Problem reading FF_Settings.yaml... Loading defaults");
+			loadDefaults();
 		}
 	}
 	

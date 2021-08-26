@@ -23,7 +23,13 @@ public final class Ico {
 	public static final ImageIcon REFRESH	= loadIcon("icons/refresh.png");
 	public static final ImageIcon MACHINE	= loadIcon("icons/machine.png");
 	public static final ImageIcon PLUS		= loadIcon("icons/plus.png");
-	public static final ImageIcon DOLLAR		= loadIcon("icons/dollar.png");
+	public static final ImageIcon DOLLAR	= loadIcon("icons/dollar.png");
+	
+	//circle icons
+	public static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");
+	public static final ImageIcon RED 		= Ico.loadIcon("icons/circles/red.png");
+	public static final ImageIcon YELLOW	= Ico.loadIcon("icons/circles/yellow.png");
+	public static final ImageIcon GRAY		= Ico.loadIcon("icons/circles/gray.png");
 		
 	public static ImageIcon getDisabled(ImageIcon i) {
 		final int w = i.getIconWidth();

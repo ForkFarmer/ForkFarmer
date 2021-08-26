@@ -206,6 +206,23 @@ public class Util {
 		clip.setContents(ss, null);
 	}
 	
+	public static Process startProcess(String... args) throws IOException {
+		ProcessBuilder pb = new ProcessBuilder(args);
+		pb.redirectError();
+
+		return pb.start();
+	}
+	
+	public static void waitForProcess(Process p ) {
+		try {
+			if (null != p)
+				p.waitFor();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public static void closeQuietly(Closeable s) {
 		if (null == s)
 			return;
@@ -241,6 +258,16 @@ public class Util {
 	public static String getWordAfter(String str, String target) {
 		str = str.substring(str.indexOf(target) + target.length());
 		return str.substring(0,str.indexOf(" "));
+	}
+
+	public static void runProcessWait(String... args) {
+		try {
+			startProcess(args).waitFor();
+		} catch (InterruptedException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
 }

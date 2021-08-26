@@ -7,7 +7,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +25,7 @@ import javax.swing.event.ListSelectionListener;
 
 import forks.Fork;
 import util.Ico;
-import util.process.ProcessPiper;
+import util.Util;
 import util.swing.SwingEX;
 import util.swing.SwingUtil;
 import util.swing.jfuntable.Col;
@@ -83,21 +83,25 @@ public class PeerView extends JPanel {
 		
 		add(MENU,BorderLayout.PAGE_START);
 		
-		String result = ProcessPiper.run(f.exePath,"show","-c");
-		
-		try (BufferedReader reader = new BufferedReader(new StringReader(result))) {
-            String l = reader.readLine();
-            while (l != null) {
-            	if (l.contains("FULL_NODE ")) {
-            		String l2 = reader.readLine();
+		Process p = null;
+		BufferedReader br = null;
+		try {
+			p = Util.startProcess(f.exePath, "show", "-c");
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			
+			String l = null;
+			while ( null != (l = br.readLine())) {
+				if (l.contains("FULL_NODE ")) {
+            		String l2 = br.readLine();
             		LIST.add(new Peer(l + l2));
             	}
-            	
-            	l = reader.readLine();
-            }
-        } catch (IOException exc) {
-            // quit
-        }
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		Util.waitForProcess(p);
+		Util.closeQuietly(br);
 		
 		TABLE.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 		    @Override
@@ -147,6 +151,6 @@ public class PeerView extends JPanel {
 		String[] peers = newPeerField.getText().split("\\s+");
 		
 		for (String p : peers)
-			Fork.SVC.submit(() -> {ProcessPiper.run(f.exePath,"show","-a", p);});
+			Fork.SVC.submit(() -> {Util.runProcessWait(f.exePath,"show","-a", p);});
 	}
 }

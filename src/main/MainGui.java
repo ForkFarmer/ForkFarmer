@@ -3,7 +3,6 @@ package main;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
@@ -18,7 +17,6 @@ import forks.ForkView;
 import transaction.TransactionView;
 import util.NetSpace;
 import util.Util;
-import util.process.ProcessPiper;
 
 @SuppressWarnings("serial")
 public class MainGui extends JPanel {
@@ -100,23 +98,7 @@ public class MainGui extends JPanel {
 		numForks = Fork.LIST.size();
 		ForkView.TABLE.setAutoCreateRowSorter(true);
 		
-		if (ForkFarmer.args.length > 0)
-			Executors.newSingleThreadScheduledExecutor().submit(MainGui::argStart);
-		
-	}
-	
-	private static void argStart() {
-		for (String s: ForkFarmer.args) {
-			for (Fork f: Fork.LIST) {
-				if (f.symbol.equals(s)) {
-					System.out.println("Launching: " + f.exePath + " start farmer");
-					ProcessPiper.run(f.exePath,"start","farmer");
-					Util.sleep(30000);
-				}
-			}
-		}
-		System.out.println("done launching forks... exiting");
-		System.exit(0);
+		Args.handle();
 	}
 	
 	private void sendTx() {
