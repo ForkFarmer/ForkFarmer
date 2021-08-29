@@ -17,8 +17,6 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.text.JTextComponent;
 
-import util.LimitedQueue;
-
 public class SwingUtil {
 	
 	public static <T> List<T> getSelected(JTable t,List<T> list) {
@@ -125,20 +123,6 @@ public class SwingUtil {
 		});
 	}
 	
-	public static <T> void addDoubleClickAction(JTable t, LimitedQueue<T> l, Consumer<T> rowConsumer) {
-		t.addMouseListener(new MouseAdapter() {
-		    public void mousePressed(MouseEvent mouseEvent) {
-		        JTable table =(JTable) mouseEvent.getSource();
-		        Point point = mouseEvent.getPoint();
-		        int row = table.rowAtPoint(point);
-		        if (-1 == row)
-		        	return;
-		        if (mouseEvent.getClickCount() == 2)
-		        	rowConsumer.accept(l.get(row));
-		    }
-		});
-	}
-
 	public static void setComponentsEnabled(Component[] cArray, boolean status) {
 		for (Component c : cArray)
 			c.setEnabled(status);

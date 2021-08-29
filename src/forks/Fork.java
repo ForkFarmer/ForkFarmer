@@ -35,7 +35,7 @@ import util.apache.ReversedLinesFileReader;
 public class Fork {
 	transient private static final String NOT_FOUND = "";
 	private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-	public static ScheduledExecutorService SVC = Executors.newScheduledThreadPool(20);
+	public static ScheduledExecutorService SVC = Executors.newScheduledThreadPool(10);
 	public static ScheduledExecutorService LOG_SVC = Executors.newScheduledThreadPool(1);
 	transient public ScheduledFuture<?> walletFuture;
 	transient  public ScheduledFuture<?> logFuture;
@@ -53,10 +53,11 @@ public class Fork {
 	transient public ImageIcon ico;
 	transient public ImageIcon statusIcon = Ico.GRAY;
 	transient private double readTime;
-	transient public NetSpace ns;
-	transient public NetSpace ps;
+	transient public NetSpace netSpace;
+	transient public NetSpace plotSpace;
 	transient public String etw;
-	transient public String status;
+	transient public String syncStatus;
+	transient public String farmStatus;
 	transient public int logLines;
 	public double price;
 	public double rewardTrigger;
@@ -83,11 +84,18 @@ public class Fork {
 	};
 	
 	public void loadWallet () {
-		boolean killed = false;
+		boolean dead = false;
 		if (true == cancel) {
 			walletFuture.cancel(true);
 			return;
 		}
+		
+		if ("CGN".contentEquals(symbol)) {
+			addr = "*** Not Supported ***";
+			return;
+		}
+		
+		//System.out.println("Refreshing: " + name);
 		
 		Process p = null, p2 = null;
 		BufferedReader br = null, br2 = null;
@@ -99,7 +107,7 @@ public class Fork {
 			while ( null != (l = br.readLine())) {
 				if (l.contains("Connection error")) {
 					p.destroyForcibly();
-					killed = true;
+					dead = true;
 					break;
 				} else if (l.contains("Total Balance: ")) {
 					String balanceStr = Util.getWordAfter(l, "Total Balance: ");
@@ -107,23 +115,29 @@ public class Fork {
 				} else if (l.contains("Wallet height: ")) {
 					String heightStr = l.substring("Wallet height: ".length());
 					height = Integer.parseInt(heightStr);
+				} else if (l.contains("Sync status: ")) {
+					syncStatus = l.substring("Sync status: ".length());
 				}
 			}
-			p.waitFor();
-		
+			
 			if (null == version) {
 				p2 = Util.startProcess(exePath, "version");
 				br2 = new BufferedReader(new InputStreamReader(p2.getInputStream()));
 				version = br2.readLine();
 			}
 			
-			if (!killed)
+			if (dead) {
+				syncStatus = "";
+			} else {
 				Transaction.load(this);
-			loadSummary();
+				loadSummary();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			statusIcon = Ico.RED;
 		}
+		
+		try {
 		Util.closeQuietly(br);
 		Util.waitForProcess(p);
 		Util.closeQuietly(br2);
@@ -132,6 +146,10 @@ public class Fork {
 		updateReadTime(readTime);
 		MainGui.updateBalance();
 		updateView();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		//System.out.println("Done Refreshing: " + name);
 	}
 	
 	private void loadSummary() {
@@ -147,14 +165,14 @@ public class Fork {
 					p.destroyForcibly();
 					break;
 				} else if (l.contains("Estimated network space: "))
-					ns = new NetSpace(l.substring("Estimated network space: ".length()));
+					netSpace = new NetSpace(l.substring("Estimated network space: ".length()));
 				else if (l.contains("Total size of plots: ")) {
-					ps = new NetSpace(l.substring("Total size of plots: ".length()));
-					MainGui.updatePlotSize(ps);
+					plotSpace = new NetSpace(l.substring("Total size of plots: ".length()));
+					MainGui.updatePlotSize(plotSpace);
 				} else if (l.contains("Expected time to win: ")) {
 					etw = l.substring("Expected time to win: ".length());
 				} else if (l.contains("Farming status: ")) {
-					status = l.substring("Farming status: ".length());
+					farmStatus = l.substring("Farming status: ".length());
 				} 
 			}
 		} catch (IOException e) {
@@ -231,21 +249,23 @@ public class Fork {
 	private void updateReadTime(double rt) {
 		readTime = rt;
 		
-		if (null == status)
+		if (null == farmStatus)
 			return;
 		
-		if (status.startsWith("Farming") && readTime <= 5 && readTime >= 0)
+		if (farmStatus.startsWith("Farming") && readTime <= 5 && readTime >= 0)
 				statusIcon = Ico.GREEN;
-		else if (status.startsWith("Farming") && readTime > 5 && readTime < 30)
+		else if (farmStatus.startsWith("Farming") && readTime > 5 && readTime < 30)
 			statusIcon = Ico.YELLOW;
-		else if (status.startsWith("Syncing"))
+		else if (farmStatus.startsWith("Syncing"))
 			statusIcon = Ico.YELLOW;
 		else
 			statusIcon = Ico.RED;
 	}
 
 	private void updateView() {
-		if (status.startsWith("Not synced"))
+		if (null == farmStatus)
+			statusIcon = Ico.RED;
+		else if (farmStatus.startsWith("Not synced"))
 			statusIcon = Ico.RED;
 		getIndex().ifPresent(ForkView::fireTableRowUpdated);
 	}
@@ -265,7 +285,7 @@ public class Fork {
 		SVC.submit(() -> {
 			Util.runProcessWait(exePath,"stop","farmer");
 			statusIcon = Ico.RED;
-			status = "";
+			farmStatus = "";
 			updateView();
 		});
 	}

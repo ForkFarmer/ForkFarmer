@@ -107,6 +107,9 @@ public class MainGui extends JPanel {
 		for (Fork f : Fork.LIST) {
 			if (address.startsWith(f.symbol.toLowerCase())) {
 				f.sendTX(address,targetAmt.getText(),targetFee.getText());
+				targetAddress.setText("");
+				targetAmt.setText("");
+				targetFee.setText("");
 				return;
 			}
 		}
@@ -123,10 +126,10 @@ public class MainGui extends JPanel {
 	public static void updateBalance() {
 		double totalValue = 0;
 		
-		for (Fork f : Fork.LIST) {
+		for (Fork f : Fork.LIST)
 			if (f.balance > 0)
 				totalValue += (double)f.price * (double)f.balance;
-		}
+		
 		valuelbl.setText("Value: $" + Util.round(totalValue, 2));
 	}
 	

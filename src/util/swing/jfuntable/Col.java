@@ -3,6 +3,8 @@ package util.swing.jfuntable;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.table.TableColumn;
 
@@ -12,6 +14,8 @@ public class Col<T> {
 	public transient final Class<T> type;
 	public transient final Function<T, Object> getValue;
 	public transient BiConsumer<T,Object> consumer;
+	JCheckBoxMenuItem jmi = null;
+	
 
 	public Col(final String name, final int width,  final Class<?> type, final Function<T, Object> getValue) {
 		this(name,width,type,getValue,null);
@@ -30,10 +34,21 @@ public class Col<T> {
 		this.consumer = consumer;
 	}
 	
+	public void resize (JTable table) {
+		if (-1 == width)
+			return;
+		int w = 0;
+		for (int z = 0; z < table.getColumnCount(); z++)
+			if (name == table.getColumnName(z)) { // bad for dulplicate col names
+				w = (null == jmi) ? width : (jmi.isSelected() ? width : 0);
+				setWidth(table.getColumnModel().getColumn(z),w); 
+			}
+	}
+	
 	public Class<T> getC() {
 		return type;
 	}
-
+	
 	public static void adjustWidths(final JTable table, final Col<?>[] cols) {
 		for (int i = 0; i < cols.length; i++) {
 			if (-1 == cols[i].width)
@@ -61,5 +76,15 @@ public class Col<T> {
 		if(null != consumer)
 			consumer.accept((T)a,b);
 	}
-
+	
+	public void setSelectView(JTable table, JPopupMenu menu, boolean selectable, boolean defaultView) {
+		if (selectable) {
+			jmi = new JCheckBoxMenuItem(name);
+			menu.add(jmi);
+			jmi.setSelected(defaultView);
+			jmi.addActionListener(ae -> resize(table));
+		}
+		resize(table);
+	}
+	
 }

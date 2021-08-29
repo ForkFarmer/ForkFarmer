@@ -23,10 +23,10 @@ public class Transaction {
 	public static boolean newTX = false;
 	
 	public final Fork   f;
-	public final String hash;
-	public final String amount;
-	public final String target;
-	public final String date;
+	public String hash = "" ;
+	public String amount = "";
+	public String target ="";
+	public String date = "";
 	
 	public Transaction(Fork f, String hash, String amount, String target, String date) {
 		this.f = f;

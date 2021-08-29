@@ -20,6 +20,6 @@ public class NetSpace implements Comparable<NetSpace> {
 	}
 	
 	public String toString() {
-		return s;
+		return (null != s ) ? s : "";
 	}
 }
