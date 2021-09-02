@@ -33,7 +33,7 @@ public class ForkFarmer {
 	
 	
 	private static void startGUI() {
-		FRAME = new JFrame("Fork Farmer 1.1");
+		FRAME = new JFrame("ForkFarmer 1.2a");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 
@@ -46,11 +46,27 @@ public class ForkFarmer {
 		FRAME.setLocationRelativeTo(null);
 		FRAME.setVisible(true);
 		
+		/*
+		TrayIcon trayIcon = new TrayIcon(Ico.LOGO.getImage());
+		
+		SystemTray st = SystemTray.getSystemTray();
+	    
+		try {
+			st.add(trayIcon);
+		} catch (AWTException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		*/
+	     
+		
 		FRAME.addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {
 		        Settings.Save();
 		    }
 		});
+		
+		
 	}
 
 	public static void showMsg(String title,String message) {

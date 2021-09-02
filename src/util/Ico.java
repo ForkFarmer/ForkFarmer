@@ -25,11 +25,15 @@ public final class Ico {
 	public static final ImageIcon PLUS		= loadIcon("icons/plus.png");
 	public static final ImageIcon DOLLAR	= loadIcon("icons/dollar.png");
 	
+	public static final ImageIcon POSAT		= loadIcon("icons/posat.png",16);
+	
 	//circle icons
 	public static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");
 	public static final ImageIcon RED 		= Ico.loadIcon("icons/circles/red.png");
 	public static final ImageIcon YELLOW	= Ico.loadIcon("icons/circles/yellow.png");
 	public static final ImageIcon GRAY		= Ico.loadIcon("icons/circles/gray.png");
+	
+	public static final String FORK_PATH = "icons/forks/";
 		
 	public static ImageIcon getDisabled(ImageIcon i) {
 		final int w = i.getIconWidth();
@@ -41,6 +45,7 @@ public final class Ico {
 		Graphics2D            g2d = image.createGraphics();
 		i.paintIcon( null,  g2d,  0, 0);
 		Image gray = GrayFilter.createDisabledImage(image);
+		
 		return new ImageIcon(gray);
 	}
 	
@@ -62,5 +67,17 @@ public final class Ico {
 	
 	public static URL getResource(final String path) {
 		return Ico.class.getClassLoader().getResource(path);
+	}
+
+	public static ImageIcon getForkIcon(String name) {
+		try {
+			return loadIcon(Ico.FORK_PATH + name + ".png",16);
+		} catch (RuntimeException e) {
+			try {
+				return loadIcon(Ico.FORK_PATH + name + ".jpg",16);
+			} catch (RuntimeException ee) {
+			}
+		}
+		return null;
 	}
 }

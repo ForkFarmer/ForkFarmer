@@ -80,7 +80,6 @@ public class MainGui extends JPanel {
         updatePlotSize(plotSize);
         			
 		Settings.Load();
-		Fork.LIST.forEach(Fork::loadIcon);
 		
 		// compute fork refresh delay
 		if (Fork.LIST.size() > 0) {

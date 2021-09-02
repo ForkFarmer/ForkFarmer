@@ -1,11 +1,18 @@
 package transaction;
 
+import java.awt.Desktop;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.swing.ImageIcon;
@@ -20,22 +27,27 @@ public class Transaction {
 	
 	private static final Set<String> TSET = new HashSet<>();
 	public static final List<Transaction> LIST = new ArrayList<>();
-	public static boolean newTX = false;
 	
 	public final Fork   f;
 	public String hash = "" ;
-	public String amount = "";
+	public double amount;
 	public String target ="";
 	public String date = "";
+	public boolean blockReward;
 	
-	public Transaction(Fork f, String hash, String amount, String target, String date) {
+	public Transaction(Fork f, String hash, double amount, String target, String date, boolean blockReward) {
 		this.f = f;
 		this.hash = hash;
 		this.amount = amount;
 		this.target = target;
 		this.date = date;
+		this.blockReward = blockReward;
 	}
 	
+	public double getAmount() {
+		return amount;
+	}
+
 	public ImageIcon getIcon() {
 		if (null != f.addr)
 			if (f.addr.equals(target))
@@ -43,7 +55,13 @@ public class Transaction {
 		return L_ARROW;
 	}
 	
-	public static void load(Fork f) {
+	public long getTimeSince() {
+		LocalDateTime now = LocalDateTime.now();
+		return Duration.between(LocalDateTime.parse(date, Fork.DTF),now).getSeconds();
+	}
+	
+	public static boolean load(Fork f) {
+		boolean newTX = false;
 		Process p = null;
 		PrintWriter pw = null;
 		BufferedReader br = null;
@@ -58,6 +76,7 @@ public class Transaction {
 			
 			String l = null;
 			while ( null != (l = br.readLine())) {
+				boolean blockReward = false;
 				if (l.contains("c to continue")) {
 					pw.println("c");
 					pw.flush();
@@ -73,31 +92,47 @@ public class Transaction {
 					if (TSET.contains(tHash)) // stop parsing if we already have this transaction
 						continue;
 					TSET.add(tHash);
+					newTX = true;
 					
 					@SuppressWarnings("unused")
 					String status  = br.readLine();
-					String amount = br.readLine().substring(8);
+					String amountStr = br.readLine().substring(8);
+					
+					String firstWord = amountStr.substring(0, amountStr.indexOf(' '));
+					firstWord.replace(",", ".");
+					
+					double amount = Double.parseDouble(firstWord);
 					String address = br.readLine().substring(12);
 					String date = br.readLine().substring(12);
 					
-					Transaction t = new Transaction(f, tHash,amount,address,date); 
+					synchronized (Transaction.class) { 
 					
-					if (!amount.startsWith("0 "))
-						LIST.add(t);
-					newTX = true;
+						Optional<Transaction> oT = LIST.stream().filter(z -> z.f.symbol.equals(f.symbol) && z.date.equals(date)).findAny();
 					
-					if (null != f.addr)
-						continue;
-					
-					String firstWord = amount.substring(0, amount.indexOf(' '));
-					firstWord.replace(",", ".");
-					
-					if (f.rewardTrigger == Double.parseDouble(firstWord))
-						f.addr =  address;
-					else if (firstWord.contentEquals("0.25") || firstWord.contentEquals("0,25")) //default
-						f.addr =  address;
-					else if (firstWord.contentEquals("1E-10")) // probably faucet?
-						f.addr =  address;
+						if (f.rewardTrigger == Double.parseDouble(firstWord))
+							blockReward = true;
+						else if (firstWord.equals("0.25") || firstWord.equals("0,25")) //default
+							blockReward = true;
+						else if (firstWord.equals("1E-10")) // probably faucet?
+							blockReward = true;
+						else if (firstWord.equals("1E-7")) // probably faucet?
+							blockReward = true;
+						else if (f.symbol.equals("NCH") && Math.abs(Double.parseDouble(firstWord) - 2) < .1) 
+							blockReward = true; // super hacky for NCH but butst can do right now
+						if (true == blockReward && null == f.addr)
+							f.addr = address;
+
+						if (oT.isPresent()) {
+							Transaction t = oT.get();
+							t.amount += amount;
+							t.blockReward |= blockReward;
+						} else {
+							Transaction t = new Transaction(f, tHash,amount,address,date, blockReward); 
+							if (0 != amount)
+								LIST.add(t);
+						}
+						
+					}
 
 				}
 
@@ -110,12 +145,27 @@ public class Transaction {
 		Util.closeQuietly(br);
 		Util.closeQuietly(pw);
 		Util.waitForProcess(p);
-
-		if (newTX) {
+		
+		if (newTX)
 			TransactionView.refresh();
-			newTX = false;
-		}
+
+		return newTX;
 		
 	}
-
+	
+	public void browse() {
+		String name = f.name;
+		String addr = target;
+	    try {
+	    	if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+	    		Desktop.getDesktop().browse(new URI("https://" + name + ".posat.io/address/" + addr));
+	    	}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+	
+	}
+	
 }

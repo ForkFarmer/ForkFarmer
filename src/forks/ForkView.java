@@ -1,6 +1,7 @@
 package forks;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -8,12 +9,15 @@ import java.awt.datatransfer.StringSelection;
 import java.util.List;
 
 import javax.swing.Icon;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 
 import main.ForkFarmer;
@@ -33,7 +37,7 @@ public class ForkView extends JPanel {
 	public static Col<Fork> cols[] = new Col[] {
 		new Col<Fork>("",   		22,	Icon.class,		f->f.ico),
 		new Col<Fork>("Symbol",   	50,	String.class, 	f->f.symbol),
-		new Col<Fork>("Balance",	140,String.class, 	Fork::getBalance),
+		new Col<Fork>("Balance",	140,Double.class, 	f ->f.balance),
 		new Col<Fork>("$",			60, Double.class, 	f->f.price),
 		new Col<Fork>("Netspace",	80, NetSpace.class, f->f.netSpace),
 		new Col<Fork>("Height",		80, Integer.class,  f->f.height),
@@ -41,10 +45,13 @@ public class ForkView extends JPanel {
 		new Col<Fork>("Version",	80,  String.class,   f->f.version),
 		new Col<Fork>("Sync",		80,  String.class,   f->f.syncStatus),
 		new Col<Fork>("Farm",		80,  String.class,   f->f.farmStatus),
-		new Col<Fork>("Estimated Win Time",	120,  String.class,   f->f.etw),
+		new Col<Fork>("Estimated Win Time",	140,  String.class,   f->f.etw),
+		new Col<Fork>("24H Win",	60,	Double.class, 	f->f.dayWin),
+		new Col<Fork>("Previous Win",	120,	String.class, 	f->f.getPreviousWin()),
 		new Col<Fork>("Address",	-1,	String.class, 	f->f.addr),
 		new Col<Fork>("Time",		50,	String.class, 	Fork::getReadTime),
 		new Col<Fork>("", 		 	22, Icon.class, 	f->f.statusIcon)
+		
 	};
 	
 	final static ForkTableModel MODEL = new ForkTableModel();	
@@ -70,7 +77,7 @@ public class ForkView extends JPanel {
 			}
 	    }
 	}
-
+	
 	public ForkView() {
 		setLayout(new BorderLayout());
 		add(JSP,BorderLayout.CENTER);
@@ -92,7 +99,6 @@ public class ForkView extends JPanel {
 		POPUP_MENU.add(new SwingEX.JMI("Hide", 		Ico.HIDE,  		ForkView::removeSelected));
 		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.MACHINE,	() -> getSelected().forEach(Fork::showConnections)));
 		
-		
 		JTableHeader header = TABLE.getTableHeader();
 		header.setComponentPopupMenu(HEADER_MENU);
 		
@@ -107,10 +113,31 @@ public class ForkView extends JPanel {
 		cols[8].setSelectView(TABLE, HEADER_MENU, true, false);
 		cols[9].setSelectView(TABLE, HEADER_MENU, true, true);
 		cols[10].setSelectView(TABLE, HEADER_MENU, true, false);
-		cols[11].setSelectView(TABLE, HEADER_MENU, false, true);
-		cols[12].setSelectView(TABLE, HEADER_MENU, false, true);
+		cols[11].setSelectView(TABLE, HEADER_MENU, true, false);
+		cols[12].setSelectView(TABLE, HEADER_MENU, true, false);
 		cols[13].setSelectView(TABLE, HEADER_MENU, false, true);
+		cols[14].setSelectView(TABLE, HEADER_MENU, false, true);
+		cols[15].setSelectView(TABLE, HEADER_MENU, false, true);
+		
+
+		SwingUtil.addToolTipCol(TABLE,1,i -> {return Fork.LIST.get(i).name;});
+		
+		TABLE.getColumnModel().getColumn(2).setCellRenderer(new BalanceRenderer());
 	}
+	
+	class BalanceRenderer extends DefaultTableCellRenderer {
+	    public Component getTableCellRendererComponent(
+	                        JTable table, Object value,
+	                        boolean isSelected, boolean hasFocus,
+	                        int row, int column) {
+	        JLabel c = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+	        setHorizontalAlignment(SwingConstants.RIGHT);
+	        if (c.getText().startsWith("-"))
+	        	c.setText("");
+	        return c;
+	    }
+	}
+
 	
 	static private void staggerStartDialog() {
 		String delay= JOptionPane.showInputDialog(ForkFarmer.FRAME,"Enter Start Interval (Seconds)", "60");
@@ -173,7 +200,7 @@ public class ForkView extends JPanel {
 	
 	static private void removeSelected() {
 		List<Fork> selList = getSelected();
-		selList.forEach(f -> f.cancel = true);
+		selList.forEach(f -> f.hidden = true);
 		Fork.LIST.removeAll(selList);
 		update();
 	}
@@ -207,7 +234,7 @@ public class ForkView extends JPanel {
 	}
 	
 	public static void fireTableLogRead(int row) {
-		MODEL.fireTableCellUpdated(row, 12);
 		MODEL.fireTableCellUpdated(row, 13);
+		MODEL.fireTableCellUpdated(row, 14);
 	}
 }

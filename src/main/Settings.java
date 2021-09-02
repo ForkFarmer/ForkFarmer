@@ -14,18 +14,17 @@ import forks.Fork;
 public class Settings {
 	private static final String SETTINGS_PATH = "FF_Settings.yaml";
 	
+	
 	public static void Load() {
 		InputStream inputStream;
 		try {
 			inputStream = new FileInputStream(new File(SETTINGS_PATH));
 			Yaml yaml = new Yaml();
 			Fork.LIST = yaml.load(inputStream);
-		} catch (FileNotFoundException e) {
-			loadDefaults();
 		} catch (Exception e) {
-			System.out.println("Problem reading FF_Settings.yaml... Loading defaults");
-			loadDefaults();
+			loadDefaults(); // problem reading or parsing settings, use defaults
 		}
+		Fork.LIST.forEach(Fork::loadIcon);
 	}
 	
 	public static void loadDefaults() {
@@ -57,16 +56,21 @@ public class Settings {
 		new Fork("XEQ","Equality", ".equality", "equality-blockchain", 0.0,3.5);
 		new Fork("XSC","Sector", ".sector", "sector-blockchain", .002,.25);
 		new Fork("XFK","Fork", ".fork", "fork-blockchain", 0.0,6.25);
-		new Fork("SCM","Scam", ".scam", "scam-blockchain", 0.00,10);
-		new Fork("CHIVES","Chives", ".chives", "chives-blockchain", 0.0,22.5);
-		new Fork("VAG","Cunt", ".cunt", "cunt-blockchain", 0.0,.25);
+		new Fork("SCM","Scam", ".scam", "scam-blockchain", 0.00,10.0);
+		new Fork("XCC","Chives", ".chives", "chives-blockchain", 0.0,22.5);
+		new Fork("VAG","Cunt", ".cunt", "cunt-blockchain", 0.0,8.625);
 		new Fork("XCL","Caldera", ".caldera", "caldera-blockchain", 0.0,.25);
 		new Fork("SIX","Lucky", ".lucky", "lucky-blockchain", 0.0,4.0);
-		new Fork("XCD","Chiadoge", ".chiadoge", "chiadoge", 0.00,2500);
+		new Fork("XCD","CryptoDoge", ".cryptodoge", "cryptodoge", 0.00,2500);
 		new Fork("SRN","Shamrock", ".shamrock", "shamrock-blockchain", 0.0,.25);
 		new Fork("PIPS","PipsCoin", ".pipscoin", "pipscoin-blockchain", 0.0,5);
 		new Fork("XBR","Beer", ".beernetwork", "beer-blockchain", 0.0,.25);
 		new Fork("FFK","Fishery", ".fishery", "fishery", 0.0,.075);
+		new Fork("XOL","Olive", ".olive", "olive-blockchain", 0.0,.25);
+		new Fork("NCH","NChainExt9", ".chia", "NChainExt9-blockchain", 0.0,-1);
+		new Fork("SSD","SSDCoin", ".ssdcoin", "sddcoin-blockchain", 0.0,.25);
+		new Fork("XKW","Kiwi", ".kiwi", "kiwi-blockchain", 0.0,.25);
+		new Fork("XCHA","XCHA", ".xcha", "xcha-blockchain", 0.0,.25);
 	}
 	
 	public static void Save() {

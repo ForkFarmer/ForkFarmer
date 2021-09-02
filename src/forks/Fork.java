@@ -8,15 +8,18 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.stream.Collectors;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -34,20 +37,17 @@ import util.apache.ReversedLinesFileReader;
 
 public class Fork {
 	transient private static final String NOT_FOUND = "";
-	private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-	public static ScheduledExecutorService SVC = Executors.newScheduledThreadPool(10);
-	public static ScheduledExecutorService LOG_SVC = Executors.newScheduledThreadPool(1);
+	transient public static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	transient public static ScheduledExecutorService SVC = Executors.newScheduledThreadPool(10);
+	transient public static ScheduledExecutorService LOG_SVC = Executors.newScheduledThreadPool(1);
 	transient public ScheduledFuture<?> walletFuture;
 	transient  public ScheduledFuture<?> logFuture;
 	public static List<Fork> LIST = new ArrayList<>();
 	public transient double balance = -1;
 	public transient int height = 0;
 	
-	private static final String icoPath = "icons/forks/";
-	
 	public String symbol;
 	public String exePath;
-	
 	public String name;
 	transient public String version;
 	transient public ImageIcon ico;
@@ -59,14 +59,17 @@ public class Fork {
 	transient public String syncStatus;
 	transient public String farmStatus;
 	transient public int logLines;
+	transient public double dayWin;
+	transient public long prevWinSeconds;
+	
 	public double price;
 	public double rewardTrigger;
 	
 	public String addr;
-	transient public boolean cancel;
+	transient boolean hidden;
 	public String logPath;
 	
-	public Fork() {
+	public Fork() { // needed for YAML
 		
 	}
 		
@@ -78,14 +81,10 @@ public class Fork {
 		DecimalFormat df = new DecimalFormat("###.##");
 		return df.format(readTime);
 	};
-	
-	public String getBalance() {
-		return (-1 == balance) ? "" : Double.toString(balance);
-	};
-	
+		
 	public void loadWallet () {
 		boolean dead = false;
-		if (true == cancel) {
+		if (true == hidden) {
 			walletFuture.cancel(true);
 			return;
 		}
@@ -105,13 +104,18 @@ public class Fork {
 			
 			String l = null;
 			while ( null != (l = br.readLine())) {
+				boolean readBalance = false;
 				if (l.contains("Connection error")) {
 					p.destroyForcibly();
 					dead = true;
 					break;
 				} else if (l.contains("Total Balance: ")) {
 					String balanceStr = Util.getWordAfter(l, "Total Balance: ");
-					balance = Double.parseDouble(balanceStr);
+					NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+					Number n = nf.parse(balanceStr);
+					if (!readBalance || balance <= 0)
+						balance = n.doubleValue();
+					readBalance = true;
 				} else if (l.contains("Wallet height: ")) {
 					String heightStr = l.substring("Wallet height: ".length());
 					height = Integer.parseInt(heightStr);
@@ -131,6 +135,22 @@ public class Fork {
 			} else {
 				Transaction.load(this);
 				loadSummary();
+				
+				synchronized(Transaction.class) {
+					
+					dayWin = Transaction.LIST.stream()
+						.filter(t -> this == t.f && t.blockReward && t.getTimeSince() < (60*60*24))
+						.collect(Collectors.summingDouble(Transaction::getAmount));
+				
+					Optional<Long> prev = Transaction.LIST.stream()
+						.filter(t -> this == t.f && t.blockReward)
+						.map(Transaction::getTimeSince).reduce(Long::min);
+					
+					if (prev.isPresent())
+						prevWinSeconds = prev.get();
+				}
+				
+				
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -167,8 +187,12 @@ public class Fork {
 				} else if (l.contains("Estimated network space: "))
 					netSpace = new NetSpace(l.substring("Estimated network space: ".length()));
 				else if (l.contains("Total size of plots: ")) {
-					plotSpace = new NetSpace(l.substring("Total size of plots: ".length()));
-					MainGui.updatePlotSize(plotSpace);
+					try {
+						plotSpace = new NetSpace(l.substring("Total size of plots: ".length()));
+						MainGui.updatePlotSize(plotSpace);
+					} catch (Exception e) {
+						// nothing to do
+					}
 				} else if (l.contains("Expected time to win: ")) {
 					etw = l.substring("Expected time to win: ".length());
 				} else if (l.contains("Farming status: ")) {
@@ -185,7 +209,7 @@ public class Fork {
 
 	public void readLog() {
 		File logFile = new File(logPath);
-		if (true == cancel) {
+		if (true == hidden) {
 			logFuture.cancel(true);
 			return;
 		} else if (!logFile.exists()) {
@@ -299,8 +323,7 @@ public class Fork {
 	}
 	
 	public void showConnections () {
-		PeerView pv = new PeerView(this);
-		ForkFarmer.showPopup(name + ": Peer Connections", pv);
+		ForkFarmer.showPopup(name + ": Peer Connections", new PeerView(this));
 	}
 	
 	public void refresh() {
@@ -361,16 +384,6 @@ public class Fork {
 		Util.waitForProcess(p);
 	}
 	
-	public void loadIcon() {
-		try {
-			ico = Ico.loadIcon(icoPath + name + ".png",16);
-		} catch (RuntimeException e) {
-			try {
-				ico = Ico.loadIcon(icoPath + name + ".jpg",16);
-			} catch (RuntimeException ee) {}
-		}
-	}
-
 	public Fork(String symbol, String name, String dataPath, String daemonPath, double price, double rewardTrigger) {
 		this.exePath = NOT_FOUND;
 		this.logPath = NOT_FOUND;
@@ -385,31 +398,22 @@ public class Fork {
 		if (System.getProperty("os.name").startsWith("Windows")) {
 			forkBase = userHome + "\\AppData\\Local\\" + daemonPath + "\\";
 			logPath = userHome + "\\" + dataPath.toLowerCase() + "\\mainnet\\log\\debug.log";
+			if (symbol.equals("NCH"))
+				logPath = userHome + "\\.chia\\ext9\\log\\debug.log";
 		} else {
 			forkBase = userHome + "/" + daemonPath + "/";
 			logPath = userHome + "/" + dataPath.toLowerCase() + "/mainnet/log/debug.log";
 		}
 		
-		if (!new File(logPath).exists())
-			exePath = "?";
-		
-		String appPath;
 		try {
 			if (System.getProperty("os.name").startsWith("Windows")) {
-				if ("Spare" == name || "Caldera" == name) {
+				
+				if ("Spare" == name || "Caldera" == name)
 					exePath = forkBase + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
-					if (!new File(exePath).exists())
-						return;
-
-						LIST.add(this);
-				} 
-				
-				appPath = Util.getDir(forkBase, "app");
-				
-				if (name.equals("Chiarose"))
-					exePath = forkBase + appPath + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
+				else if (name.equals("Chiarose"))
+					exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
 				else
-					exePath = forkBase + appPath + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
+					exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
 			} else {
 				exePath = forkBase + "/venv/bin/" + name.toLowerCase();
 			}
@@ -418,10 +422,28 @@ public class Fork {
 				return;
 			
 			LIST.add(this);
-			
 		} catch (IOException e) {
-			
+			// Didn't load the fork for whatever reason
 		}
+	}
+
+	public String getPreviousWin() {
+		if (0 == prevWinSeconds)
+			return "Never";
+		if (prevWinSeconds < 60)
+			return prevWinSeconds + " Seconds";
+		if (prevWinSeconds < 60*60)
+			return (prevWinSeconds /60) + " Minutes";
+		
+		return (prevWinSeconds/60/60) + " Hours";
+	}
+
+	public static Optional<Fork> getBySymbol(String symbol) {
+		return LIST.stream().filter(f -> f.symbol.equals(symbol)).findAny();
+	}
+	
+	public void loadIcon() {
+		ico = Ico.getForkIcon(name);
 	}
 
 }

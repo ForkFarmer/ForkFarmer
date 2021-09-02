@@ -7,7 +7,9 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
+import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -31,6 +33,28 @@ public class SwingUtil {
 			}
 		}
 		return res;
+	}
+	
+	public static void addToolTipCol(JTable table, int i, Function<Integer,String> sup) {
+		table.getColumnModel().getColumn(i).setCellRenderer(new ToolTipRenderer(sup));
+	}
+	
+	@SuppressWarnings("serial")
+	public static class ToolTipRenderer extends DefaultTableCellRenderer {
+		private final Function<Integer,String> fString;
+		
+		public ToolTipRenderer(Function<Integer,String> sup) {
+			this.fString = sup;
+		}
+		
+	    public Component getTableCellRendererComponent(
+	                        JTable table, Object value,
+	                        boolean isSelected, boolean hasFocus,
+	                        int row, int column) {
+	        JLabel c = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+	        c.setToolTipText(fString.apply(row));
+	        return c;
+	    }
 	}
 
 	public static <T> void removeSelected(JTable t, List<T> list) {
@@ -127,5 +151,6 @@ public class SwingUtil {
 		for (Component c : cArray)
 			c.setEnabled(status);
 	}
+	
 	
 }
