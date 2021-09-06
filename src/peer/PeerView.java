@@ -91,10 +91,13 @@ public class PeerView extends JPanel {
 			
 			String l = null;
 			while ( null != (l = br.readLine())) {
-				if (l.contains("FULL_NODE ")) {
+				if (f.symbol.equals("HDD") && l.contains("FULL_NODE ")) {
+					LIST.add(Peer.factorySingleLine(l));
+            	} else if (l.contains("FULL_NODE ")) {
             		String l2 = br.readLine();
-            		LIST.add(new Peer(l + l2));
+            		LIST.add(Peer.factoryMultiLine(l + l2));
             	}
+            		
 			}
 			
 		} catch (IOException e) {
@@ -150,7 +153,9 @@ public class PeerView extends JPanel {
 	public void addPeers() {
 		String[] peers = newPeerField.getText().split("\\s+");
 		
-		for (String p : peers)
+		for (String p : peers) {
+			System.out.println("Running add peer: " + p);
 			Fork.SVC.submit(() -> {Util.runProcessWait(f.exePath,"show","-a", p);});
+		}
 	}
 }

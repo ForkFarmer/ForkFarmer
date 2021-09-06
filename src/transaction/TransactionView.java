@@ -2,6 +2,9 @@ package transaction;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.util.List;
 
 import javax.swing.Icon;
@@ -63,6 +66,7 @@ public class TransactionView extends JPanel {
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
 		POPUP_MENU.add(new SwingEX.JMI("View at posat.io", 	Ico.POSAT, 		() -> getSelected().forEach(Transaction::browse)));
+		POPUP_MENU.add(new SwingEX.JMI("Copy", 				Ico.CLIPBOARD,  TransactionView::copy));
 		
 		SwingUtil.addDoubleClickAction(TABLE, r -> {
 			if (1 != getSelected().size())
@@ -93,6 +97,18 @@ public class TransactionView extends JPanel {
 
 	public static synchronized void refresh() {
 		MODEL.fireTableDataChanged();
+	}
+	
+	static private void copy() {
+		List<Transaction> list = getSelected();
+		StringBuilder sb = new StringBuilder();
+		for (Transaction t: list)
+			if (null != t.target)
+				sb.append(t.target + "\n");
+		
+		StringSelection stringSelection = new StringSelection(sb.toString());
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		clipboard.setContents(stringSelection, null);
 	}
 	
 }

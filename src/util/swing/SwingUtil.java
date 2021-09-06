@@ -51,8 +51,9 @@ public class SwingUtil {
 	                        JTable table, Object value,
 	                        boolean isSelected, boolean hasFocus,
 	                        int row, int column) {
-	        JLabel c = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-	        c.setToolTipText(fString.apply(row));
+	    	int modelIndex = table.convertRowIndexToModel(row); 
+	        JLabel c = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, modelIndex, column);
+	        c.setToolTipText(fString.apply(modelIndex));
 	        return c;
 	    }
 	}

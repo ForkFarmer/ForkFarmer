@@ -56,11 +56,12 @@ public class Fork {
 	transient public NetSpace netSpace;
 	transient public NetSpace plotSpace;
 	transient public String etw;
+	transient public long etwMin;
 	transient public String syncStatus;
 	transient public String farmStatus;
 	transient public int logLines;
 	transient public double dayWin;
-	transient public long prevWinSeconds;
+	transient public Transaction lastWin;
 	
 	public double price;
 	public double rewardTrigger;
@@ -137,17 +138,9 @@ public class Fork {
 				loadSummary();
 				
 				synchronized(Transaction.class) {
-					
 					dayWin = Transaction.LIST.stream()
 						.filter(t -> this == t.f && t.blockReward && t.getTimeSince() < (60*60*24))
 						.collect(Collectors.summingDouble(Transaction::getAmount));
-				
-					Optional<Long> prev = Transaction.LIST.stream()
-						.filter(t -> this == t.f && t.blockReward)
-						.map(Transaction::getTimeSince).reduce(Long::min);
-					
-					if (prev.isPresent())
-						prevWinSeconds = prev.get();
 				}
 				
 				
@@ -195,6 +188,7 @@ public class Fork {
 					}
 				} else if (l.contains("Expected time to win: ")) {
 					etw = l.substring("Expected time to win: ".length());
+					etwMin = Util.etwStringToMinutes(etw);
 				} else if (l.contains("Farming status: ")) {
 					farmStatus = l.substring("Farming status: ".length());
 				} 
@@ -202,7 +196,7 @@ public class Fork {
 		} catch (IOException e) {
 			e.printStackTrace(); 	// TODO Auto-generated catch block
 		}
-
+		ForkView.update(this);
 		Util.waitForProcess(p);
 		Util.closeQuietly(br);
 	}
@@ -267,7 +261,6 @@ public class Fork {
 		};
 		updateReadTime(readTime);
 		Util.closeQuietly(lr);
-		updateLogView();
 	}
 
 	private void updateReadTime(double rt) {
@@ -277,13 +270,14 @@ public class Fork {
 			return;
 		
 		if (farmStatus.startsWith("Farming") && readTime <= 5 && readTime >= 0)
-				statusIcon = Ico.GREEN;
+			statusIcon = Ico.GREEN;
 		else if (farmStatus.startsWith("Farming") && readTime > 5 && readTime < 30)
 			statusIcon = Ico.YELLOW;
 		else if (farmStatus.startsWith("Syncing"))
 			statusIcon = Ico.YELLOW;
 		else
 			statusIcon = Ico.RED;
+		ForkView.updateLogRead(this);
 	}
 
 	private void updateView() {
@@ -291,11 +285,7 @@ public class Fork {
 			statusIcon = Ico.RED;
 		else if (farmStatus.startsWith("Not synced"))
 			statusIcon = Ico.RED;
-		getIndex().ifPresent(ForkView::fireTableRowUpdated);
-	}
-	
-	private void updateLogView() {
-		getIndex().ifPresent(ForkView::fireTableLogRead);
+		ForkView.update(this);
 	}
 	
 	public void start() {
@@ -408,9 +398,9 @@ public class Fork {
 		try {
 			if (System.getProperty("os.name").startsWith("Windows")) {
 				
-				if ("Spare" == name || "Caldera" == name)
+				if ("Spare" == name || "Caldera" == name || "SSDCoin" == name)
 					exePath = forkBase + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
-				else if (name.equals("Chiarose"))
+				else if (name.equals("Chiarose") || name.equals("NChainExt9"))
 					exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
 				else
 					exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
@@ -428,14 +418,14 @@ public class Fork {
 	}
 
 	public String getPreviousWin() {
-		if (0 == prevWinSeconds)
+		if (null == lastWin)
 			return "Never";
-		if (prevWinSeconds < 60)
-			return prevWinSeconds + " Seconds";
-		if (prevWinSeconds < 60*60)
-			return (prevWinSeconds /60) + " Minutes";
-		
-		return (prevWinSeconds/60/60) + " Hours";
+		long previousWinSeconds = lastWin.getTimeSince();
+		if (previousWinSeconds < 60)
+			return previousWinSeconds + " Seconds";
+		if (previousWinSeconds < 60*60)
+			return (previousWinSeconds /60) + " Minutes";
+		return (previousWinSeconds/60/60) + " Hours";
 	}
 
 	public static Optional<Fork> getBySymbol(String symbol) {
@@ -444,6 +434,14 @@ public class Fork {
 	
 	public void loadIcon() {
 		ico = Ico.getForkIcon(name);
+	}
+
+	public String getEffort() {
+		if (etwMin > 0 && null != lastWin) {
+			int effort = (int)(lastWin.getTimeSince() / etwMin);
+			return effort + "%";
+		}
+		return "";
 	}
 
 }

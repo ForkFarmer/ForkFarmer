@@ -18,6 +18,7 @@ import java.util.Set;
 import javax.swing.ImageIcon;
 
 import forks.Fork;
+import forks.ForkView;
 import util.Ico;
 import util.Util;
 
@@ -105,7 +106,7 @@ public class Transaction {
 					String address = br.readLine().substring(12);
 					String date = br.readLine().substring(12);
 					
-					synchronized (Transaction.class) { 
+					synchronized (Transaction.LIST) { 
 					
 						Optional<Transaction> oT = LIST.stream().filter(z -> z.f.symbol.equals(f.symbol) && z.date.equals(date)).findAny();
 					
@@ -146,8 +147,16 @@ public class Transaction {
 		Util.closeQuietly(pw);
 		Util.waitForProcess(p);
 		
-		if (newTX)
+		if (newTX) {
+			synchronized(Transaction.LIST) {
+			// update fork last win handle
+			f.lastWin = LIST.stream()
+					.filter(t -> f == t.f && t.blockReward)
+					.reduce((a,b) -> a.getTimeSince() < b.getTimeSince() ? a:b).orElse(null);
+			}
+			ForkView.updateNewTx(f);
 			TransactionView.refresh();
+		}
 
 		return newTX;
 		

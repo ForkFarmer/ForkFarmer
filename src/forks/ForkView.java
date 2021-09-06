@@ -41,14 +41,16 @@ public class ForkView extends JPanel {
 		new Col<Fork>("$",			60, Double.class, 	f->f.price),
 		new Col<Fork>("Netspace",	80, NetSpace.class, f->f.netSpace),
 		new Col<Fork>("Height",		80, Integer.class,  f->f.height),
-		new Col<Fork>("Farm Size",	80,  NetSpace.class, f->f.plotSpace),
-		new Col<Fork>("Version",	80,  String.class,   f->f.version),
-		new Col<Fork>("Sync",		80,  String.class,   f->f.syncStatus),
-		new Col<Fork>("Farm",		80,  String.class,   f->f.farmStatus),
-		new Col<Fork>("Estimated Win Time",	140,  String.class,   f->f.etw),
+		new Col<Fork>("Farm Size",	80, NetSpace.class, f->f.plotSpace),
+		new Col<Fork>("Version",	80, String.class,   f->f.version),
+		new Col<Fork>("Sync",		80, String.class,   f->f.syncStatus),
+		new Col<Fork>("Farm",		80, String.class,   f->f.farmStatus),
+		new Col<Fork>("ETW",		140,String.class,   f->f.etw),
 		new Col<Fork>("24H Win",	60,	Double.class, 	f->f.dayWin),
-		new Col<Fork>("Previous Win",	120,	String.class, 	f->f.getPreviousWin()),
+		new Col<Fork>("Last Win",	120,String.class, 	f->f.getPreviousWin()),
+		new Col<Fork>("Effort",		60,	String.class, 	f->f.getEffort()),
 		new Col<Fork>("Address",	-1,	String.class, 	f->f.addr),
+		new Col<Fork>("Reward",		40,	Double.class, 	f->f.rewardTrigger),
 		new Col<Fork>("Time",		50,	String.class, 	Fork::getReadTime),
 		new Col<Fork>("", 		 	22, Icon.class, 	f->f.statusIcon)
 		
@@ -65,16 +67,20 @@ public class ForkView extends JPanel {
 			super(cols);
 			onGetRowCount(() -> Fork.LIST.size());
 			onGetValueAt((r, c) -> cols[c].apply(Fork.LIST.get(r)));
-			onisCellEditable((r, c) -> (3 == c));
+			onisCellEditable((r, c) -> (3 == c || 15 == c));
 		}
 		
 		public void setValueAt(Object value, int row, int col) {
-			double newPrice = (double) value;
+			double newValue = (double) value;
 			if (3 == col) {
-				Fork.LIST.get(row).price = newPrice;
+				Fork.LIST.get(row).price = newValue;
 				fireTableCellUpdated(row, col);
 				MainGui.updateBalance();
+			} else if (15 == col) {
+				Fork.LIST.get(row).rewardTrigger = newValue;
+				fireTableCellUpdated(row, col);
 			}
+			
 	    }
 	}
 	
@@ -86,7 +92,7 @@ public class ForkView extends JPanel {
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
 		POPUP_MENU.add(new SwingEX.JMI("Start", 	Ico.START, 		() -> getSelected().forEach(Fork::start)));
-		POPUP_MENU.add(new SwingEX.JMI("Stagger", 	Ico.START,	() -> ForkView.staggerStartDialog()));
+		POPUP_MENU.add(new SwingEX.JMI("Stagger", 	Ico.START,		() -> ForkView.staggerStartDialog()));
 		POPUP_MENU.add(new SwingEX.JMI("Stop", 		Ico.STOP,  		() -> getSelected().forEach(Fork::stop)));
 		POPUP_MENU.addSeparator();
 		
@@ -115,9 +121,11 @@ public class ForkView extends JPanel {
 		cols[10].setSelectView(TABLE, HEADER_MENU, true, false);
 		cols[11].setSelectView(TABLE, HEADER_MENU, true, false);
 		cols[12].setSelectView(TABLE, HEADER_MENU, true, false);
-		cols[13].setSelectView(TABLE, HEADER_MENU, false, true);
+		cols[13].setSelectView(TABLE, HEADER_MENU, true, false);
 		cols[14].setSelectView(TABLE, HEADER_MENU, false, true);
-		cols[15].setSelectView(TABLE, HEADER_MENU, false, true);
+		cols[15].setSelectView(TABLE, HEADER_MENU, true, false);
+		cols[16].setSelectView(TABLE, HEADER_MENU, false, true);
+		cols[17].setSelectView(TABLE, HEADER_MENU, false, true);
 		
 
 		SwingUtil.addToolTipCol(TABLE,1,i -> {return Fork.LIST.get(i).name;});
@@ -229,12 +237,24 @@ public class ForkView extends JPanel {
 		MODEL.fireTableDataChanged();
 	}
 	
-	public static void fireTableRowUpdated(int row) {
+	private static void fireTableRowUpdated(int row) {
 		MODEL.fireTableRowsUpdated(row, row);
 	}
 	
-	public static void fireTableLogRead(int row) {
-		MODEL.fireTableCellUpdated(row, 13);
-		MODEL.fireTableCellUpdated(row, 14);
+	public static void update(Fork f) {
+		f.getIndex().ifPresent(ForkView::fireTableRowUpdated);
+	}
+	
+	public static void updateLogRead(Fork f) {
+		f.getIndex().ifPresent(row -> {
+			MODEL.fireTableCellUpdated(row, 16); // time
+			MODEL.fireTableCellUpdated(row, 17); // status
+		});
+	}
+
+	public static void updateNewTx(Fork f) {
+		f.getIndex().ifPresent(row -> {
+			MODEL.fireTableCellUpdated(row, 12); //last win
+		});
 	}
 }
