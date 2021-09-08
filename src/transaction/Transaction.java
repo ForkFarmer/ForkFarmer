@@ -19,6 +19,9 @@ import javax.swing.ImageIcon;
 
 import forks.Fork;
 import forks.ForkView;
+import types.Balance;
+import types.Effort;
+import types.TimeU;
 import util.Ico;
 import util.Util;
 
@@ -31,24 +34,28 @@ public class Transaction {
 	
 	public final Fork   f;
 	public String hash = "" ;
-	public double amount;
+	public Balance amount;
 	public String target ="";
 	public String date = "";
 	public boolean blockReward;
+	Effort effort;
 	
 	public Transaction(Fork f, String hash, double amount, String target, String date, boolean blockReward) {
 		this.f = f;
 		this.hash = hash;
-		this.amount = amount;
+		this.amount = new Balance(amount);
 		this.target = target;
 		this.date = date;
 		this.blockReward = blockReward;
+		
+		if (getTimeSince().inMinutes() < 3);
+			effort = f.getEffort();
 	}
 	
 	public double getAmount() {
-		return amount;
+		return amount.balance;
 	}
-
+	
 	public ImageIcon getIcon() {
 		if (null != f.addr)
 			if (f.addr.equals(target))
@@ -56,9 +63,9 @@ public class Transaction {
 		return L_ARROW;
 	}
 	
-	public long getTimeSince() {
+	public TimeU getTimeSince() {
 		LocalDateTime now = LocalDateTime.now();
-		return Duration.between(LocalDateTime.parse(date, Fork.DTF),now).getSeconds();
+		return new TimeU(Duration.between(LocalDateTime.parse(date, Fork.DTF),now).getSeconds());
 	}
 	
 	public static boolean load(Fork f) {
@@ -120,12 +127,14 @@ public class Transaction {
 							blockReward = true;
 						else if (f.symbol.equals("NCH") && Math.abs(Double.parseDouble(firstWord) - 2) < .1) 
 							blockReward = true; // super hacky for NCH but butst can do right now
+						else if (f.symbol.equals("XTH") && Math.abs(Double.parseDouble(firstWord) - 4) < .1) 
+							blockReward = true; // super hacky for NCH but butst can do right now
 						if (true == blockReward && null == f.addr)
 							f.addr = address;
 
 						if (oT.isPresent()) {
 							Transaction t = oT.get();
-							t.amount += amount;
+							t.amount.add(amount);
 							t.blockReward |= blockReward;
 						} else {
 							Transaction t = new Transaction(f, tHash,amount,address,date, blockReward); 
@@ -152,7 +161,7 @@ public class Transaction {
 			// update fork last win handle
 			f.lastWin = LIST.stream()
 					.filter(t -> f == t.f && t.blockReward)
-					.reduce((a,b) -> a.getTimeSince() < b.getTimeSince() ? a:b).orElse(null);
+					.reduce((a,b) -> a.getTimeSince().inMinutes() < b.getTimeSince().inMinutes() ? a:b).orElse(null);
 			}
 			ForkView.updateNewTx(f);
 			TransactionView.refresh();

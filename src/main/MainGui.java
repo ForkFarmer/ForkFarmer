@@ -124,10 +124,10 @@ public class MainGui extends JPanel {
 
 	public static void updateBalance() {
 		double totalValue = 0;
-		
+
 		for (Fork f : Fork.LIST)
-			if (f.balance > 0)
-				totalValue += (double)f.price * (double)f.balance;
+			if (f.balance.balance > 0)
+				totalValue += f.price * f.balance.balance;
 		
 		valuelbl.setText("Value: $" + Util.round(totalValue, 2));
 	}

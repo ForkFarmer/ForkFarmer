@@ -21,9 +21,11 @@ public final class Ico {
 	public static final ImageIcon EYE 		= loadIcon("icons/eye.png");
 	public static final ImageIcon HIDE 		= loadIcon("icons/hide.png");
 	public static final ImageIcon REFRESH	= loadIcon("icons/refresh.png");
-	public static final ImageIcon MACHINE	= loadIcon("icons/machine.png");
+	public static final ImageIcon P2P		= loadIcon("icons/conn.png");
 	public static final ImageIcon PLUS		= loadIcon("icons/plus.png");
 	public static final ImageIcon DOLLAR	= loadIcon("icons/dollar.png");
+	public static final ImageIcon CLI		= loadIcon("icons/cli.png");
+	public static final ImageIcon BUG		= loadIcon("icons/bug.png");
 	
 	public static final ImageIcon POSAT		= loadIcon("icons/posat.png",16);
 	

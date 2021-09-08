@@ -8,7 +8,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
 import util.LimitedQueue;
-import util.swing.jfuntable.Col;
 import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
@@ -18,16 +17,14 @@ public class LogView extends JPanel {
 	private final JTable TABLE = new JTable(MODEL);
 	private final JScrollPane JSP = new JScrollPane(TABLE);
 	
-	public static Col<?> cols[] = new Col[] {
-		new Col<>("Time",   		150,	String.class, LogEvent::getTime),
-		new Col<>("Description",  	 -1,	String.class, LogEvent::getDetails)
-	};
-	
-	class LogTableModel extends JFunTableModel {
+	class LogTableModel extends JFunTableModel<LogEvent> {
 		public LogTableModel() {
-			super(cols);
+			
+			addColumn("Time",   		150,	String.class, LogEvent::getTime);
+			addColumn("Description",  	 -1,	String.class, LogEvent::getDetails);
+			
 			onGetRowCount(() -> MSG_QUEUE.size());
-			onGetValueAt((r, c) -> cols[c].apply(MSG_QUEUE.get(r)));
+			onGetValueAt((r, c) -> colList.get(c).apply(MSG_QUEUE.get(r)));
 			onisCellEditable((r, c) -> false);
 		}
 	}
@@ -35,7 +32,9 @@ public class LogView extends JPanel {
 	public LogView() {
 		setLayout(new BorderLayout());
 		add(JSP,BorderLayout.CENTER);
-		Col.adjustWidths(TABLE,cols);
+		
+		MODEL.colList.forEach(c -> c.setSelectView(TABLE,null));
+		
 		//SwingUtil.addDoubleClickAction(TABLE, MSG_QUEUE, LogEvent::view);
 		JSP.setPreferredSize(new Dimension(300,200));
 	}

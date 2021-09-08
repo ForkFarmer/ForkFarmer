@@ -6,15 +6,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.charset.Charset;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -22,6 +21,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
 
 import javax.swing.ImageIcon;
+import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -30,10 +30,15 @@ import main.ForkFarmer;
 import main.MainGui;
 import peer.PeerView;
 import transaction.Transaction;
+import types.Balance;
+import types.Effort;
+import types.ReadTime;
+import types.TimeU;
 import util.Ico;
 import util.NetSpace;
 import util.Util;
 import util.apache.ReversedLinesFileReader;
+import util.swing.SwingEX;
 
 public class Fork {
 	transient private static final String NOT_FOUND = "";
@@ -43,7 +48,7 @@ public class Fork {
 	transient public ScheduledFuture<?> walletFuture;
 	transient  public ScheduledFuture<?> logFuture;
 	public static List<Fork> LIST = new ArrayList<>();
-	public transient double balance = -1;
+	public transient Balance balance = new Balance();
 	public transient int height = 0;
 	
 	public String symbol;
@@ -52,16 +57,16 @@ public class Fork {
 	transient public String version;
 	transient public ImageIcon ico;
 	transient public ImageIcon statusIcon = Ico.GRAY;
-	transient private double readTime;
+	transient ReadTime readTime;
 	transient public NetSpace netSpace;
 	transient public NetSpace plotSpace;
-	transient public String etw;
-	transient public long etwMin;
+	transient public TimeU etw = new TimeU();
 	transient public String syncStatus;
 	transient public String farmStatus;
 	transient public int logLines;
 	transient public double dayWin;
 	transient public Transaction lastWin;
+	transient public Exception lastException;
 	
 	public double price;
 	public double rewardTrigger;
@@ -74,15 +79,6 @@ public class Fork {
 		
 	}
 		
-	public String getReadTime() {
-		if (0 == readTime)
-			return "";
-		if (-2 == readTime)
-			return "Timeout";
-		DecimalFormat df = new DecimalFormat("###.##");
-		return df.format(readTime);
-	};
-		
 	public void loadWallet () {
 		boolean dead = false;
 		if (true == hidden) {
@@ -94,8 +90,6 @@ public class Fork {
 			addr = "*** Not Supported ***";
 			return;
 		}
-		
-		//System.out.println("Refreshing: " + name);
 		
 		Process p = null, p2 = null;
 		BufferedReader br = null, br2 = null;
@@ -111,11 +105,8 @@ public class Fork {
 					dead = true;
 					break;
 				} else if (l.contains("Total Balance: ")) {
-					String balanceStr = Util.getWordAfter(l, "Total Balance: ");
-					NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
-					Number n = nf.parse(balanceStr);
-					if (!readBalance || balance <= 0)
-						balance = n.doubleValue();
+					if (!readBalance || balance.balance <= 0)
+						balance = new Balance(Util.getWordAfter(l, "Total Balance: "));
 					readBalance = true;
 				} else if (l.contains("Wallet height: ")) {
 					String heightStr = l.substring("Wallet height: ".length());
@@ -139,14 +130,14 @@ public class Fork {
 				
 				synchronized(Transaction.class) {
 					dayWin = Transaction.LIST.stream()
-						.filter(t -> this == t.f && t.blockReward && t.getTimeSince() < (60*60*24))
+						.filter(t -> this == t.f && t.blockReward && t.getTimeSince().inMinutes() < (60*24))
 						.collect(Collectors.summingDouble(Transaction::getAmount));
 				}
 				
 				
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			lastException = e;
 			statusIcon = Ico.RED;
 		}
 		
@@ -156,13 +147,13 @@ public class Fork {
 		Util.closeQuietly(br2);
 		Util.waitForProcess(p2);
 		
-		updateReadTime(readTime);
+		updateIcon();
 		MainGui.updateBalance();
 		updateView();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//System.out.println("Done Refreshing: " + name);
+		
 	}
 	
 	private void loadSummary() {
@@ -187,14 +178,13 @@ public class Fork {
 						// nothing to do
 					}
 				} else if (l.contains("Expected time to win: ")) {
-					etw = l.substring("Expected time to win: ".length());
-					etwMin = Util.etwStringToMinutes(etw);
+					etw = new TimeU(l.substring("Expected time to win: ".length()));
 				} else if (l.contains("Farming status: ")) {
 					farmStatus = l.substring("Farming status: ".length());
 				} 
 			}
 		} catch (IOException e) {
-			e.printStackTrace(); 	// TODO Auto-generated catch block
+			lastException = e;
 		}
 		ForkView.update(this);
 		Util.waitForProcess(p);
@@ -217,7 +207,7 @@ public class Fork {
 		try {
 			String s;
 			lr = new ReversedLinesFileReader(logFile,Charset.defaultCharset());
-			readTime = 0;
+			readTime = ReadTime.EMPTY;
 			for (int i = 0; null != (s = lr.readLine()); i++) {
 				
 				if (s.length() < 19)
@@ -238,40 +228,41 @@ public class Fork {
 					break;
 				}	
 				
-				if (0 == readTime) {
+				if (readTime == ReadTime.EMPTY) {
 					if (s.contains("Time: ")) {
 						s = Util.getWordAfter(s, "Time: ");
-						updateReadTime(Double.parseDouble(s));
+						readTime = new ReadTime(Double.parseDouble(s));
 					} else if (s.contains("took: ")) {
 						s = Util.getWordAfter(s, "took: ");
 						if (s.endsWith("."))
 							s = s.substring(0, s.length()-1);
-						updateReadTime(Double.parseDouble(s));
+						readTime = new ReadTime(Double.parseDouble(s));
+						break;
 					} else if (s.contains("WARNING  Respond plots came too late")) {
-						readTime = -2;
+						readTime = ReadTime.TIMEOUT;
+						break;
 					} else if (s.contains("Harvester did not respond")) {
-						readTime = -2;
+						readTime = ReadTime.TIMEOUT;
+						break;
 					}
 				}
 			}
 			
 		} catch (Exception e) {
-			// could not read log;
-			e.printStackTrace();
+			lastException = e;
 		};
-		updateReadTime(readTime);
+		
+		updateIcon();
 		Util.closeQuietly(lr);
 	}
 
-	private void updateReadTime(double rt) {
-		readTime = rt;
-		
+	private void updateIcon() {
 		if (null == farmStatus)
 			return;
 		
-		if (farmStatus.startsWith("Farming") && readTime <= 5 && readTime >= 0)
+		if (farmStatus.startsWith("Farming") && readTime.time <= 5 && readTime.time >= 0)
 			statusIcon = Ico.GREEN;
-		else if (farmStatus.startsWith("Farming") && readTime > 5 && readTime < 30)
+		else if (farmStatus.startsWith("Farming") && readTime.time > 5 && readTime.time < 30)
 			statusIcon = Ico.YELLOW;
 		else if (farmStatus.startsWith("Syncing"))
 			statusIcon = Ico.YELLOW;
@@ -314,6 +305,49 @@ public class Fork {
 	
 	public void showConnections () {
 		ForkFarmer.showPopup(name + ": Peer Connections", new PeerView(this));
+	}
+	
+	public void showLastException () {
+		JPanel exceptionPanel = new JPanel(new BorderLayout());
+		JTextArea jta = new JTextArea();
+		JScrollPane JSP = new JScrollPane(jta);
+		JSP.setPreferredSize(new Dimension(800,300));
+		JMenuBar MENU = new JMenuBar();
+		
+		MENU.add(new SwingEX.Btn("show wallet", Ico.CLI,  () -> {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Running: wallet show");
+			sb.append("ExePath: " + exePath);
+			
+			String ret = Util.runProcessWait(exePath,"wallet","show");
+			sb.append("\n" +  ret);
+			jta.setText(sb.toString());
+		}));
+		
+		MENU.add(new SwingEX.Btn("farm summary", Ico.CLI,  () -> {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Running: wallet show\n");
+			sb.append("ExePath: " + exePath + "\n");
+			
+			String ret = Util.runProcessWait(exePath,"farm","summary");
+			sb.append("\n" +  ret);
+			jta.setText(sb.toString());
+		}));
+		
+		
+		exceptionPanel.add(JSP,BorderLayout.CENTER);
+		exceptionPanel.add(MENU,BorderLayout.PAGE_START);
+		
+		if (null != lastException) {
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			lastException.printStackTrace(pw);
+			String sStackTrace = sw.toString(); // stack trace as a string
+			jta.setText(sStackTrace);
+		} else
+			jta.setText("Congrats! No exceptions found");
+		
+		ForkFarmer.showPopup(name + ": Exception",  exceptionPanel);
 	}
 	
 	public void refresh() {
@@ -418,14 +452,7 @@ public class Fork {
 	}
 
 	public String getPreviousWin() {
-		if (null == lastWin)
-			return "Never";
-		long previousWinSeconds = lastWin.getTimeSince();
-		if (previousWinSeconds < 60)
-			return previousWinSeconds + " Seconds";
-		if (previousWinSeconds < 60*60)
-			return (previousWinSeconds /60) + " Minutes";
-		return (previousWinSeconds/60/60) + " Hours";
+		return (null == lastWin) ? "Never" : lastWin.getTimeSince().toString();
 	}
 
 	public static Optional<Fork> getBySymbol(String symbol) {
@@ -436,12 +463,10 @@ public class Fork {
 		ico = Ico.getForkIcon(name);
 	}
 
-	public String getEffort() {
-		if (etwMin > 0 && null != lastWin) {
-			int effort = (int)(lastWin.getTimeSince() / etwMin);
-			return effort + "%";
-		}
-		return "";
+	public Effort getEffort() {
+		return new Effort((etw.inMinutes() > 0 && null != lastWin) ?
+				(int) (((double)lastWin.getTimeSince().inMinutes() / (double)etw.inMinutes()) * (double)100) : 0);
+		
 	}
 
 }

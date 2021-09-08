@@ -1,7 +1,6 @@
 package forks;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -9,64 +8,60 @@ import java.awt.datatransfer.StringSelection;
 import java.util.List;
 
 import javax.swing.Icon;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.SwingConstants;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 
 import main.ForkFarmer;
 import main.MainGui;
+import types.Balance;
+import types.Effort;
+import types.ReadTime;
+import types.TimeU;
 import util.Ico;
 import util.NetSpace;
 import util.Util;
 import util.swing.SwingEX;
 import util.swing.SwingUtil;
-import util.swing.jfuntable.Col;
 import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
 public class ForkView extends JPanel {
-	@SuppressWarnings("unchecked")
-	
-	public static Col<Fork> cols[] = new Col[] {
-		new Col<Fork>("",   		22,	Icon.class,		f->f.ico),
-		new Col<Fork>("Symbol",   	50,	String.class, 	f->f.symbol),
-		new Col<Fork>("Balance",	140,Double.class, 	f ->f.balance),
-		new Col<Fork>("$",			60, Double.class, 	f->f.price),
-		new Col<Fork>("Netspace",	80, NetSpace.class, f->f.netSpace),
-		new Col<Fork>("Height",		80, Integer.class,  f->f.height),
-		new Col<Fork>("Farm Size",	80, NetSpace.class, f->f.plotSpace),
-		new Col<Fork>("Version",	80, String.class,   f->f.version),
-		new Col<Fork>("Sync",		80, String.class,   f->f.syncStatus),
-		new Col<Fork>("Farm",		80, String.class,   f->f.farmStatus),
-		new Col<Fork>("ETW",		140,String.class,   f->f.etw),
-		new Col<Fork>("24H Win",	60,	Double.class, 	f->f.dayWin),
-		new Col<Fork>("Last Win",	120,String.class, 	f->f.getPreviousWin()),
-		new Col<Fork>("Effort",		60,	String.class, 	f->f.getEffort()),
-		new Col<Fork>("Address",	-1,	String.class, 	f->f.addr),
-		new Col<Fork>("Reward",		40,	Double.class, 	f->f.rewardTrigger),
-		new Col<Fork>("Time",		50,	String.class, 	Fork::getReadTime),
-		new Col<Fork>("", 		 	22, Icon.class, 	f->f.statusIcon)
-		
-	};
-	
-	final static ForkTableModel MODEL = new ForkTableModel();	
+	public static final ForkTableModel MODEL = new ForkTableModel();	
 	public static final JTable TABLE = new JTable(MODEL);
 	private static final JScrollPane JSP = new JScrollPane(TABLE);
 	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
 	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
 	
-	static class ForkTableModel extends JFunTableModel {
+	public static class ForkTableModel extends JFunTableModel<Fork> {
 		public ForkTableModel() {
-			super(cols);
+			super();
+			
+			addColumn("",   		22,	Icon.class,		f->f.ico).showMandatory();
+			addColumn("Symbol",   	50,	String.class, 	f->f.symbol).show();
+			addColumn("Balance",	140,Balance.class, 	f->f.balance).show();
+			addColumn("$",			60, Double.class, 	f->f.price).show();
+			addColumn("Netspace",	80, NetSpace.class, f->f.netSpace).show();
+			addColumn("Height",		80, Integer.class,  f->f.height);
+			addColumn("Farm Size",	80, NetSpace.class, f->f.plotSpace);
+			addColumn("Version",	80, String.class,   f->f.version);
+			addColumn("Sync",		80, String.class,   f->f.syncStatus);
+			addColumn("Farm",		80, String.class,   f->f.farmStatus).show();
+			addColumn("ETW",		140,TimeU.class,    f->f.etw);
+			addColumn("24H Win",	60,	Double.class, 	f->f.dayWin);
+			addColumn("Last Win",	120,TimeU.class, 	f->f.getPreviousWin());
+			addColumn("Effort",		60,	Effort.class, 	Fork::getEffort);
+			addColumn("Address",	-1,	String.class, 	f->f.addr).showMandatory();;
+			addColumn("Reward",		40,	Double.class, 	f->f.rewardTrigger);
+			addColumn("Time",		50,	ReadTime.class, f->f.readTime).show();
+			addColumn("", 			22, Icon.class, 	f->f.statusIcon).showMandatory();
+			
 			onGetRowCount(() -> Fork.LIST.size());
-			onGetValueAt((r, c) -> cols[c].apply(Fork.LIST.get(r)));
+			onGetValueAt((r, c) -> colList.get(c).apply(Fork.LIST.get(r)));
 			onisCellEditable((r, c) -> (3 == c || 15 == c));
 		}
 		
@@ -82,6 +77,7 @@ public class ForkView extends JPanel {
 			}
 			
 	    }
+		
 	}
 	
 	public ForkView() {
@@ -103,49 +99,19 @@ public class ForkView extends JPanel {
 		POPUP_MENU.addSeparator();
 		POPUP_MENU.add(new SwingEX.JMI("Refresh",	Ico.REFRESH,  	ForkView::refresh));
 		POPUP_MENU.add(new SwingEX.JMI("Hide", 		Ico.HIDE,  		ForkView::removeSelected));
-		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.MACHINE,	() -> getSelected().forEach(Fork::showConnections)));
+		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.P2P,	() -> getSelected().forEach(Fork::showConnections)));
+		POPUP_MENU.addSeparator();
+		POPUP_MENU.add(new SwingEX.JMI("Debug",		Ico.BUG,	() -> getSelected().forEach(Fork::showLastException)));
 		
 		JTableHeader header = TABLE.getTableHeader();
 		header.setComponentPopupMenu(HEADER_MENU);
 		
-		cols[0].setSelectView(TABLE, HEADER_MENU, false, true);
-		cols[1].setSelectView(TABLE, HEADER_MENU, false, true);
-		cols[2].setSelectView(TABLE, HEADER_MENU, true, true);
-		cols[3].setSelectView(TABLE, HEADER_MENU, true, true);
-		cols[4].setSelectView(TABLE, HEADER_MENU, true, true);
-		cols[5].setSelectView(TABLE, HEADER_MENU, true, false);
-		cols[6].setSelectView(TABLE, HEADER_MENU, true, false);
-		cols[7].setSelectView(TABLE, HEADER_MENU, true, false);
-		cols[8].setSelectView(TABLE, HEADER_MENU, true, false);
-		cols[9].setSelectView(TABLE, HEADER_MENU, true, true);
-		cols[10].setSelectView(TABLE, HEADER_MENU, true, false);
-		cols[11].setSelectView(TABLE, HEADER_MENU, true, false);
-		cols[12].setSelectView(TABLE, HEADER_MENU, true, false);
-		cols[13].setSelectView(TABLE, HEADER_MENU, true, false);
-		cols[14].setSelectView(TABLE, HEADER_MENU, false, true);
-		cols[15].setSelectView(TABLE, HEADER_MENU, true, false);
-		cols[16].setSelectView(TABLE, HEADER_MENU, false, true);
-		cols[17].setSelectView(TABLE, HEADER_MENU, false, true);
+		MODEL.colList.forEach(c -> c.setSelectView(TABLE,HEADER_MENU));
 		
-
 		SwingUtil.addToolTipCol(TABLE,1,i -> {return Fork.LIST.get(i).name;});
 		
-		TABLE.getColumnModel().getColumn(2).setCellRenderer(new BalanceRenderer());
+		SwingUtil.setColRight(TABLE,2);
 	}
-	
-	class BalanceRenderer extends DefaultTableCellRenderer {
-	    public Component getTableCellRendererComponent(
-	                        JTable table, Object value,
-	                        boolean isSelected, boolean hasFocus,
-	                        int row, int column) {
-	        JLabel c = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-	        setHorizontalAlignment(SwingConstants.RIGHT);
-	        if (c.getText().startsWith("-"))
-	        	c.setText("");
-	        return c;
-	    }
-	}
-
 	
 	static private void staggerStartDialog() {
 		String delay= JOptionPane.showInputDialog(ForkFarmer.FRAME,"Enter Start Interval (Seconds)", "60");
@@ -188,8 +154,7 @@ public class ForkView extends JPanel {
 				continue;
 			
 			for (Fork f: Fork.LIST) {
-				
-				
+
 				if (cols[2].equals(f.symbol)) {
 					if (f.symbol.equals("XCH"))
 						f.price = Double.parseDouble(cols[7]);

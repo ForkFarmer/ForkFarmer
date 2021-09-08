@@ -5,6 +5,7 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -271,52 +272,21 @@ public class Util {
 		return str.substring(0,str.indexOf(" "));
 	}
 
-	public static void runProcessWait(String... args) {
+	public static String runProcessWait(String... args) {
+		ByteArrayOutputStream baos =  new ByteArrayOutputStream();
 		try {
-			startProcess(args).waitFor();
+			Process p = startProcess(args);
+			InputStreamConsumer isc = new InputStreamConsumer(p.getInputStream(), baos);
+			isc.start();	
+			p.waitFor();
+			isc.join();
+			
 		} catch (InterruptedException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return baos.toString();
 		
-	}
-
-	public static long etwStringToMinutes(String etw) {
-		long etw_minutes = 0;
-		
-		long hour_minutes = 60;
-		long day_minutes = 24 * hour_minutes;
-		long week_minutes = 7 * day_minutes;
-		long months_minutes = 43800;
-		long year_minutes = 12 * months_minutes;
-		
-		String[] etwA = etw.split(" ");
-		
-		for (int i = 0; i < etwA.length; i+= 2) {
-			if (etwA[i].equals("and"))
-				i++;
-			if (etwA[i].equals("Never"))
-				return 0;
-			if (etwA[i].equals("Now"))
-				return 0;
-
-			String key = etwA[i+1];
-			long val = Long.parseLong(etwA[i]);
-			
-			if (key.startsWith("year"))
-				etw_minutes += val * year_minutes;
-			if (key.startsWith("month"))
-				etw_minutes += val * months_minutes;
-			if (key.startsWith("week"))
-				etw_minutes += val * week_minutes;
-			if (key.startsWith("day"))
-				etw_minutes += val * day_minutes;
-			if (key.startsWith("hour"))
-				etw_minutes += val * hour_minutes;
-			if (key.startsWith("minute"))
-				etw_minutes += val;
-		}
-		return etw_minutes;
 	}
 	
 }

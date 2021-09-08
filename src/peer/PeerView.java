@@ -28,7 +28,6 @@ import util.Ico;
 import util.Util;
 import util.swing.SwingEX;
 import util.swing.SwingUtil;
-import util.swing.jfuntable.Col;
 import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
@@ -36,28 +35,27 @@ public class PeerView extends JPanel {
 	final List<Peer> LIST = new ArrayList<>();
 	final Fork f;
 	
-	@SuppressWarnings("unchecked")
-	public static Col<Peer> cols[] = new Col[] {
-		new Col<Peer>("Address",   	-1,		String.class,	p->p.address),
-		new Col<Peer>("Height",   	80,		String.class,	p->p.height),
-		new Col<Peer>("Time",  		160,	String.class,	p->p.time),
-		new Col<Peer>("Upload",   	80,		double.class, 	p->p.ul),
-		new Col<Peer>("Dowload",   	80,		double.class, 	p->p.dl)
-	};
-	
 	final PeerTableModel MODEL = new PeerTableModel();
 	private final JTable TABLE = new JTable(MODEL);
 	private final JScrollPane JSP = new JScrollPane(TABLE);
 	
 	private final JButton addPeers = new SwingEX.Btn("Add Peers", Ico.PLUS, () -> {addPeers();});
 	private final JButton copyPeers = new SwingEX.Btn("Copy", 	Ico.CLIPBOARD,  () -> {copy();});
+	private final JButton copyCLI = new SwingEX.Btn("CLI Copy", Ico.CLI,  () -> {copyCLI();});
 	private final JTextField newPeerField = new JTextField();
 	
-	class PeerTableModel extends JFunTableModel {
+	class PeerTableModel extends JFunTableModel<Peer> {
 		public PeerTableModel() {
-			super(cols);
+			super();
+			
+			addColumn("Address",   	-1,		String.class,	p->p.address);
+			addColumn("Height",   	80,		String.class,	p->p.height);
+			addColumn("Time",  		160,	String.class,	p->p.time);
+			addColumn("Upload",   	80,		double.class, 	p->p.ul);
+			addColumn("Dowload",   	80,		double.class, 	p->p.dl);
+			
 			onGetRowCount(() -> LIST.size());
-			onGetValueAt((r, c) -> cols[c].apply(LIST.get(r)));
+			onGetValueAt((r, c) -> colList.get(c).apply(LIST.get(r)));
 			onisCellEditable((r, c) -> false);
 		}
 	}
@@ -67,17 +65,22 @@ public class PeerView extends JPanel {
 		setLayout(new BorderLayout());
 //		setBorder(new TitledBorder("Peer Connections:"));
 		add(JSP,BorderLayout.CENTER);
-		Col.adjustWidths(TABLE,cols);
+		
+		MODEL.colList.forEach(c -> c.setSelectView(TABLE,null));
+		
+		
 		JSP.setPreferredSize(new Dimension(600,250));
 		
 		JMenuBar MENU = new JMenuBar();
 		MENU.add(copyPeers);
+		MENU.add(copyCLI);
 		MENU.add(new JSeparator());
 		MENU.add(addPeers);
 		MENU.add(newPeerField);
 		
 		addPeers.setEnabled(false);
 		copyPeers.setEnabled(false);
+		copyCLI.setEnabled(false);
 		
 		addPeers.setToolTipText("Peer format ip:port delimited by space");
 		
@@ -110,6 +113,7 @@ public class PeerView extends JPanel {
 		    @Override
 		    public void valueChanged(ListSelectionEvent event) {
 		    	copyPeers.setEnabled(TABLE.getSelectedRow() > -1);
+		    	copyCLI.setEnabled(TABLE.getSelectedRow() > -1);
 		    }
 		});
 		
@@ -135,6 +139,20 @@ public class PeerView extends JPanel {
 		MODEL.fireTableDataChanged();
 	}
 	
+	private void copyCLI() {
+		List<Peer> peerList = SwingUtil.getSelected(TABLE, LIST);
+		StringBuilder sb = new StringBuilder();
+		for (Peer p: peerList)
+			if (null != p.address)
+				sb.append(f.name + " show -a " + p.address + "\n");
+		
+		StringSelection stringSelection = new StringSelection(sb.toString());
+		
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		clipboard.setContents(stringSelection, null);
+		
+	}
+
 	private void copy() {
 		List<Peer> peerList = SwingUtil.getSelected(TABLE, LIST);
 		StringBuilder sb = new StringBuilder();
@@ -153,9 +171,7 @@ public class PeerView extends JPanel {
 	public void addPeers() {
 		String[] peers = newPeerField.getText().split("\\s+");
 		
-		for (String p : peers) {
-			System.out.println("Running add peer: " + p);
+		for (String p : peers)
 			Fork.SVC.submit(() -> {Util.runProcessWait(f.exePath,"show","-a", p);});
-		}
 	}
 }

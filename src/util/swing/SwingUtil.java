@@ -153,5 +153,11 @@ public class SwingUtil {
 			c.setEnabled(status);
 	}
 	
+	public static void setColRight(JTable t, int i) {
+		DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+		rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
+		t.getColumnModel().getColumn(i).setCellRenderer(rightRenderer);
+	}
+	
 	
 }

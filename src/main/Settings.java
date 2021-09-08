@@ -5,15 +5,40 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.List;
 
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import forks.Fork;
+import forks.ForkView;
+import util.swing.jfuntable.Col;
 
 public class Settings {
 	private static final String SETTINGS_PATH = "FF_Settings.yaml";
 	
+	List<Fork> forkList;
+	List<Col<Fork>> fvColList;
+	
+	public Settings() {
+		
+	}
+	
+	 public List<Fork> getforkList(){
+		 return forkList;
+	 }
+	 
+	 public void setforkList(List<Fork> list){
+		 forkList = list;
+	 }
+	 
+	 public List<Col<Fork>> getfvColList(){
+		 return fvColList;
+	 }
+	 
+	 public void setfvColList(List<Col<Fork>> list){
+		 fvColList = list;
+	 }
 	
 	public static void Load() {
 		InputStream inputStream;
@@ -25,6 +50,7 @@ public class Settings {
 			loadDefaults(); // problem reading or parsing settings, use defaults
 		}
 		Fork.LIST.forEach(Fork::loadIcon);
+		ForkView.update();
 	}
 	
 	public static void loadDefaults() {
@@ -73,9 +99,14 @@ public class Settings {
 		new Fork("XKW","Kiwi", ".kiwi", "kiwi-blockchain", 0.0,.25);
 		new Fork("XCHA","XCHA", ".xcha", "xcha-blockchain", 0.0,.25);
 		new Fork("XBT","Beet", ".beet", "beet-blockchain", 0.0,.25);
+
+		new Fork("XTH","Thyme", ".thyme", "thyme-blockchain", 0.0,.25);
+		new Fork("LLC","LittleLamboCoin", ".thyme", "thyme-blockchain", 0.0,.25);
+		new Fork("XACH","Achi", ".achi", "achi-blockchain", 0.0,.25);
+		new Fork("OZT","GoldCoin", ".goldcoin", "goldcoin-blockchain", 0.0,.25);
 	}
 	
-	public static void Save() {
+	public void Save() {
 		DumperOptions options = new DumperOptions();
 		options.setIndent(2);
 		options.setPrettyFlow(true);
