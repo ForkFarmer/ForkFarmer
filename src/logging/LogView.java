@@ -45,5 +45,7 @@ public class LogView extends JPanel {
 		MODEL.fireTableDataChanged();
 		TABLE.scrollRectToVisible(TABLE.getCellRect(idx, 0, true));
 	}
+
+	
 	
 }

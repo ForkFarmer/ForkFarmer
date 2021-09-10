@@ -2,16 +2,23 @@ package forks;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
+import javax.swing.DropMode;
 import javax.swing.Icon;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.table.JTableHeader;
@@ -22,11 +29,15 @@ import types.Balance;
 import types.Effort;
 import types.ReadTime;
 import types.TimeU;
+import util.FFUtil;
 import util.Ico;
 import util.NetSpace;
 import util.Util;
+import util.apache.ReversedLinesFileReader;
+import util.swing.Reorderable;
 import util.swing.SwingEX;
 import util.swing.SwingUtil;
+import util.swing.TableRowTransferHandler;
 import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
@@ -37,21 +48,23 @@ public class ForkView extends JPanel {
 	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
 	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
 	
-	public static class ForkTableModel extends JFunTableModel<Fork> {
+	public static class ForkTableModel extends JFunTableModel<Fork> implements Reorderable {
 		public ForkTableModel() {
 			super();
 			
 			addColumn("",   		22,	Icon.class,		f->f.ico).showMandatory();
 			addColumn("Symbol",   	50,	String.class, 	f->f.symbol).show();
+			addColumn("Name",   	80,	String.class, 	f->f.name);
 			addColumn("Balance",	140,Balance.class, 	f->f.balance).show();
 			addColumn("$",			60, Double.class, 	f->f.price).show();
+			//addColumn("Est. $/Mth",	80, Double.class, 	f->f.estEarn);
 			addColumn("Netspace",	80, NetSpace.class, f->f.netSpace).show();
 			addColumn("Height",		80, Integer.class,  f->f.height);
 			addColumn("Farm Size",	80, NetSpace.class, f->f.plotSpace);
 			addColumn("Version",	80, String.class,   f->f.version);
 			addColumn("Sync",		80, String.class,   f->f.syncStatus);
 			addColumn("Farm",		80, String.class,   f->f.farmStatus).show();
-			addColumn("ETW",		140,TimeU.class,    f->f.etw);
+			addColumn("ETW",		150,TimeU.class,    f->f.etw);
 			addColumn("24H Win",	60,	Double.class, 	f->f.dayWin);
 			addColumn("Last Win",	120,TimeU.class, 	f->f.getPreviousWin());
 			addColumn("Effort",		60,	Effort.class, 	Fork::getEffort);
@@ -62,23 +75,41 @@ public class ForkView extends JPanel {
 			
 			onGetRowCount(() -> Fork.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Fork.LIST.get(r)));
-			onisCellEditable((r, c) -> (3 == c || 15 == c));
+			onisCellEditable((r, c) -> (4 == c || 17 == c));
 		}
 		
 		public void setValueAt(Object value, int row, int col) {
 			double newValue = (double) value;
-			if (3 == col) {
+			if (4 == col) {
 				Fork.LIST.get(row).price = newValue;
 				fireTableCellUpdated(row, col);
 				MainGui.updateBalance();
-			} else if (15 == col) {
+			} else if (17 == col) {
 				Fork.LIST.get(row).rewardTrigger = newValue;
 				fireTableCellUpdated(row, col);
 			}
 			
 	    }
-		
+
+		@Override
+		public void reorder(int fromIndex, int toIndex) {
+			synchronized (Fork.LIST) {
+				SwingUtil.mapViewToModel(TABLE,Fork.LIST);
+						
+				fromIndex = TABLE.convertRowIndexToModel(fromIndex);
+				toIndex = TABLE.convertRowIndexToModel(toIndex);
+				 
+				if (toIndex > fromIndex) // need account from 'remove' in toIndx
+					toIndex--;
+				 
+					Fork f = Fork.LIST.remove(fromIndex);
+					Fork.LIST.add(toIndex, f);
+				}
+				ForkView.update();
+		}
 	}
+	
+	
 	
 	public ForkView() {
 		setLayout(new BorderLayout());
@@ -95,13 +126,17 @@ public class ForkView extends JPanel {
 		POPUP_MENU.add(new SwingEX.JMI("View Log", 	Ico.EYE,  		ForkView::viewLog));
 		//POPUP_MENU.add(new SwingEX.JMI("New Addr", 	Ico.GEAR, 		() -> getSelected().forEach(Fork::generate)));
 		POPUP_MENU.add(new SwingEX.JMI("Copy", 		Ico.CLIPBOARD,  ForkView::copy));
-		POPUP_MENU.add(new SwingEX.JMI("Update", 	Ico.DOLLAR,  	ForkView::updatePrices));
+		
+		JMenuItem update = new SwingEX.JMI("Update", 	Ico.DOLLAR,  	() -> new Thread(ForkView::updatePrices).start());
+		update.setToolTipText("from xchforks.com");
+		
+		POPUP_MENU.add(update);
 		POPUP_MENU.addSeparator();
 		POPUP_MENU.add(new SwingEX.JMI("Refresh",	Ico.REFRESH,  	ForkView::refresh));
 		POPUP_MENU.add(new SwingEX.JMI("Hide", 		Ico.HIDE,  		ForkView::removeSelected));
-		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.P2P,	() -> getSelected().forEach(Fork::showConnections)));
+		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.P2P,		() -> getSelected().forEach(Fork::showConnections)));
 		POPUP_MENU.addSeparator();
-		POPUP_MENU.add(new SwingEX.JMI("Debug",		Ico.BUG,	() -> getSelected().forEach(Fork::showLastException)));
+		POPUP_MENU.add(new SwingEX.JMI("Debug",		Ico.BUG,		() -> getSelected().forEach(Fork::showLastException)));
 		
 		JTableHeader header = TABLE.getTableHeader();
 		header.setComponentPopupMenu(HEADER_MENU);
@@ -110,7 +145,11 @@ public class ForkView extends JPanel {
 		
 		SwingUtil.addToolTipCol(TABLE,1,i -> {return Fork.LIST.get(i).name;});
 		
-		SwingUtil.setColRight(TABLE,2);
+		SwingUtil.setColRight(TABLE,3);
+		
+		TABLE.setDragEnabled(true);
+		TABLE.setDropMode(DropMode.INSERT_ROWS);
+		TABLE.setTransferHandler(new TableRowTransferHandler(TABLE));
 	}
 	
 	static private void staggerStartDialog() {
@@ -133,38 +172,18 @@ public class ForkView extends JPanel {
 	}
 	
 	static private void updatePrices() {
-		JPanel logPanel = new JPanel(new BorderLayout());
-		JTextArea jta = new JTextArea();
-		JScrollPane JSP = new JScrollPane(jta);
-		JSP.setPreferredSize(new Dimension(900,600));
-		logPanel.add(JSP,BorderLayout.CENTER);
+		Map<String,Double> priceMap = FFUtil.getPrices();
 		
-		ForkFarmer.showPopup("Paste xchforks.com table", logPanel);
-		
-		String xchForksTable = jta.getText();
-		
-		String[] rows = xchForksTable.split("\n");
-		
-		for (String row : rows) {
-			row = row.replaceAll("\t", " ");
-			row = row.replaceAll("\\s+", " ");
-			String[] cols = row.split(" ");
+		for(Entry<String,Double> priceEntry : priceMap.entrySet()) {
+			String forkName = priceEntry.getKey();
 			
-			if (cols.length < 9)
-				continue;
-			
-			for (Fork f: Fork.LIST) {
-
-				if (cols[2].equals(f.symbol)) {
-					if (f.symbol.equals("XCH"))
-						f.price = Double.parseDouble(cols[7]);
-					else
-						f.price = Double.parseDouble(cols[8]);
-				}
-			}
-		
-			update();
+			Fork.LIST.stream()
+				.filter(f -> f.name.equals(forkName)).findAny()
+				.ifPresent(f -> f.price = priceEntry.getValue());
 		}
+		
+		update();
+		
 	}
 	
 	static private void refresh() {
@@ -179,19 +198,38 @@ public class ForkView extends JPanel {
 	}
 
 	static private void viewLog() {
-		getSelected().forEach(Fork::viewLog);
+		JPanel logPanel = new JPanel(new BorderLayout());
+		JTabbedPane JTP = new JTabbedPane();
+		logPanel.add(JTP,BorderLayout.CENTER);
+		
+		for (Fork f : getSelected()) {
+			File logFile = new File(f.logPath);
+			JTextArea jta = new JTextArea();
+			JScrollPane JSP = new JScrollPane(jta);
+			JSP.setPreferredSize(new Dimension(1200,500));
+			JTP.addTab(f.name + " log",f.ico,JSP);
+			
+			ReversedLinesFileReader lr = null;
+			try {
+				lr = new ReversedLinesFileReader(logFile,Charset.defaultCharset());
+				List<String> SL = lr.readLines(50);
+				String output = String.join("\n", SL);
+				jta.setText(output);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			};
+			Util.closeQuietly(lr);
+		}
+		
+		ForkFarmer.showPopup("LogView:", logPanel);
+		
 	}
 	
 	static private void copy() {
-		List<Fork> forkList = getSelected();
-		StringBuilder sb = new StringBuilder();
-		for (Fork f: forkList)
-			if (null != f.addr)
-				sb.append(f.addr + "\n");
-		
-		StringSelection stringSelection = new StringSelection(sb.toString());
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		clipboard.setContents(stringSelection, null);
+		String addrs = getSelected().stream()
+				.map(f -> f.addr).filter(Objects::nonNull)
+				.collect(Collectors.joining("\n"));
+		Util.copyToClip(addrs);
 	}
 	
 	private static List<Fork> getSelected() {
@@ -212,14 +250,20 @@ public class ForkView extends JPanel {
 	
 	public static void updateLogRead(Fork f) {
 		f.getIndex().ifPresent(row -> {
-			MODEL.fireTableCellUpdated(row, 16); // time
-			MODEL.fireTableCellUpdated(row, 17); // status
+			MODEL.fireTableCellUpdated(row, 18); // time
+			MODEL.fireTableCellUpdated(row, 19); // status
+		});
+	}
+	
+	public static void updateBalance(Fork f) {
+		f.getIndex().ifPresent(row -> {
+			MODEL.fireTableCellUpdated(row, 3); // balance
 		});
 	}
 
 	public static void updateNewTx(Fork f) {
 		f.getIndex().ifPresent(row -> {
-			MODEL.fireTableCellUpdated(row, 12); //last win
+			MODEL.fireTableCellUpdated(row, 14); //last win
 		});
 	}
 }

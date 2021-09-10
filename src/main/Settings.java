@@ -12,6 +12,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import forks.Fork;
 import forks.ForkView;
+import util.swing.SwingUtil;
 import util.swing.jfuntable.Col;
 
 public class Settings {
@@ -104,9 +105,14 @@ public class Settings {
 		new Fork("LLC","LittleLamboCoin", ".thyme", "thyme-blockchain", 0.0,.25);
 		new Fork("XACH","Achi", ".achi", "achi-blockchain", 0.0,.25);
 		new Fork("OZT","GoldCoin", ".goldcoin", "goldcoin-blockchain", 0.0,.25);
+		new Fork("STOR","Stor", ".stor", "stor-blockchain", 0.0,.25);
 	}
 	
 	public void Save() {
+		synchronized (Fork.LIST) {
+			SwingUtil.mapViewToModel(ForkView.TABLE,Fork.LIST);
+		}
+		
 		DumperOptions options = new DumperOptions();
 		options.setIndent(2);
 		options.setPrettyFlow(true);

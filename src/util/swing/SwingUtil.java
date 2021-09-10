@@ -19,6 +19,8 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.text.JTextComponent;
 
+import forks.Fork;
+
 public class SwingUtil {
 	
 	public static <T> List<T> getSelected(JTable t,List<T> list) {
@@ -157,6 +159,17 @@ public class SwingUtil {
 		DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
 		rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
 		t.getColumnModel().getColumn(i).setCellRenderer(rightRenderer);
+	}
+
+	public static void mapViewToModel(JTable table, List<Fork> lIST) {
+		Fork[] mapping = new Fork[Fork.LIST.size()];
+		for (int i = 0; i < mapping.length; i++)
+			mapping[i] = Fork.LIST.get(table.convertRowIndexToModel(i));
+		Fork.LIST.clear();
+		table.getRowSorter().setSortKeys(null);
+		for (int i = 0; i < mapping.length; i++)
+			Fork.LIST.add(mapping[i]);
+		
 	}
 	
 	

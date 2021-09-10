@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.swing.ImageIcon;
@@ -65,6 +66,7 @@ public class Fork {
 	transient public String farmStatus;
 	transient public int logLines;
 	transient public double dayWin;
+	transient public double estEarn;
 	transient public Transaction lastWin;
 	transient public Exception lastException;
 	
@@ -108,6 +110,7 @@ public class Fork {
 					if (!readBalance || balance.balance <= 0)
 						balance = new Balance(Util.getWordAfter(l, "Total Balance: "));
 					readBalance = true;
+					ForkView.updateBalance(this);
 				} else if (l.contains("Wallet height: ")) {
 					String heightStr = l.substring("Wallet height: ".length());
 					height = Integer.parseInt(heightStr);
@@ -120,6 +123,8 @@ public class Fork {
 				p2 = Util.startProcess(exePath, "version");
 				br2 = new BufferedReader(new InputStreamReader(p2.getInputStream()));
 				version = br2.readLine();
+				if (!p2.waitFor(2, TimeUnit.SECONDS))
+					p2.destroyForcibly();
 			}
 			
 			if (dead) {
@@ -179,6 +184,7 @@ public class Fork {
 					}
 				} else if (l.contains("Expected time to win: ")) {
 					etw = new TimeU(l.substring("Expected time to win: ".length()));
+					estEarn = 43800 / etw.inMinutes() * price;
 				} else if (l.contains("Farming status: ")) {
 					farmStatus = l.substring("Farming status: ".length());
 				} 
@@ -261,6 +267,8 @@ public class Fork {
 			return;
 		
 		if (farmStatus.startsWith("Farming") && readTime.time <= 5 && readTime.time >= 0)
+			statusIcon = Ico.GREEN;
+		else if (farmStatus.startsWith("Farming") && readTime == ReadTime.EMPTY)
 			statusIcon = Ico.GREEN;
 		else if (farmStatus.startsWith("Farming") && readTime.time > 5 && readTime.time < 30)
 			statusIcon = Ico.YELLOW;
@@ -354,29 +362,6 @@ public class Fork {
 		SVC.submit(() -> loadWallet());
 	}
 	
-	public void viewLog() {
-		File logFile = new File(logPath);
-		JPanel logPanel = new JPanel(new BorderLayout());
-		JTextArea jta = new JTextArea();
-		JScrollPane JSP = new JScrollPane(jta);
-		JSP.setPreferredSize(new Dimension(1200,500));
-		logPanel.add(JSP,BorderLayout.CENTER);
-		
-		ReversedLinesFileReader lr = null;
-		try {
-			lr = new ReversedLinesFileReader(logFile,Charset.defaultCharset());
-			List<String> SL = lr.readLines(30);
-			String output = String.join("\n", SL);
-			jta.setText(output);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		};
-		Util.closeQuietly(lr);
-		
-		ForkFarmer.showPopup(name + " log", logPanel);
-		
-	}
-
 	public Optional<Integer> getIndex() {
 		synchronized (LIST) {
 			int idx = LIST.indexOf(this);
@@ -432,9 +417,9 @@ public class Fork {
 		try {
 			if (System.getProperty("os.name").startsWith("Windows")) {
 				
-				if ("Spare" == name || "Caldera" == name || "SSDCoin" == name)
+				if ("Spare" == name || "Caldera" == name || "SSDCoin" == name || name.equals("Stor"))
 					exePath = forkBase + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
-				else if (name.equals("Chiarose") || name.equals("NChainExt9"))
+				else if (name.equals("Chiarose") || name.equals("NChainExt9") )
 					exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
 				else
 					exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
@@ -451,8 +436,8 @@ public class Fork {
 		}
 	}
 
-	public String getPreviousWin() {
-		return (null == lastWin) ? "Never" : lastWin.getTimeSince().toString();
+	public TimeU getPreviousWin() {
+		return (null == lastWin) ? TimeU.NEVER : lastWin.getTimeSince();
 	}
 
 	public static Optional<Fork> getBySymbol(String symbol) {

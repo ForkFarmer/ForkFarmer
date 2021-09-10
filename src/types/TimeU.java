@@ -1,6 +1,7 @@
 package types;
 
 public class TimeU implements Comparable<TimeU> {
+	public static final TimeU NEVER = new TimeU("Never",0);
 	String str = "";
 	long minutes;
 	
@@ -16,6 +17,11 @@ public class TimeU implements Comparable<TimeU> {
 	
 	public TimeU() {
 		// TODO Auto-generated constructor stub
+	}
+	
+	public TimeU(String s, long m) {
+		str = s;
+		minutes = m;
 	}
 	
 	public TimeU(long seconds) {
