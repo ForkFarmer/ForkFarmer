@@ -6,9 +6,7 @@ Discord: https://discord.gg/vhwVg5kKNR
 
 Requires JRE 1.8 or greater to run: https://www.java.com/en/download/
 
-Uses JTatto look-and-feel: http://jtattoo.net/
-
-![ff_1b](https://user-images.githubusercontent.com/66434789/130903066-20765f25-0613-4f43-bdff-1e04d46a3e16.png)
+![ff](https://user-images.githubusercontent.com/66434789/133337859-3cb74582-9757-44a5-9ee1-c1730a03dd47.png)
 
 # Donations
 https://xchforkmerch.creator-spring.com/listing/got-forks?product=369
