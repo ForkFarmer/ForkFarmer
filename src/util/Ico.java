@@ -26,6 +26,7 @@ public final class Ico {
 	public static final ImageIcon DOLLAR	= loadIcon("icons/dollar.png");
 	public static final ImageIcon CLI		= loadIcon("icons/cli.png");
 	public static final ImageIcon BUG		= loadIcon("icons/bug.png");
+	public static final ImageIcon WALLET	= loadIcon("icons/wallet.png",16);
 	
 	public static final ImageIcon POSAT		= loadIcon("icons/posat.png",16);
 	

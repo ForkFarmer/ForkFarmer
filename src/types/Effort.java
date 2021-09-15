@@ -1,6 +1,8 @@
 package types;
 
 public class Effort implements Comparable<Effort> {
+	public static Effort EMPTY = new Effort(-1);
+	
 	int effort;
 	
 	public Effort(int e) {

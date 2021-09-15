@@ -83,15 +83,14 @@ public class MainGui extends JPanel {
 		
 		// compute fork refresh delay
 		if (Fork.LIST.size() > 0) {
-		long delayStep = (long)(120/Fork.LIST.size());
-		long delay = 0;
-		for (Fork f: Fork.LIST) {
-			Fork.SVC.submit(() -> f.loadWallet());
-			Fork.LOG_SVC.submit(() -> f.readLog());
-			f.walletFuture =  Fork.SVC.scheduleAtFixedRate(() -> f.loadWallet(), delay, 120, TimeUnit.SECONDS);
-			f.logFuture =  Fork.LOG_SVC.scheduleAtFixedRate(() -> f.readLog(), delay, 10, TimeUnit.SECONDS);
-			delay += delayStep;
-		}
+			long delayStep = (long)(120/Fork.LIST.size());
+			long delay = 0;
+			for (Fork f: Fork.LIST) {
+				Fork.SVC.submit(() -> f.loadWallet());
+				f.walletFuture =  Fork.SVC.scheduleAtFixedRate(() -> f.loadWallet(), 120 + delay, 120, TimeUnit.SECONDS);
+				delay += delayStep;
+			}
+			new Thread(ForkView::logReader).start();
 		}
 		
 		numForks = Fork.LIST.size();
@@ -108,7 +107,6 @@ public class MainGui extends JPanel {
 				f.sendTX(address,targetAmt.getText(),targetFee.getText());
 				targetAddress.setText("");
 				targetAmt.setText("");
-				targetFee.setText("");
 				return;
 			}
 		}

@@ -2,9 +2,12 @@ package forks;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -13,6 +16,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.DropMode;
 import javax.swing.Icon;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -22,6 +26,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumnModel;
 
 import main.ForkFarmer;
 import main.MainGui;
@@ -29,6 +34,7 @@ import types.Balance;
 import types.Effort;
 import types.ReadTime;
 import types.TimeU;
+import types.Wallet;
 import util.FFUtil;
 import util.Ico;
 import util.NetSpace;
@@ -55,27 +61,28 @@ public class ForkView extends JPanel {
 			addColumn("",   		22,	Icon.class,		f->f.ico).showMandatory();
 			addColumn("Symbol",   	50,	String.class, 	f->f.symbol).show();
 			addColumn("Name",   	80,	String.class, 	f->f.name);
-			addColumn("Balance",	140,Balance.class, 	f->f.balance).show();
+			addColumn("Balance",	120,Balance.class, 	f->f.balance).show();
 			addColumn("$",			60, Double.class, 	f->f.price).show();
 			//addColumn("Est. $/Mth",	80, Double.class, 	f->f.estEarn);
 			addColumn("Netspace",	80, NetSpace.class, f->f.netSpace).show();
-			addColumn("Height",		80, Integer.class,  f->f.height);
+			addColumn("Height",		80, Balance.class,  f->f.height);
 			addColumn("Farm Size",	80, NetSpace.class, f->f.plotSpace);
 			addColumn("Version",	80, String.class,   f->f.version);
 			addColumn("Sync",		80, String.class,   f->f.syncStatus);
 			addColumn("Farm",		80, String.class,   f->f.farmStatus).show();
-			addColumn("ETW",		150,TimeU.class,    f->f.etw);
+			addColumn("ETW",		70, TimeU.class,    f->f.etw);
 			addColumn("24H Win",	60,	Double.class, 	f->f.dayWin);
-			addColumn("Last Win",	120,TimeU.class, 	f->f.getPreviousWin());
+			addColumn("Last Win",	90, TimeU.class, 	f->f.getPreviousWin());
 			addColumn("Effort",		60,	Effort.class, 	Fork::getEffort);
-			addColumn("Address",	-1,	String.class, 	f->f.addr).showMandatory();;
+			addColumn("Address",	-1,	Wallet.class, 	f->f.wallet).showMandatory();;
 			addColumn("Reward",		40,	Double.class, 	f->f.rewardTrigger);
+			addColumn("#W",			40,	Integer.class, 	f->f.walletList.size());
 			addColumn("Time",		50,	ReadTime.class, f->f.readTime).show();
 			addColumn("", 			22, Icon.class, 	f->f.statusIcon).showMandatory();
 			
 			onGetRowCount(() -> Fork.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Fork.LIST.get(r)));
-			onisCellEditable((r, c) -> (4 == c || 17 == c));
+			onisCellEditable((r, c) -> (4 == c || 16 == c));
 		}
 		
 		public void setValueAt(Object value, int row, int col) {
@@ -84,7 +91,7 @@ public class ForkView extends JPanel {
 				Fork.LIST.get(row).price = newValue;
 				fireTableCellUpdated(row, col);
 				MainGui.updateBalance();
-			} else if (17 == col) {
+			} else if (16 == col) {
 				Fork.LIST.get(row).rewardTrigger = newValue;
 				fireTableCellUpdated(row, col);
 			}
@@ -109,18 +116,66 @@ public class ForkView extends JPanel {
 		}
 	}
 	
-	
-	
+	/*
+	public static class SymbolRendered extends DefaultTableCellRenderer {
+		@Override
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+			Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			JLabel lbl = (JLabel)c;
+			//Fork.getBySymbol(lbl.getText()).ifPresent(f -> lbl.setIcon(f.ico));
+			
+			return this;
+		}
+	}
+	*/
+	JMenu WalletSelector = new JMenu("Wallet");
 	public ForkView() {
 		setLayout(new BorderLayout());
 		add(JSP,BorderLayout.CENTER);
 		
+		WalletSelector.setIcon(Ico.WALLET);
+		
 		JSP.setPreferredSize(new Dimension(700,400));
 		
-		TABLE.setComponentPopupMenu(POPUP_MENU);
+		//TABLE.setComponentPopupMenu(POPUP_MENU);
+		
+		  TABLE.addMouseListener(new MouseAdapter() {
+		         public void mouseReleased(MouseEvent me) {
+		            if (me.isPopupTrigger()) {
+		            	List<Fork> sel = getSelected();
+		            	if (1 == sel.size()) {
+		            		Fork f = sel.get(0);
+		            		WalletSelector.removeAll();
+		            		for (int i = 0; i < f.walletList.size(); i++) {
+		            			WalletSelector.setEnabled(true);
+		            			Wallet w = f.walletList.get(i);
+		            			WalletSelector.add(new SwingEX.JMI(w.index + ") " + w.fingerprint + ": " + w.addr, 	Ico.WALLET, () -> {
+		            				new Thread(() -> {
+		            					f.balance = new Balance();
+		            					f.farmStatus = "";
+		            					f.syncStatus = "";
+		            					f.wallet = w;
+		            					update(f);
+		            					f.loadWallet();
+		            				}).start();
+		            			}));
+		            		}
+			            	
+		            	} else {
+		            		WalletSelector.setEnabled(false);
+		            	}
+
+		            	POPUP_MENU.show(TABLE, me.getX(), me.getY());
+		            }
+		         }
+		      });
+		
 		POPUP_MENU.add(new SwingEX.JMI("Start", 	Ico.START, 		() -> getSelected().forEach(Fork::start)));
 		POPUP_MENU.add(new SwingEX.JMI("Stagger", 	Ico.START,		() -> ForkView.staggerStartDialog()));
 		POPUP_MENU.add(new SwingEX.JMI("Stop", 		Ico.STOP,  		() -> getSelected().forEach(Fork::stop)));
+		POPUP_MENU.addSeparator();
+		
+		POPUP_MENU.add(WalletSelector);
 		POPUP_MENU.addSeparator();
 		
 		POPUP_MENU.add(new SwingEX.JMI("View Log", 	Ico.EYE,  		ForkView::viewLog));
@@ -137,19 +192,30 @@ public class ForkView extends JPanel {
 		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.P2P,		() -> getSelected().forEach(Fork::showConnections)));
 		POPUP_MENU.addSeparator();
 		POPUP_MENU.add(new SwingEX.JMI("Debug",		Ico.BUG,		() -> getSelected().forEach(Fork::showLastException)));
+		//POPUP_MENU.add(new SwingEX.JMI("Debug",		Ico.BUG,		ForkView::reorderTest));
 		
 		JTableHeader header = TABLE.getTableHeader();
 		header.setComponentPopupMenu(HEADER_MENU);
 		
 		MODEL.colList.forEach(c -> c.setSelectView(TABLE,HEADER_MENU));
 		
-		SwingUtil.addToolTipCol(TABLE,1,i -> {return Fork.LIST.get(i).name;});
-		
 		SwingUtil.setColRight(TABLE,3);
+		SwingUtil.setColRight(TABLE,18);
+		 
+		//TABLE.getColumnModel().getColumn(1).setCellRenderer(new SymbolRendered());
 		
 		TABLE.setDragEnabled(true);
 		TABLE.setDropMode(DropMode.INSERT_ROWS);
 		TABLE.setTransferHandler(new TableRowTransferHandler(TABLE));
+	}
+	
+	static private void reorderTest() {
+		TableColumnModel tcm = TABLE.getColumnModel();
+	    for (int i = 0; i < MODEL.getColumnCount() - 1; i++) {
+	            int location = tcm.getColumnIndex(MODEL.getColumnName(i));
+	            System.out.println("LOC: " + location);
+	            //tcm.moveColumn(location, i);
+	   }
 	}
 	
 	static private void staggerStartDialog() {
@@ -172,14 +238,18 @@ public class ForkView extends JPanel {
 	}
 	
 	static private void updatePrices() {
-		Map<String,Double> priceMap = FFUtil.getPrices();
-		
-		for(Entry<String,Double> priceEntry : priceMap.entrySet()) {
-			String forkName = priceEntry.getKey();
+		try {
+			Map<String,Double> priceMap = FFUtil.getPrices();
 			
-			Fork.LIST.stream()
-				.filter(f -> f.name.equals(forkName)).findAny()
-				.ifPresent(f -> f.price = priceEntry.getValue());
+			for(Entry<String,Double> priceEntry : priceMap.entrySet()) {
+				String forkName = priceEntry.getKey();
+				
+				Fork.LIST.stream()
+					.filter(f -> f.name.toLowerCase().equals(forkName.toLowerCase())).findAny()
+					.ifPresent(f -> f.price = priceEntry.getValue());
+			}
+		} catch (Exception e) {
+			
 		}
 		
 		update();
@@ -227,7 +297,7 @@ public class ForkView extends JPanel {
 	
 	static private void copy() {
 		String addrs = getSelected().stream()
-				.map(f -> f.addr).filter(Objects::nonNull)
+				.map(f -> f.wallet.toString()).filter(Objects::nonNull)
 				.collect(Collectors.joining("\n"));
 		Util.copyToClip(addrs);
 	}
@@ -248,13 +318,6 @@ public class ForkView extends JPanel {
 		f.getIndex().ifPresent(ForkView::fireTableRowUpdated);
 	}
 	
-	public static void updateLogRead(Fork f) {
-		f.getIndex().ifPresent(row -> {
-			MODEL.fireTableCellUpdated(row, 18); // time
-			MODEL.fireTableCellUpdated(row, 19); // status
-		});
-	}
-	
 	public static void updateBalance(Fork f) {
 		f.getIndex().ifPresent(row -> {
 			MODEL.fireTableCellUpdated(row, 3); // balance
@@ -263,7 +326,27 @@ public class ForkView extends JPanel {
 
 	public static void updateNewTx(Fork f) {
 		f.getIndex().ifPresent(row -> {
-			MODEL.fireTableCellUpdated(row, 14); //last win
+			MODEL.fireTableCellUpdated(row, 13); //last win
 		});
 	}
+	
+	public static void logReader() {
+		List<Fork> logList = new ArrayList<>(Fork.LIST);
+		
+		while(true) {
+			for (Fork f: logList) {
+				f.readLog();
+				f.getIndex().ifPresent(row -> {
+					MODEL.fireTableCellUpdated(row, 6);  // height
+					MODEL.fireTableCellUpdated(row, 13); // last win
+					MODEL.fireTableCellUpdated(row, 18); // time
+					MODEL.fireTableCellUpdated(row, 19); // status
+				});
+			}
+			Util.sleep(5000);
+			
+		}
+		
+	}
+	
 }

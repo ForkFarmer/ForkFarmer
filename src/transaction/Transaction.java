@@ -22,6 +22,7 @@ import forks.ForkView;
 import types.Balance;
 import types.Effort;
 import types.TimeU;
+import util.FFUtil;
 import util.Ico;
 import util.Util;
 
@@ -38,7 +39,7 @@ public class Transaction {
 	public String target ="";
 	public String date = "";
 	public boolean blockReward;
-	Effort effort;
+	Effort effort = Effort.EMPTY;
 	
 	public Transaction(Fork f, String hash, double amount, String target, String date, boolean blockReward) {
 		this.f = f;
@@ -48,7 +49,7 @@ public class Transaction {
 		this.date = date;
 		this.blockReward = blockReward;
 		
-		if (getTimeSince().inMinutes() < 3);
+		if (blockReward && getTimeSince().inMinutes() < 3)
 			effort = f.getEffort();
 	}
 	
@@ -57,19 +58,23 @@ public class Transaction {
 	}
 	
 	public ImageIcon getIcon() {
-		if (null != f.addr)
-			if (f.addr.equals(target))
+		if (null != f.wallet.addr)
+			if (f.wallet.addr.equals(target))
 				return R_ARROW;
 		return L_ARROW;
 	}
 	
 	public TimeU getTimeSince() {
 		LocalDateTime now = LocalDateTime.now();
-		return new TimeU(Duration.between(LocalDateTime.parse(date, Fork.DTF),now).getSeconds());
+		return new TimeU(Duration.between(LocalDateTime.parse(date, FFUtil.DTF),now).getSeconds());
 	}
 	
 	public static boolean load(Fork f) {
 		boolean newTX = false;
+
+		if (-1 == f.wallet.index)
+			return false;
+
 		Process p = null;
 		PrintWriter pw = null;
 		BufferedReader br = null;
@@ -78,6 +83,7 @@ public class Transaction {
 			pw = new PrintWriter(p.getOutputStream());
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		
+			pw.println(f.wallet.index); // hack to 
 			for (int i = 0; i < 50; i++)
 				pw.println("c");
 			pw.close();
@@ -129,8 +135,9 @@ public class Transaction {
 							blockReward = true; // super hacky for NCH but butst can do right now
 						else if (f.symbol.equals("XTH") && Math.abs(Double.parseDouble(firstWord) - 4) < .1) 
 							blockReward = true; // super hacky for NCH but butst can do right now
-						if (true == blockReward && null == f.addr)
-							f.addr = address;
+					
+						//if (true == blockReward && null == f.addr)
+							//f.addr = address;
 
 						if (oT.isPresent()) {
 							Transaction t = oT.get();
@@ -155,7 +162,7 @@ public class Transaction {
 		Util.closeQuietly(br);
 		Util.closeQuietly(pw);
 		Util.waitForProcess(p);
-		
+			
 		if (newTX) {
 			synchronized(Transaction.LIST) {
 			// update fork last win handle

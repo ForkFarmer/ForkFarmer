@@ -59,7 +59,7 @@ public class Settings {
 		new Fork("XFX","Flax", ".flax", "flax-blockchain", 0.9, .25);
 		new Fork("SIT","Silicoin", ".silicoin", "silicoin-blockchain", .35,.25);
 		new Fork("SPARE","Spare", ".spare-blockchain", "spare-blockchain", .04,.5);
-		new Fork("XFL","Flora", ".flora", "flora-blockchain", .1,3.5);
+		new Fork("XFL","Flora", ".flora", "flora-blockchain", .1,.5);
 		new Fork("CGN","Chaingreen", ".chaingreen", "chaingreen-blockchain", .0003,62.5);
 		new Fork("NCH","NChainExt9", ".chia", "NChainExt9-blockchain", 0.5,-1);
 		new Fork("XGJ","Goji", ".goji-blockchain", "goji-blockchain", 0.026,.25);
@@ -72,7 +72,7 @@ public class Settings {
 		new Fork("XKA","Kale", ".kale", "kale-blockchain", .01,.25);
 		new Fork("XTX","Taco", ".taco", "taco-blockchain", .02,.25);
 		new Fork("TAD","Tad", ".tad", "tad-blockchain", .04,2.0);
-		new Fork("XMZ","Maize", ".maize", "maize-blockchain", 0.01,22.5);
+		new Fork("XMZ","Maize", ".maize", "maize-blockchain", 0.01,0.25);
 		new Fork("SOCK","Socks", ".socks", "socks-blockchain", 0.008,.25);
 		new Fork("WHEAT","Wheat", ".wheat", "wheat-blockchain", .02,12.5);
 		new Fork("XMX","Melati", ".melati", "melati-blockchain", .01,.25);
@@ -106,6 +106,8 @@ public class Settings {
 		new Fork("XACH","Achi", ".achi", "achi-blockchain", 0.0,.25);
 		new Fork("OZT","GoldCoin", ".goldcoin", "goldcoin-blockchain", 0.0,.25);
 		new Fork("STOR","Stor", ".stor", "stor-blockchain", 0.0,.25);
+		new Fork("XNT","Skynet", ".skynet", "skynet-blockchain", 0.0, .625);
+		new Fork("PEA","Peas", ".peas", "peas-blockchain", 0.0,.25);
 	}
 	
 	public void Save() {

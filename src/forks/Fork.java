@@ -11,7 +11,6 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +34,8 @@ import types.Balance;
 import types.Effort;
 import types.ReadTime;
 import types.TimeU;
+import types.Wallet;
+import util.FFUtil;
 import util.Ico;
 import util.NetSpace;
 import util.Util;
@@ -43,22 +44,19 @@ import util.swing.SwingEX;
 
 public class Fork {
 	transient private static final String NOT_FOUND = "";
-	transient public static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-	transient public static ScheduledExecutorService SVC = Executors.newScheduledThreadPool(10);
-	transient public static ScheduledExecutorService LOG_SVC = Executors.newScheduledThreadPool(1);
+	transient public static ScheduledExecutorService SVC = Executors.newScheduledThreadPool(5);
 	transient public ScheduledFuture<?> walletFuture;
-	transient  public ScheduledFuture<?> logFuture;
 	public static List<Fork> LIST = new ArrayList<>();
 	public transient Balance balance = new Balance();
-	public transient int height = 0;
-	
+	public transient Balance height = new Balance();
+		
 	public String symbol;
 	public String exePath;
 	public String name;
 	transient public String version;
 	transient public ImageIcon ico;
 	transient public ImageIcon statusIcon = Ico.GRAY;
-	transient ReadTime readTime;
+	transient ReadTime readTime = ReadTime.EMPTY;
 	transient public NetSpace netSpace;
 	transient public NetSpace plotSpace;
 	transient public TimeU etw = new TimeU();
@@ -69,18 +67,62 @@ public class Fork {
 	transient public double estEarn;
 	transient public Transaction lastWin;
 	transient public Exception lastException;
+	transient public int selectedWallet;
+	transient boolean walletLoaded = false;
+	transient public List<Wallet> walletList = new ArrayList<>();
 	
 	public double price;
 	public double rewardTrigger;
 	
-	public String addr;
+	transient public Wallet wallet = Wallet.EMPTY;
 	transient boolean hidden;
 	public String logPath;
 	
 	public Fork() { // needed for YAML
 		
 	}
+	
+	public void loadWallets() {
+		walletLoaded = true;
+		Process p = null;
+		BufferedReader br = null;
+		try {
+			p = Util.startProcess(exePath, "keys", "show");
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			
+			int walletIndex = 1;
+			String l = null;
+			while ( null != (l = br.readLine())) {
+				if (l.startsWith("Fingerprint: " )) {
+					String fingerprint = l.substring("Fingerprint: ".length());;
+					while (null != (l = br.readLine())) {
+						if (l.contains("First wallet address: ")) {
+							String address = l.substring("First wallet address: ".length());
+							walletList.add(new Wallet(fingerprint, address,walletIndex));
+							walletIndex++;
+							break;
+						}
+					}
+				}
+				
+			}
+			
+			
+		} catch (Exception e) {
+			lastException = e;
+			e.printStackTrace();
+		}
+		Util.closeQuietly(br);
+		Util.waitForProcess(p);
 		
+		if (1 == walletList.size()) {
+			wallet = walletList.get(0);
+		} else if (walletList.size() > 1)
+			wallet = Wallet.SELECT;
+		ForkView.update(this);
+	}
+		
+	@SuppressWarnings("unused")
 	public void loadWallet () {
 		boolean dead = false;
 		if (true == hidden) {
@@ -89,9 +131,16 @@ public class Fork {
 		}
 		
 		if ("CGN".contentEquals(symbol)) {
-			addr = "*** Not Supported ***";
+			wallet = Wallet.NOT_SUPPORTED;
 			return;
 		}
+		
+		if (!walletLoaded)
+			loadWallets();
+		
+		if (-1 == wallet.index)
+			return;
+		
 		
 		Process p = null, p2 = null;
 		BufferedReader br = null, br2 = null;
@@ -102,6 +151,16 @@ public class Fork {
 			String l = null;
 			while ( null != (l = br.readLine())) {
 				boolean readBalance = false;
+				if (l.contains("Choose")) { // little bit of a hack for multiple wallets.. but it works for now
+					PrintWriter pw = new PrintWriter(p.getOutputStream());
+					char[] buf = new char[4096];
+					br.read(buf);
+					int numWallets = new String(buf).split("\r\n|\r|\n").length - 1;
+					pw.println(wallet.index);
+					pw.flush();
+					pw.close();
+				}
+				
 				if (l.contains("Connection error")) {
 					p.destroyForcibly();
 					dead = true;
@@ -113,7 +172,7 @@ public class Fork {
 					ForkView.updateBalance(this);
 				} else if (l.contains("Wallet height: ")) {
 					String heightStr = l.substring("Wallet height: ".length());
-					height = Integer.parseInt(heightStr);
+					height = new Balance(Integer.parseInt(heightStr));
 				} else if (l.contains("Sync status: ")) {
 					syncStatus = l.substring("Sync status: ".length());
 				}
@@ -198,60 +257,51 @@ public class Fork {
 	}
 
 	public void readLog() {
+		boolean readH = false, readT = false;
 		File logFile = new File(logPath);
-		if (true == hidden) {
-			logFuture.cancel(true);
+		if (true == hidden || !logFile.exists())
 			return;
-		} else if (!logFile.exists()) {
-			return;
-		}
 		
 		LocalDateTime now = LocalDateTime.now();  
-		
+		LocalDateTime logTime = null;
 		ReversedLinesFileReader lr = null;
 		long sec;
 		try {
-			String s;
+			String s,t;
 			lr = new ReversedLinesFileReader(logFile,Charset.defaultCharset());
 			readTime = ReadTime.EMPTY;
 			for (int i = 0; null != (s = lr.readLine()); i++) {
+				logTime = FFUtil.parseTime(s);
 				
-				if (s.length() < 19)
-					continue;
-				sec = 0;
-				try {
-					String logTimeString = s.substring(0,19);
-					logTimeString = logTimeString.replace("T", " ");
-					LocalDateTime logTime = LocalDateTime.parse(logTimeString, DTF);
-					Duration duration = Duration.between(logTime, now);
-					sec = duration.getSeconds();
-				} catch (Exception e) {
-					// error parsing date for some reason
-				}
+				Duration duration = Duration.between(logTime, now);
+				sec = duration.getSeconds();
 				
-				if (sec > 60 || i > 250) {
+				if (sec > 30 || i > 250 || (readT && readH)) {
 					logLines = i;
 					break;
 				}	
 				
-				if (readTime == ReadTime.EMPTY) {
-					if (s.contains("Time: ")) {
-						s = Util.getWordAfter(s, "Time: ");
-						readTime = new ReadTime(Double.parseDouble(s));
-					} else if (s.contains("took: ")) {
-						s = Util.getWordAfter(s, "took: ");
-						if (s.endsWith("."))
-							s = s.substring(0, s.length()-1);
-						readTime = new ReadTime(Double.parseDouble(s));
-						break;
-					} else if (s.contains("WARNING  Respond plots came too late")) {
-						readTime = ReadTime.TIMEOUT;
-						break;
-					} else if (s.contains("Harvester did not respond")) {
-						readTime = ReadTime.TIMEOUT;
-						break;
-					}
+				
+				if (!readT && null != (t = Util.wordAfterIfExist(s, "Time: "))) {
+					readTime = new ReadTime(Double.parseDouble(t));
+					readT = true;
+				} else if (!readT && null != (t = Util.wordAfterIfExist(s, "Time: "))) {
+					if (t.endsWith("."))
+						t = t.substring(0, s.length()-1);
+					readTime = new ReadTime(Double.parseDouble(t));
+					readT = true;
+				} else if (!readT && s.contains("WARNING  Respond plots came too late")) {
+					readTime = ReadTime.TIMEOUT;
+					readT = true;
+				} else if (!readT && s.contains("Harvester did not respond")) {
+					readTime = ReadTime.TIMEOUT;
+					readT = true;
+				} else if (!readH && null != (t = Util.wordAfterIfExist(s, "wallet peak to height "))) {
+					t = t.replace(",", "");
+					height = new Balance(Integer.parseInt(t));
+					readH = true;
 				}
+				
 			}
 			
 		} catch (Exception e) {
@@ -263,20 +313,19 @@ public class Fork {
 	}
 
 	private void updateIcon() {
-		if (null == farmStatus)
-			return;
-		
-		if (farmStatus.startsWith("Farming") && readTime.time <= 5 && readTime.time >= 0)
-			statusIcon = Ico.GREEN;
-		else if (farmStatus.startsWith("Farming") && readTime == ReadTime.EMPTY)
-			statusIcon = Ico.GREEN;
-		else if (farmStatus.startsWith("Farming") && readTime.time > 5 && readTime.time < 30)
-			statusIcon = Ico.YELLOW;
-		else if (farmStatus.startsWith("Syncing"))
-			statusIcon = Ico.YELLOW;
-		else
-			statusIcon = Ico.RED;
-		ForkView.updateLogRead(this);
+		if (null != farmStatus) {
+			if (farmStatus.equals("Farming")) {
+				if (readTime == ReadTime.EMPTY || (readTime.time <= 5 && readTime.time >= 0))
+					statusIcon = Ico.GREEN;
+				else if (readTime.time > 5 && readTime.time < 30)
+					statusIcon = Ico.YELLOW;
+				else
+					statusIcon = Ico.RED;
+			} else if (farmStatus.equals("Syncing")) {
+				statusIcon = Ico.YELLOW;
+			} else
+				statusIcon = Ico.RED;
+		}
 	}
 
 	private void updateView() {
@@ -327,7 +376,7 @@ public class Fork {
 			sb.append("Running: wallet show");
 			sb.append("ExePath: " + exePath);
 			
-			String ret = Util.runProcessWait(exePath,"wallet","show");
+			String ret = Util.runProcessDebug(exePath,"wallet","show");
 			sb.append("\n" +  ret);
 			jta.setText(sb.toString());
 		}));
@@ -337,7 +386,7 @@ public class Fork {
 			sb.append("Running: wallet show\n");
 			sb.append("ExePath: " + exePath + "\n");
 			
-			String ret = Util.runProcessWait(exePath,"farm","summary");
+			String ret = Util.runProcessDebug(exePath,"farm","summary");
 			sb.append("\n" +  ret);
 			jta.setText(sb.toString());
 		}));
@@ -355,7 +404,7 @@ public class Fork {
 		} else
 			jta.setText("Congrats! No exceptions found");
 		
-		ForkFarmer.showPopup(name + ": Exception",  exceptionPanel);
+		ForkFarmer.showPopup(name + ": Debug View",  exceptionPanel);
 	}
 	
 	public void refresh() {
@@ -374,7 +423,7 @@ public class Fork {
 		BufferedReader br = null;
 		
 		try {
-			p = Util.startProcess(exePath,"wallet","send","-i","1","-a",amt,"-m",fee,"-t",address);
+			p = Util.startProcess(exePath,"wallet","send","-i",Integer.toString(wallet.index),"-a",amt,"-m",fee,"-t",address);
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			StringBuilder sb = new StringBuilder();
 			

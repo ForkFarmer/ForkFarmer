@@ -5,11 +5,30 @@ public class TimeU implements Comparable<TimeU> {
 	String str = "";
 	long minutes;
 	
-	
-	public TimeU(String str) {
+	public TimeU(String str) { // used for etw
 		minutes = convertToMinutes(str);
+		
+		str = str.replace(" ", "");
+		str = str.replace("and", "");
+		str = str.replace("years", "y ");
+		str = str.replace("year", "y ");
+		str = str.replace("months", "mo ");
+		str = str.replace("month", "mo ");
+		str = str.replace("weeks", "w ");
+		str = str.replace("week", "w ");
+		str = str.replace("days", "d ");
+		str = str.replace("day", "d ");
+		str = str.replace("hours", "h ");
+		str = str.replace("hour", "h ");
+		str = str.replace("minutes", "m ");
+		str = str.replace("minute", "m ");
+		str = str.replace("and", "");
+		
+		
 		this.str = str;
 	}
+	
+	
 	
 	public long inMinutes() {
 		return minutes;
@@ -26,13 +45,22 @@ public class TimeU implements Comparable<TimeU> {
 	
 	public TimeU(long seconds) {
 		minutes = seconds/60;
+		StringBuilder sb = new StringBuilder();
 		
-		if (seconds < 60)
-			str = seconds + " Seconds";
-		if (seconds < 60*60)
-			str = (seconds /60) + " Minutes";
-		else
-			str = (seconds/60/60) + " Hours";
+		int day = (int) (seconds/60/60/24);
+		if (day > 0) {
+			sb.append(day + "d ");
+			seconds -= (day * (60*60*24));
+		}
+		int hours = (int) (seconds/60/60);
+		if (hours > 0) {
+			sb.append(String.format("%02d", hours) + "h ");
+			seconds -= (hours * (60*60));
+		}
+		int min = (int) (seconds/60);
+		sb.append(String.format("%02d", min) + "m ");
+		
+		str = sb.toString();
 	}
 
 	public String toString() {

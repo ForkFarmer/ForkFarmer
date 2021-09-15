@@ -271,7 +271,15 @@ public class Util {
 		str = str.substring(str.indexOf(target) + target.length());
 		return str.substring(0,str.indexOf(" "));
 	}
-
+	
+	public static String wordAfterIfExist(String str, String target) {
+		int targetIndex = str.indexOf(target);
+		if (-1 == targetIndex)
+			return null; 
+		str = str.substring(str.indexOf(target) + target.length());
+		return str.substring(0,str.indexOf(" "));
+	}
+	
 	public static String runProcessWait(String... args) {
 		ByteArrayOutputStream baos =  new ByteArrayOutputStream();
 		try {
@@ -280,13 +288,31 @@ public class Util {
 			isc.start();	
 			p.waitFor();
 			isc.join();
-			
 		} catch (InterruptedException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return baos.toString();
 		
+	}
+	
+	public static String runProcessDebug(String... args) {
+		ByteArrayOutputStream baos =  new ByteArrayOutputStream();
+		try {
+			ProcessBuilder pb = new ProcessBuilder()
+							.command(args)
+							.redirectErrorStream(true);
+			Process p = pb.start();
+			InputStreamConsumer isc = new InputStreamConsumer(p.getInputStream(), baos);
+			isc.start();	
+			if (!p.waitFor(5, TimeUnit.SECONDS))
+				p.destroyForcibly();
+			isc.join();
+		} catch (InterruptedException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return baos.toString();
 	}
 	
 }

@@ -17,6 +17,12 @@ public class Balance implements Comparable<Balance> {
 		balanceStr = df.format(balance);
 	}
 	
+	public Balance(int amt) {
+		balance = amt;
+		DecimalFormat df = new DecimalFormat("#,##0.######");
+		balanceStr = df.format(balance);
+	}
+	
 	public Balance(String balanceStr) throws ParseException {
 		/*
 		NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
