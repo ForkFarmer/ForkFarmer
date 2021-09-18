@@ -6,6 +6,12 @@ public class TimeU implements Comparable<TimeU> {
 	long minutes;
 	
 	public TimeU(String str) { // used for etw
+		
+		if (str.equals("Unknown")) {
+			this.str = str;
+			return;
+		}
+		
 		minutes = convertToMinutes(str);
 		
 		str = str.replace(" ", "");

@@ -1,6 +1,6 @@
 package forks;
 
-import java.awt.BorderLayout;
+import java.	awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -78,21 +78,25 @@ public class ForkView extends JPanel {
 			addColumn("Reward",		40,	Double.class, 	f->f.rewardTrigger);
 			addColumn("#W",			40,	Integer.class, 	f->f.walletList.size());
 			addColumn("Time",		50,	ReadTime.class, f->f.readTime).show();
+			addColumn("FN",			30,	Boolean.class, 	f->f.fullNode);
+			addColumn("WN",			30,	Boolean.class, 	f->f.walletNode);
 			addColumn("", 			22, Icon.class, 	f->f.statusIcon).showMandatory();
 			
 			onGetRowCount(() -> Fork.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Fork.LIST.get(r)));
-			onisCellEditable((r, c) -> (4 == c || 16 == c));
+			onisCellEditable((r, c) -> (4 == c || 16 == c || 19 == c));
 		}
 		
 		public void setValueAt(Object value, int row, int col) {
-			double newValue = (double) value;
 			if (4 == col) {
-				Fork.LIST.get(row).price = newValue;
+				Fork.LIST.get(row).price = (double) value;
 				fireTableCellUpdated(row, col);
 				MainGui.updateBalance();
 			} else if (16 == col) {
-				Fork.LIST.get(row).rewardTrigger = newValue;
+				Fork.LIST.get(row).rewardTrigger = (double) value;
+				fireTableCellUpdated(row, col);
+			} else if (19 == col) {
+				Fork.LIST.get(row).fullNode = (boolean) value;
 				fireTableCellUpdated(row, col);
 			}
 			
@@ -340,7 +344,7 @@ public class ForkView extends JPanel {
 					MODEL.fireTableCellUpdated(row, 6);  // height
 					MODEL.fireTableCellUpdated(row, 13); // last win
 					MODEL.fireTableCellUpdated(row, 18); // time
-					MODEL.fireTableCellUpdated(row, 19); // status
+					MODEL.fireTableCellUpdated(row, 20); // status
 				});
 			}
 			Util.sleep(5000);

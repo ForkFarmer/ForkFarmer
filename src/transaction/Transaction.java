@@ -123,26 +123,18 @@ public class Transaction {
 					
 						Optional<Transaction> oT = LIST.stream().filter(z -> z.f.symbol.equals(f.symbol) && z.date.equals(date)).findAny();
 					
-						if (f.rewardTrigger == Double.parseDouble(firstWord))
-							blockReward = true;
-						else if (firstWord.equals("0.25") || firstWord.equals("0,25")) //default
+						if (Math.abs(Double.parseDouble(firstWord) - f.rewardTrigger) < .01)
 							blockReward = true;
 						else if (firstWord.equals("1E-10")) // probably faucet?
 							blockReward = true;
 						else if (firstWord.equals("1E-7")) // probably faucet?
 							blockReward = true;
-						else if (f.symbol.equals("NCH") && Math.abs(Double.parseDouble(firstWord) - 2) < .1) 
-							blockReward = true; // super hacky for NCH but butst can do right now
-						else if (f.symbol.equals("XTH") && Math.abs(Double.parseDouble(firstWord) - 4) < .1) 
-							blockReward = true; // super hacky for NCH but butst can do right now
-					
-						//if (true == blockReward && null == f.addr)
-							//f.addr = address;
 
 						if (oT.isPresent()) {
 							Transaction t = oT.get();
 							t.amount.add(amount);
 							t.blockReward |= blockReward;
+							t.effort = f.getEffort();
 						} else {
 							Transaction t = new Transaction(f, tHash,amount,address,date, blockReward); 
 							if (0 != amount)

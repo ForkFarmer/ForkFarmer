@@ -23,6 +23,7 @@ import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import javax.swing.ImageIcon;
 
@@ -52,11 +53,19 @@ public class Util {
 	}
 	
 	public static String getDir(String base, String target) throws IOException {
-		try {
-		 return Files.list(new File(base).toPath()).map(p -> p.getFileName().toString()).filter(s->s.startsWith(target)).findAny().get();
-		} catch (NoSuchElementException e) {
-			throw new IOException("Couldn't get directory: " + base + " Target: " + target);
-		}
+		
+		 List<String> appList = Files.list(new File(base).toPath())
+				 .map(p -> p.getFileName().toString())
+				 .filter(s->s.startsWith(target))
+				 .filter(s -> new File(base + s).isDirectory())
+				 .collect(Collectors.toList());
+		 if (appList.size() > 1) {
+			 throw new IOException("2 app directories");
+		 } else if (1 == appList.size()) {
+			 return appList.get(0);
+		 }
+
+		throw new IOException("app folder does not exist");
 	}
 	
 	public static double round(double value, int places) {
@@ -305,7 +314,7 @@ public class Util {
 			Process p = pb.start();
 			InputStreamConsumer isc = new InputStreamConsumer(p.getInputStream(), baos);
 			isc.start();	
-			if (!p.waitFor(5, TimeUnit.SECONDS))
+			if (!p.waitFor(10, TimeUnit.SECONDS))
 				p.destroyForcibly();
 			isc.join();
 		} catch (InterruptedException | IOException e) {

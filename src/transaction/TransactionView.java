@@ -15,6 +15,7 @@ import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.JTableHeader;
 
+import types.Balance;
 import util.Ico;
 import util.swing.SwingEX;
 import util.swing.SwingUtil;
@@ -39,7 +40,7 @@ public class TransactionView extends JPanel {
 			addColumn("Name", 		80,		String.class, 	t->t.f.name).show();
 			addColumn("Effort",		80,		Integer.class, 	t->t.effort).show();
 			addColumn("To",   		-1,		String.class, 	t->t.target).showMandatory();
-			addColumn("Amount", 	100,	String.class, 	t->t.amount).showMandatory();			
+			addColumn("Amount", 	100,	Balance.class, 	t->t.amount).showMandatory();			
 			
 			onGetRowCount(() -> Transaction.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Transaction.LIST.get(r)));

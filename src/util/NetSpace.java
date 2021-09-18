@@ -7,6 +7,10 @@ public class NetSpace implements Comparable<NetSpace> {
 	
 	public NetSpace(String nsString) {
 		s = nsString;
+		
+		if (nsString.equals("Unknown"))
+			return;
+		
 		szTB = Double.parseDouble(nsString.substring(0,nsString.indexOf(' ')));
 		if (s.endsWith("PiB"))
 			szTB = szTB * 1024;

@@ -44,7 +44,7 @@ import util.swing.SwingEX;
 
 public class Fork {
 	transient private static final String NOT_FOUND = "";
-	transient public static ScheduledExecutorService SVC = Executors.newScheduledThreadPool(5);
+	transient public static ScheduledExecutorService SVC = Executors.newScheduledThreadPool(4);
 	transient public ScheduledFuture<?> walletFuture;
 	public static List<Fork> LIST = new ArrayList<>();
 	public transient Balance balance = new Balance();
@@ -71,6 +71,8 @@ public class Fork {
 	transient boolean walletLoaded = false;
 	transient public List<Wallet> walletList = new ArrayList<>();
 	
+	public boolean fullNode = true;
+	public boolean walletNode = true;
 	public double price;
 	public double rewardTrigger;
 	
@@ -190,7 +192,7 @@ public class Fork {
 				syncStatus = "";
 			} else {
 				Transaction.load(this);
-				loadSummary();
+				loadFarmSummary();
 				
 				synchronized(Transaction.class) {
 					dayWin = Transaction.LIST.stream()
@@ -220,7 +222,7 @@ public class Fork {
 		
 	}
 	
-	private void loadSummary() {
+	private void loadFarmSummary() {
 		Process p = null;
 		BufferedReader br = null;
 		try {
@@ -229,7 +231,7 @@ public class Fork {
 			
 			String l = null;
 			while ( null != (l = br.readLine())) {
-				if (l.contains("Connection error")) {
+				if (l.contains("Connection error") && false == fullNode) {
 					p.destroyForcibly();
 					break;
 				} else if (l.contains("Estimated network space: "))
@@ -243,7 +245,8 @@ public class Fork {
 					}
 				} else if (l.contains("Expected time to win: ")) {
 					etw = new TimeU(l.substring("Expected time to win: ".length()));
-					estEarn = 43800 / etw.inMinutes() * price;
+					if (etw.inMinutes()  > 0 && price > 0)
+						estEarn = 43800 / etw.inMinutes() * price;
 				} else if (l.contains("Farming status: ")) {
 					farmStatus = l.substring("Farming status: ".length());
 				} 
@@ -273,8 +276,13 @@ public class Fork {
 			for (int i = 0; null != (s = lr.readLine()); i++) {
 				logTime = FFUtil.parseTime(s);
 				
-				Duration duration = Duration.between(logTime, now);
-				sec = duration.getSeconds();
+				if (null != logTime) {
+					Duration duration = Duration.between(logTime, now);
+					sec = duration.getSeconds();
+				} else {
+					sec = 1; // kinda a hack if logTime fails
+				}
+					
 				
 				if (sec > 30 || i > 250 || (readT && readH)) {
 					logLines = i;
@@ -314,7 +322,7 @@ public class Fork {
 
 	private void updateIcon() {
 		if (null != farmStatus) {
-			if (farmStatus.equals("Farming")) {
+			if (farmStatus.equals("Farming") || (farmStatus.equals("Not available") && false == fullNode)) {
 				if (readTime == ReadTime.EMPTY || (readTime.time <= 5 && readTime.time >= 0))
 					statusIcon = Ico.GREEN;
 				else if (readTime.time > 5 && readTime.time < 30)
@@ -378,16 +386,19 @@ public class Fork {
 			
 			String ret = Util.runProcessDebug(exePath,"wallet","show");
 			sb.append("\n" +  ret);
+			sb.append("Done running query\n");
 			jta.setText(sb.toString());
 		}));
 		
 		MENU.add(new SwingEX.Btn("farm summary", Ico.CLI,  () -> {
+			
 			StringBuilder sb = new StringBuilder();
 			sb.append("Running: wallet show\n");
 			sb.append("ExePath: " + exePath + "\n");
 			
 			String ret = Util.runProcessDebug(exePath,"farm","summary");
 			sb.append("\n" +  ret);
+			sb.append("Done running query\n");
 			jta.setText(sb.toString());
 		}));
 		
