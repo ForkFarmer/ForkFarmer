@@ -14,6 +14,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -313,8 +314,13 @@ public class SwingEX {
 		}
 		*/
 	}
-
 	
+	public static class JMIco extends JMenu {
+		public JMIco(String s, ImageIcon ico) {
+			super(s);
+			setIcon(ico);
+		}
+	}
 	
 	
 }

@@ -35,7 +35,7 @@ public class ForkFarmer {
 	
 	
 	private static void startGUI() {
-		FRAME = new JFrame("ForkFarmer 1.6.3");
+		FRAME = new JFrame("ForkFarmer 1.7");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 
@@ -64,7 +64,6 @@ public class ForkFarmer {
 		
 		FRAME.addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {
-		        
 		    	Settings s = new Settings();
 		    	s.forkList = Fork.LIST;
 		    	s.fvColList = ForkView.MODEL.colList;

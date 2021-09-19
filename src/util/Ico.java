@@ -15,6 +15,8 @@ import javax.swing.ImageIcon;
 public final class Ico {
 	public static final ImageIcon LOGO 		= loadIcon("icons/fork.png");
 	public static final ImageIcon CLIPBOARD	= loadIcon("icons/clipboard.png");
+	public static final ImageIcon ACTION 	= loadIcon("icons/firework.png");
+	public static final ImageIcon EXPLORE 	= loadIcon("icons/explore.png");
 	public static final ImageIcon START 	= loadIcon("icons/start.png");
 	public static final ImageIcon STOP 		= loadIcon("icons/stop.png");
 	public static final ImageIcon GEAR 		= loadIcon("icons/gear.png");

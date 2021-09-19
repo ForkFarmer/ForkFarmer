@@ -106,9 +106,12 @@ public class Settings {
 		new Fork("XTH","Thyme", ".thyme", "thyme-blockchain", 0.0,.25);
 		new Fork("LLC","LittleLamboCoin", ".thyme", "thyme-blockchain", 0.0,.25);
 		new Fork("XACH","Achi", ".achi", "achi-blockchain", 0.0,.25);
-		new Fork("STOR","Stor", ".stor", "stor-blockchain", 0.0,.25);
+		new Fork("STOR","Stor", ".stor", "stor-blockchain", 0.0,.5);
 		new Fork("XNT","Skynet", ".skynet", "skynet-blockchain", 0.0, .625);
 		new Fork("PEA","Peas", ".peas", "peas-blockchain", 0.0,.25);
+		new Fork("XKM","Mint", ".mint", "mint-blockchain", 0.0,.25);
+		new Fork("LCH","Lotus", ".lotus", "lotus-blockchain", 0.0,.25);
+		new Fork("MGA","Mogua", ".mogua", "mogua-blockchain", 0.0,2.5);
 	}
 	
 	public void Save() {

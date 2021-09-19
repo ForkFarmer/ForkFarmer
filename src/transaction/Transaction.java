@@ -162,7 +162,8 @@ public class Transaction {
 					.filter(t -> f == t.f && t.blockReward)
 					.reduce((a,b) -> a.getTimeSince().inMinutes() < b.getTimeSince().inMinutes() ? a:b).orElse(null);
 			}
-			ForkView.updateNewTx(f);
+			
+			ForkView.update(f);
 			TransactionView.refresh();
 		}
 

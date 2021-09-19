@@ -1,6 +1,7 @@
 package util.swing.jfuntable;
 
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.swing.JCheckBoxMenuItem;
@@ -11,12 +12,14 @@ import javax.swing.table.TableColumn;
 public class Col<T> {
 	public final String name;
 	public int width;
+	public int colIndex;
 	public transient final Class<T> type;
 	public transient final Function<T, Object> getValue;
 	public transient BiConsumer<T,Object> consumer;
 	JCheckBoxMenuItem jmi = null;
 	public boolean selectable = true;
 	public boolean deafaultView = false;
+	public boolean editable = false;
 
 	public Col(final String name, final int width,  final Class<?> type, final Function<T, Object> getValue) {
 		this(name,width,type,getValue,null);
@@ -88,13 +91,29 @@ public class Col<T> {
 		resize(table);
 	}
 	
-	public void showMandatory() {
+	public Col<T> showMandatory() {
 		selectable = false;
 		deafaultView = true;
+		return this;
 	}
 	
-	public void show() {
+	public Col<T> show() {
 		deafaultView = true;
+		return this;
+	}
+	
+	public Col<T> index(Consumer<Integer> i) {
+		i.accept(colIndex);
+		return this;
+	}
+	
+	public boolean isEditable() {
+		return editable;
+	}
+	
+	public Col<T> editable() {
+		editable = true;
+		return this;
 	}
 	
 }

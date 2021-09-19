@@ -1,6 +1,7 @@
 package forks;
 
 import java.awt.BorderLayout;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.io.BufferedReader;
 import java.io.File;
@@ -76,9 +77,10 @@ public class Fork {
 	public double price;
 	public double rewardTrigger;
 	
-	transient public Wallet wallet = Wallet.EMPTY;
+	transient public Wallet wallet;
 	transient boolean hidden;
 	public String logPath;
+	public String configPath;
 	
 	public Fork() { // needed for YAML
 		
@@ -117,11 +119,28 @@ public class Fork {
 		Util.closeQuietly(br);
 		Util.waitForProcess(p);
 		
-		if (1 == walletList.size()) {
-			wallet = walletList.get(0);
-		} else if (walletList.size() > 1)
-			wallet = Wallet.SELECT;
+		if (null == wallet) {
+			if (1 == walletList.size()) {
+				wallet = walletList.get(0);
+			} else if (walletList.size() > 1)
+				wallet = Wallet.SELECT;
+		}
 		ForkView.update(this);
+	}
+	
+	public void loadVersion() {
+		Process p = null;
+		BufferedReader br = null;
+		try {
+			p = Util.startProcess(exePath, "version");
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			version = br.readLine();
+			if (!p.waitFor(3, TimeUnit.SECONDS))
+				p.destroyForcibly();
+		} catch (Exception e) {
+			version = "error";
+		}
+		Util.closeQuietly(br);
 	}
 		
 	@SuppressWarnings("unused")
@@ -137,15 +156,23 @@ public class Fork {
 			return;
 		}
 		
+		if (null == version)
+			loadVersion();
+		
 		if (!walletLoaded)
 			loadWallets();
+		
+		if (false == walletNode) {
+			loadFarmSummary();
+			updateView();
+			return;
+		}
 		
 		if (-1 == wallet.index)
 			return;
 		
-		
-		Process p = null, p2 = null;
-		BufferedReader br = null, br2 = null;
+		Process p = null;
+		BufferedReader br = null;
 		try {
 			p = Util.startProcess(exePath, "wallet", "show");
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -180,14 +207,6 @@ public class Fork {
 				}
 			}
 			
-			if (null == version) {
-				p2 = Util.startProcess(exePath, "version");
-				br2 = new BufferedReader(new InputStreamReader(p2.getInputStream()));
-				version = br2.readLine();
-				if (!p2.waitFor(2, TimeUnit.SECONDS))
-					p2.destroyForcibly();
-			}
-			
 			if (dead) {
 				syncStatus = "";
 			} else {
@@ -208,14 +227,11 @@ public class Fork {
 		}
 		
 		try {
-		Util.closeQuietly(br);
-		Util.waitForProcess(p);
-		Util.closeQuietly(br2);
-		Util.waitForProcess(p2);
-		
-		updateIcon();
-		MainGui.updateBalance();
-		updateView();
+			Util.closeQuietly(br);
+			Util.waitForProcess(p);
+			
+			MainGui.updateBalance();
+			updateView();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -316,11 +332,11 @@ public class Fork {
 			lastException = e;
 		};
 		
-		updateIcon();
 		Util.closeQuietly(lr);
+		updateView();
 	}
 
-	private void updateIcon() {
+	private void updateView() {
 		if (null != farmStatus) {
 			if (farmStatus.equals("Farming") || (farmStatus.equals("Not available") && false == fullNode)) {
 				if (readTime == ReadTime.EMPTY || (readTime.time <= 5 && readTime.time >= 0))
@@ -333,14 +349,14 @@ public class Fork {
 				statusIcon = Ico.YELLOW;
 			} else
 				statusIcon = Ico.RED;
+		} else if (false == fullNode) {
+			if (readTime.time <= 5 && readTime.time >= 0)
+				statusIcon = Ico.GREEN;
+			else if (readTime.time > 5 && readTime.time < 30)
+				statusIcon = Ico.YELLOW;
+			else
+				statusIcon = Ico.RED;
 		}
-	}
-
-	private void updateView() {
-		if (null == farmStatus)
-			statusIcon = Ico.RED;
-		else if (farmStatus.startsWith("Not synced"))
-			statusIcon = Ico.RED;
 		ForkView.update(this);
 	}
 	
@@ -355,9 +371,18 @@ public class Fork {
 		SVC.submit(() -> {
 			Util.runProcessWait(exePath,"stop","farmer");
 			statusIcon = Ico.RED;
-			farmStatus = "";
-			updateView();
+			farmStatus = null;
+			ForkView.update(this);
 		});
+	}
+	
+	public void openConfig() {
+		try {
+			Desktop.getDesktop().open(new File(configPath));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void generate() {
@@ -453,7 +478,7 @@ public class Fork {
 		Util.waitForProcess(p);
 	}
 	
-	public Fork(String symbol, String name, String dataPath, String daemonPath, double price, double rewardTrigger) {
+	public Fork(String symbol, String name, final String dataPath, final String daemonPath, double price, double rewardTrigger) {
 		this.exePath = NOT_FOUND;
 		this.logPath = NOT_FOUND;
 		this.symbol = symbol;
@@ -467,6 +492,7 @@ public class Fork {
 		if (System.getProperty("os.name").startsWith("Windows")) {
 			forkBase = userHome + "\\AppData\\Local\\" + daemonPath + "\\";
 			logPath = userHome + "\\" + dataPath.toLowerCase() + "\\mainnet\\log\\debug.log";
+			configPath = userHome + "\\" + dataPath.toLowerCase() + "\\mainnet\\config\\config.yaml";
 			if (symbol.equals("NCH"))
 				logPath = userHome + "\\.chia\\ext9\\log\\debug.log";
 		} else {
@@ -477,9 +503,9 @@ public class Fork {
 		try {
 			if (System.getProperty("os.name").startsWith("Windows")) {
 				
-				if ("Spare" == name || "Caldera" == name || "SSDCoin" == name || name.equals("Stor"))
+				if ("Spare" == name || "Caldera" == name || "SSDCoin" == name || "Kiwi" == name) {
 					exePath = forkBase + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
-				else if (name.equals("Chiarose") || name.equals("NChainExt9") )
+				}else if (name.equals("Chiarose") || name.equals("NChainExt9") )
 					exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
 				else
 					exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
@@ -512,6 +538,10 @@ public class Fork {
 		return new Effort((etw.inMinutes() > 0 && null != lastWin) ?
 				(int) (((double)lastWin.getTimeSince().inMinutes() / (double)etw.inMinutes()) * (double)100) : 0);
 		
+	}
+
+	public Wallet getWallet() {
+		return (null != wallet) ? wallet : Wallet.EMPTY;
 	}
 
 }
