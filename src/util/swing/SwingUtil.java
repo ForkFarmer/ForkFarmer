@@ -1,13 +1,17 @@
 package util.swing;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -170,6 +174,16 @@ public class SwingUtil {
 		for (int i = 0; i < mapping.length; i++)
 			Fork.LIST.add(mapping[i]);
 		
+	}
+
+	public static void persistDimension(Component cmpt, Supplier<Dimension> p, Consumer<Dimension> c) {
+		cmpt.setPreferredSize(p.get());
+		
+		cmpt.addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent componentEvent) {
+				c.accept(cmpt.getSize());
+			}
+		});
 	}
 	
 	

@@ -15,10 +15,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.swing.ImageIcon;
@@ -44,9 +40,6 @@ import util.apache.ReversedLinesFileReader;
 import util.swing.SwingEX;
 
 public class Fork {
-	transient private static final String NOT_FOUND = "";
-	transient public static ScheduledExecutorService SVC = Executors.newScheduledThreadPool(4);
-	transient public ScheduledFuture<?> walletFuture;
 	public static List<Fork> LIST = new ArrayList<>();
 	public transient Balance balance = new Balance();
 	public transient Balance height = new Balance();
@@ -57,7 +50,7 @@ public class Fork {
 	transient public String version;
 	transient public ImageIcon ico;
 	transient public ImageIcon statusIcon = Ico.GRAY;
-	transient ReadTime readTime = ReadTime.EMPTY;
+	public transient ReadTime readTime = ReadTime.EMPTY;
 	transient public NetSpace netSpace;
 	transient public NetSpace plotSpace;
 	transient public TimeU etw = new TimeU();
@@ -77,7 +70,7 @@ public class Fork {
 	public double price;
 	public double rewardTrigger;
 	
-	transient public Wallet wallet;
+	transient public Wallet wallet = Wallet.EMPTY;
 	transient boolean hidden;
 	public String logPath;
 	public String configPath;
@@ -87,7 +80,6 @@ public class Fork {
 	}
 	
 	public void loadWallets() {
-		walletLoaded = true;
 		Process p = null;
 		BufferedReader br = null;
 		try {
@@ -119,13 +111,10 @@ public class Fork {
 		Util.closeQuietly(br);
 		Util.waitForProcess(p);
 		
-		if (null == wallet) {
-			if (1 == walletList.size()) {
-				wallet = walletList.get(0);
-			} else if (walletList.size() > 1)
-				wallet = Wallet.SELECT;
-		}
-		ForkView.update(this);
+		if (1 == walletList.size()) {
+			wallet = walletList.get(0);
+		} else if (walletList.size() > 1)
+			wallet = Wallet.SELECT;
 	}
 	
 	public void loadVersion() {
@@ -135,41 +124,22 @@ public class Fork {
 			p = Util.startProcess(exePath, "version");
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			version = br.readLine();
-			if (!p.waitFor(3, TimeUnit.SECONDS))
-				p.destroyForcibly();
 		} catch (Exception e) {
 			version = "error";
 		}
 		Util.closeQuietly(br);
+		Util.waitForProcess(p);
 	}
 		
 	@SuppressWarnings("unused")
 	public void loadWallet () {
-		boolean dead = false;
-		if (true == hidden) {
-			walletFuture.cancel(true);
+		if (false == walletNode || -1 == wallet.index)
+			return;
+		
+		if ("CGN".equals(symbol)) {
+			balance = Balance.NOT_SUPPORTED;
 			return;
 		}
-		
-		if ("CGN".contentEquals(symbol)) {
-			wallet = Wallet.NOT_SUPPORTED;
-			return;
-		}
-		
-		if (null == version)
-			loadVersion();
-		
-		if (!walletLoaded)
-			loadWallets();
-		
-		if (false == walletNode) {
-			loadFarmSummary();
-			updateView();
-			return;
-		}
-		
-		if (-1 == wallet.index)
-			return;
 		
 		Process p = null;
 		BufferedReader br = null;
@@ -178,8 +148,8 @@ public class Fork {
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			
 			String l = null;
+			boolean readBalance = false;
 			while ( null != (l = br.readLine())) {
-				boolean readBalance = false;
 				if (l.contains("Choose")) { // little bit of a hack for multiple wallets.. but it works for now
 					PrintWriter pw = new PrintWriter(p.getOutputStream());
 					char[] buf = new char[4096];
@@ -192,13 +162,16 @@ public class Fork {
 				
 				if (l.contains("Connection error")) {
 					p.destroyForcibly();
-					dead = true;
+					syncStatus = "";
 					break;
-				} else if (l.contains("Total Balance: ")) {
-					if (!readBalance || balance.balance <= 0)
-						balance = new Balance(Util.getWordAfter(l, "Total Balance: "));
-					readBalance = true;
-					ForkView.updateBalance(this);
+				} else if (l.contains("-Total Balance: ")) {
+					Balance newBalance = new Balance(Util.getWordAfter(l, "-Total Balance: "));
+					if (!readBalance) {
+						balance = newBalance;
+						readBalance = true;
+					} else {
+						balance.add(newBalance);
+					}
 				} else if (l.contains("Wallet height: ")) {
 					String heightStr = l.substring("Wallet height: ".length());
 					height = new Balance(Integer.parseInt(heightStr));
@@ -207,38 +180,29 @@ public class Fork {
 				}
 			}
 			
-			if (dead) {
-				syncStatus = "";
-			} else {
+			
+			if ("" != syncStatus) {
 				Transaction.load(this);
-				loadFarmSummary();
-				
 				synchronized(Transaction.class) {
 					dayWin = Transaction.LIST.stream()
 						.filter(t -> this == t.f && t.blockReward && t.getTimeSince().inMinutes() < (60*24))
 						.collect(Collectors.summingDouble(Transaction::getAmount));
 				}
-				
-				
 			}
+				
 		} catch (Exception e) {
 			lastException = e;
 			statusIcon = Ico.RED;
 		}
 		
-		try {
-			Util.closeQuietly(br);
-			Util.waitForProcess(p);
-			
-			MainGui.updateBalance();
-			updateView();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		Util.closeQuietly(br);
+		Util.waitForProcess(p);
 		
+		MainGui.updateBalance();
+		updateIcon();
 	}
 	
-	private void loadFarmSummary() {
+	public void loadFarmSummary() {
 		Process p = null;
 		BufferedReader br = null;
 		try {
@@ -270,7 +234,6 @@ public class Fork {
 		} catch (IOException e) {
 			lastException = e;
 		}
-		ForkView.update(this);
 		Util.waitForProcess(p);
 		Util.closeQuietly(br);
 	}
@@ -333,47 +296,39 @@ public class Fork {
 		};
 		
 		Util.closeQuietly(lr);
-		updateView();
+		updateIcon();
+		ForkView.update(this);
 	}
 
-	private void updateView() {
+	void updateIcon() {
+		if (readTime.time <= 5 && readTime.time >= 0)
+			statusIcon = Ico.GREEN;
+		else if (readTime.time > 5 && readTime.time < 30)
+			statusIcon = Ico.YELLOW;
+		else
+			statusIcon = Ico.RED;
+		
 		if (null != farmStatus) {
-			if (farmStatus.equals("Farming") || (farmStatus.equals("Not available") && false == fullNode)) {
-				if (readTime == ReadTime.EMPTY || (readTime.time <= 5 && readTime.time >= 0))
-					statusIcon = Ico.GREEN;
-				else if (readTime.time > 5 && readTime.time < 30)
-					statusIcon = Ico.YELLOW;
-				else
-					statusIcon = Ico.RED;
-			} else if (farmStatus.equals("Syncing")) {
+			if (farmStatus.equals("Farming") && readTime == ReadTime.EMPTY)
+				statusIcon = Ico.GREEN; // proof times < 5sec are don't show up in log for many of xch for default log levels.
+			if (farmStatus.equals("Syncing"))
 				statusIcon = Ico.YELLOW;
-			} else
-				statusIcon = Ico.RED;
-		} else if (false == fullNode) {
-			if (readTime.time <= 5 && readTime.time >= 0)
-				statusIcon = Ico.GREEN;
-			else if (readTime.time > 5 && readTime.time < 30)
-				statusIcon = Ico.YELLOW;
-			else
+			if (farmStatus.startsWith("Not Synched"))
 				statusIcon = Ico.RED;
 		}
-		ForkView.update(this);
+		
 	}
 	
 	public void start() {
-		SVC.submit(() -> {
-			Util.runProcessWait(exePath,"start","farmer");
-			loadWallet();	
-		});
+		Util.runProcessWait(exePath,"start","farmer");
+		loadWallet();
 	}
 	
 	public void stop() {
-		SVC.submit(() -> {
-			Util.runProcessWait(exePath,"stop","farmer");
-			statusIcon = Ico.RED;
-			farmStatus = null;
-			ForkView.update(this);
-		});
+		Util.runProcessWait(exePath,"stop","farmer");
+		statusIcon = Ico.RED;
+		farmStatus = null;
+		ForkView.update(this);
 	}
 	
 	public void openConfig() {
@@ -386,11 +341,11 @@ public class Fork {
 	}
 	
 	public void generate() {
-		SVC.submit(() -> {
+		new Thread(() -> {
 			
 			//addr = ProcessPiper.run(exePath,"wallet","get_address").replace("\n", "").replace("\r", "");
-			updateView();
-		});
+			updateIcon();
+		}).start();
 	}
 	
 	public void showConnections () {
@@ -444,7 +399,7 @@ public class Fork {
 	}
 	
 	public void refresh() {
-		SVC.submit(() -> loadWallet());
+		new Thread(() -> loadWallet()).start();
 	}
 	
 	public Optional<Integer> getIndex() {
@@ -479,8 +434,6 @@ public class Fork {
 	}
 	
 	public Fork(String symbol, String name, final String dataPath, final String daemonPath, double price, double rewardTrigger) {
-		this.exePath = NOT_FOUND;
-		this.logPath = NOT_FOUND;
 		this.symbol = symbol;
 		this.name = name;
 		this.price= price;
@@ -502,12 +455,10 @@ public class Fork {
 		
 		try {
 			if (System.getProperty("os.name").startsWith("Windows")) {
-				
-				if ("Spare" == name || "Caldera" == name || "SSDCoin" == name || "Kiwi" == name) {
-					exePath = forkBase + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
-				}else if (name.equals("Chiarose") || name.equals("NChainExt9") )
-					exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
-				else
+				exePath = forkBase + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
+				if (!new File(exePath).exists())
+						exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
+				if (!new File(exePath).exists())
 					exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
 			} else {
 				exePath = forkBase + "/venv/bin/" + name.toLowerCase();
@@ -530,18 +481,18 @@ public class Fork {
 		return LIST.stream().filter(f -> f.symbol.equals(symbol)).findAny();
 	}
 	
-	public void loadIcon() {
-		ico = Ico.getForkIcon(name);
-	}
-
 	public Effort getEffort() {
 		return new Effort((etw.inMinutes() > 0 && null != lastWin) ?
 				(int) (((double)lastWin.getTimeSince().inMinutes() / (double)etw.inMinutes()) * (double)100) : 0);
 		
 	}
 
-	public Wallet getWallet() {
-		return (null != wallet) ? wallet : Wallet.EMPTY;
+	public void stdUpdate() {
+		if (!hidden) {
+			loadWallet();
+			loadFarmSummary();
+			ForkView.update(this);
+		}
 	}
 
 }

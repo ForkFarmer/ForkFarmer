@@ -4,11 +4,17 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 
 public class Balance implements Comparable<Balance> {
+	public static final Balance NOT_SUPPORTED = new Balance("*Not Supported*",0);
 	public double balance = -1;
 	String balanceStr = "";
 	
 	public Balance() {
 		
+	}
+	
+	public Balance(String s, double amt) {
+		this.balanceStr = s;
+		this.balance = amt;
 	}
 	
 	public Balance(double amt) {
@@ -44,6 +50,12 @@ public class Balance implements Comparable<Balance> {
 
 	public void add(double amount) {
 		balance += amount;
+		DecimalFormat df = new DecimalFormat("#,##0.######");
+		balanceStr = df.format(balance);
+	}
+
+	public void add(Balance b) {
+		balance += b.balance;
 		DecimalFormat df = new DecimalFormat("#,##0.######");
 		balanceStr = df.format(balance);
 	}

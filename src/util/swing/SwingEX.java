@@ -175,6 +175,10 @@ public class SwingEX {
 		public String getText() {
 			return field.getText();
 		}
+		
+		public int getAsInt() {
+			return Integer.parseInt(getText());
+		}
 
 	}
 	

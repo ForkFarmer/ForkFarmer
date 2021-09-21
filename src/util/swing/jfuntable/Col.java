@@ -13,13 +13,15 @@ public class Col<T> {
 	public final String name;
 	public int width;
 	public int colIndex;
+	public boolean show;
+	
+	public transient boolean selectable = true;
+	public transient boolean editable = false;
 	public transient final Class<T> type;
 	public transient final Function<T, Object> getValue;
 	public transient BiConsumer<T,Object> consumer;
-	JCheckBoxMenuItem jmi = null;
-	public boolean selectable = true;
-	public boolean deafaultView = false;
-	public boolean editable = false;
+	public transient JCheckBoxMenuItem jmi = null;
+	
 
 	public Col(final String name, final int width,  final Class<?> type, final Function<T, Object> getValue) {
 		this(name,width,type,getValue,null);
@@ -85,7 +87,7 @@ public class Col<T> {
 		if (selectable && null != menu) {
 			jmi = new JCheckBoxMenuItem(name);
 			menu.add(jmi);
-			jmi.setSelected(deafaultView);
+			jmi.setSelected(show);
 			jmi.addActionListener(ae -> resize(table));
 		}
 		resize(table);
@@ -93,12 +95,12 @@ public class Col<T> {
 	
 	public Col<T> showMandatory() {
 		selectable = false;
-		deafaultView = true;
+		show = true;
 		return this;
 	}
 	
-	public Col<T> show() {
-		deafaultView = true;
+	public Col<T> show(boolean s) {
+		show = s;
 		return this;
 	}
 	

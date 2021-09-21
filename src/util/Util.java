@@ -19,8 +19,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -230,14 +231,13 @@ public class Util {
 	
 	
 	public static void waitForProcess(Process p ) {
-		
 		try {
 			if (null != p) {
-				p.waitFor(60, TimeUnit.SECONDS);
-				p.destroyForcibly();
+				if (!p.waitFor(60, TimeUnit.SECONDS))
+					p.destroyForcibly();
 				//ProcessDebug.remove(p);
 			}
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -322,6 +322,11 @@ public class Util {
 			e.printStackTrace();
 		}
 		return baos.toString();
+	}
+
+	public static void blockUntilAvail(ExecutorService svc) {
+		while (((ThreadPoolExecutor)svc).getQueue().size() > 0) // block queue
+			sleep(500);
 	}
 	
 }

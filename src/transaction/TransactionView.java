@@ -1,7 +1,6 @@
 package transaction;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -15,6 +14,7 @@ import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.JTableHeader;
 
+import main.Settings;
 import types.Balance;
 import util.Ico;
 import util.swing.SwingEX;
@@ -26,7 +26,7 @@ public class TransactionView extends JPanel {
 	
 	final static TxTableModel MODEL = new TxTableModel();
 	private final static JTable TABLE = new JTable(MODEL);
-	private final JScrollPane JSP = new JScrollPane(TABLE);
+	public static final JScrollPane JSP = new JScrollPane(TABLE);
 	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
 	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
 	
@@ -35,10 +35,10 @@ public class TransactionView extends JPanel {
 			super();
 			addColumn("",   		22,		Icon.class,		t->t.getIcon()).showMandatory();
 			addColumn("Date",   	140,	String.class, 	t->t.date).showMandatory();
-			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).show();
-			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol).show();
-			addColumn("Name", 		80,		String.class, 	t->t.f.name).show();
-			addColumn("Effort",		80,		Integer.class, 	t->t.effort).show();
+			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).show(true);
+			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol).show(true);
+			addColumn("Name", 		80,		String.class, 	t->t.f.name).show(true);
+			addColumn("Effort",		80,		Integer.class, 	t->t.effort).show(true);
 			addColumn("To",   		-1,		String.class, 	t->t.target).showMandatory();
 			addColumn("Amount", 	100,	Balance.class, 	t->t.amount).showMandatory();			
 			
@@ -54,7 +54,8 @@ public class TransactionView extends JPanel {
 		add(JSP,BorderLayout.CENTER);
 		//Col.adjustWidths(TABLE,cols);
 		//TABLE.getColumnModel().getColumn(2).setCellRenderer(new MyRenderer());
-		JSP.setPreferredSize(new Dimension(950,250));
+		
+		SwingUtil.persistDimension(JSP, () -> Settings.GUI.txViewDimension, d -> Settings.GUI.txViewDimension = d);
 		
 		TABLE.setAutoCreateRowSorter(true);
 		TABLE.getRowSorter().toggleSortOrder(1);

@@ -49,7 +49,7 @@ public class Transaction {
 		this.date = date;
 		this.blockReward = blockReward;
 		
-		if (blockReward && getTimeSince().inMinutes() < 3)
+		if (blockReward && getTimeSince().inMinutes() < 5)
 			effort = f.getEffort();
 	}
 	

@@ -11,8 +11,6 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
-import forks.Fork;
-import forks.ForkView;
 import util.Ico;
 import util.jtattoo.hifi.HiFiLookAndFeel;
 
@@ -35,7 +33,9 @@ public class ForkFarmer {
 	
 	
 	private static void startGUI() {
-		FRAME = new JFrame("ForkFarmer 1.7");
+		Settings.Load();
+		
+		FRAME = new JFrame("ForkFarmer 1.8");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 
@@ -64,10 +64,7 @@ public class ForkFarmer {
 		
 		FRAME.addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {
-		    	Settings s = new Settings();
-		    	s.forkList = Fork.LIST;
-		    	s.fvColList = ForkView.MODEL.colList;
-		    	s.Save();
+		    	Settings.Save();
 		    }
 		});
 		

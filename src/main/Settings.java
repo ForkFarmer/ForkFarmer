@@ -1,56 +1,69 @@
 package main;
 
+import java.awt.Dimension;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import forks.Fork;
 import forks.ForkView;
+import util.Ico;
 import util.swing.SwingUtil;
-import util.swing.jfuntable.Col;
 
 public class Settings {
 	private static final String SETTINGS_PATH = "FF_Settings.yaml";
+	public static Gui GUI = new Gui();
 	
-	List<Fork> forkList;
-	List<Col<Fork>> fvColList;
+	static Map<String, Object> Settings = new HashMap<>();
 	
-	public Settings() {
-		
+	public static class Gui {
+		public int logReaderIntraDelay;
+		public int logReaderExoDelay;
+		public int daemonReaderWorkers;
+		public int daemonReaderDelay;
+		public Dimension txViewDimension;
+		public Dimension forkViewDimension;
 	}
 	
-	 public List<Fork> getforkList(){
-		 return forkList;
-	 }
-	 
-	 public void setforkList(List<Fork> list){
-		 forkList = list;
-	 }
-	 
-	 public List<Col<Fork>> getfvColList(){
-		 return fvColList;
-	 }
-	 
-	 public void setfvColList(List<Col<Fork>> list){
-		 fvColList = list;
-	 }
-	
+	@SuppressWarnings("unchecked")
 	public static void Load() {
 		InputStream inputStream;
 		try {
 			inputStream = new FileInputStream(new File(SETTINGS_PATH));
 			Yaml yaml = new Yaml();
-			Fork.LIST = yaml.load(inputStream);
+			Map<String, Object> settings = yaml.load(inputStream);
+			GUI = (Gui) settings.get("Gui Settings");
+			Fork.LIST = (List<Fork>) settings.get("Fork List");
+		
+			/*
+			List<Col<Fork>> colList = (List<Col<Fork>>) settings.get("Fork View Columns");
+			
+			for (Col<Fork> c : colList) {
+				Col<Fork> newCol = ForkView.MODEL.colMap.get(c.name);
+				newCol.width = c.width;
+				newCol.show = c.show;
+			}
+			*/
+			
 		} catch (Exception e) {
+			//e.printStackTrace();
 			loadDefaults(); // problem reading or parsing settings, use defaults
+			GUI.logReaderIntraDelay = 100;
+			GUI.logReaderExoDelay = 5000;
+			GUI.daemonReaderWorkers = 2;
+			GUI.daemonReaderDelay = 5000;
+			GUI.txViewDimension = new Dimension(900,250);
+			GUI.forkViewDimension = new Dimension(700,400);
 		}
-		Fork.LIST.forEach(Fork::loadIcon);
+		Fork.LIST.forEach(f -> f.ico = Ico.getForkIcon(f.name));
 		ForkView.update();
 	}
 	
@@ -78,7 +91,7 @@ public class Settings {
 		new Fork("XTX","Taco", ".taco", "taco-blockchain", .02,.25);
 		new Fork("XSE","Seno", ".seno2", "seno-blockchain", 0.015,.25);
 		new Fork("XCD","CryptoDoge", ".cryptodoge", "cryptodoge", 0.00,2500);
-		new Fork("WHEAT","Wheat", ".wheat", "wheat-blockchain", .02,12.5);
+		new Fork("WHEAT","Wheat", ".wheat", "wheat-blockchain", .02,0.25);
 		new Fork("SOCK","Socks", ".socks", "socks-blockchain", 0.01,.25);
 		new Fork("XCR","Chiarose", ".chiarose", "chia-rosechain", 0.0004,25.0);
 		new Fork("XMX","Melati", ".melati", "melati-blockchain", .01,.25);
@@ -104,7 +117,7 @@ public class Settings {
 		new Fork("XCHA","XCHA", ".xcha", "xcha-blockchain", 0.0,.25);
 		new Fork("XBT","Beet", ".beet", "beet-blockchain", 0.0,.25);
 		new Fork("XTH","Thyme", ".thyme", "thyme-blockchain", 0.0,.25);
-		new Fork("LLC","LittleLamboCoin", ".thyme", "thyme-blockchain", 0.0,.25);
+		new Fork("LLC","LittleLamboCoin", ".littlelambocoin", "littlelambocoin", 0.0,.25);
 		new Fork("XACH","Achi", ".achi", "achi-blockchain", 0.0,.25);
 		new Fork("STOR","Stor", ".stor", "stor-blockchain", 0.0,.5);
 		new Fork("XNT","Skynet", ".skynet", "skynet-blockchain", 0.0, .625);
@@ -114,10 +127,14 @@ public class Settings {
 		new Fork("MGA","Mogua", ".mogua", "mogua-blockchain", 0.0,2.5);
 	}
 	
-	public void Save() {
+	public static void Save() {
 		synchronized (Fork.LIST) {
 			SwingUtil.mapViewToModel(ForkView.TABLE,Fork.LIST);
 		}
+		
+		Settings.put("Fork List", Fork.LIST);
+		Settings.put("Gui Settings", GUI);
+		//Settings.put("Fork View Columns", ForkView.MODEL.colList);
 		
 		DumperOptions options = new DumperOptions();
 		options.setIndent(2);
@@ -129,7 +146,7 @@ public class Settings {
 		try {
 			writer = new PrintWriter(SETTINGS_PATH);
 			Yaml yaml = new Yaml(options);
-			yaml.dump(Fork.LIST, writer);
+			yaml.dump(Settings, writer);
 			
 			writer.close();
 		} catch (FileNotFoundException e) {
@@ -137,7 +154,5 @@ public class Settings {
 			e.printStackTrace();
 		}
 	}
-	
-	
 
 }

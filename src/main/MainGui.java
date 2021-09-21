@@ -3,7 +3,7 @@ package main;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.util.concurrent.TimeUnit;
+import java.awt.GridLayout;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -15,12 +15,14 @@ import javax.swing.border.TitledBorder;
 import forks.Fork;
 import forks.ForkView;
 import transaction.TransactionView;
+import util.Ico;
 import util.NetSpace;
 import util.Util;
+import util.swing.SwingEX;
+import util.swing.SwingEX.LTPanel;
 
 @SuppressWarnings("serial")
 public class MainGui extends JPanel {
-	public static int numForks;
 	public static ForkView FV = new ForkView();
 	
 	// *** Transaction Panel ***
@@ -58,6 +60,41 @@ public class MainGui extends JPanel {
         c.weightx=0;
         c.gridx=4;
         tPanel.add(sendBtn,c);
+        c.gridx=5;
+        tPanel.add(new SwingEX.Btn("",Ico.GEAR, () -> {
+        	JPanel settingPanel = new JPanel(new GridLayout(2,1));
+        	
+        	JPanel logReader = new JPanel(new GridLayout(2,1));
+        	logReader.setBorder(new TitledBorder("Log Reader:"));
+        	JPanel daemonReader = new JPanel(new GridLayout(2,1));
+        	daemonReader.setBorder(new TitledBorder("Daemon Reader:"));
+        	
+        	LTPanel lriSleep = new SwingEX.LTPanel("    Intra Delay (ms): " , Integer.toString(Settings.GUI.logReaderIntraDelay));
+    		LTPanel lreSleep = new SwingEX.LTPanel("    Exo Delay (ms): " , Integer.toString(Settings.GUI.logReaderExoDelay));
+    		
+    		LTPanel dWorkers = new SwingEX.LTPanel("    Worker threads (requires restart): " , Integer.toString(Settings.GUI.daemonReaderWorkers));
+    		LTPanel dIntraSleep = new SwingEX.LTPanel("    Delay (ms): " , Integer.toString(Settings.GUI.daemonReaderDelay));
+        	
+    		logReader.add(lriSleep);
+    		logReader.add(lreSleep);
+    		
+    		daemonReader.add(dWorkers);
+    		daemonReader.add(dIntraSleep);
+    		
+        	settingPanel.add(logReader);
+        	settingPanel.add(daemonReader);
+        	
+        	if (true == ForkFarmer.showPopup("Settings:", settingPanel)) {
+        		Settings.GUI.logReaderIntraDelay = lriSleep.getAsInt();
+        		Settings.GUI.logReaderExoDelay = lreSleep.getAsInt();
+        		Settings.GUI.daemonReaderWorkers = dWorkers.getAsInt();
+        		Settings.GUI.daemonReaderDelay = dIntraSleep.getAsInt();
+        		
+        	}
+        		
+        	
+        }));
+        	
         
         sendBtn.addActionListener(e -> sendTx());
         		
@@ -79,21 +116,9 @@ public class MainGui extends JPanel {
         
         updatePlotSize(plotSize);
         			
-		Settings.Load();
-		
 		// compute fork refresh delay
-		if (Fork.LIST.size() > 0) {
-			long delayStep = (long)(120/Fork.LIST.size());
-			long delay = 0;
-			for (Fork f: Fork.LIST) {
-				Fork.SVC.submit(() -> f.loadWallet());
-				f.walletFuture =  Fork.SVC.scheduleAtFixedRate(() -> f.loadWallet(), 120 + delay, 120, TimeUnit.SECONDS);
-				delay += delayStep;
-			}
-			new Thread(ForkView::logReader).start();
-		}
-		
-		numForks = Fork.LIST.size();
+		new Thread(ForkView::daemonReader).start();
+		new Thread(ForkView::logReader).start();
 		ForkView.TABLE.setAutoCreateRowSorter(true);
 		
 		Args.handle();

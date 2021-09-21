@@ -39,7 +39,7 @@ public class PeerView extends JPanel {
 	private final JTable TABLE = new JTable(MODEL);
 	private final JScrollPane JSP = new JScrollPane(TABLE);
 	
-	private final JButton addPeers = new SwingEX.Btn("Add Peers", Ico.PLUS, () -> {addPeers();});
+	private final JButton addPeers = new SwingEX.Btn("Add Peers", Ico.PLUS, () -> {new Thread(() -> addPeers()).start();});
 	private final JButton copyPeers = new SwingEX.Btn("Copy", 	Ico.CLIPBOARD,  () -> {copy();});
 	private final JButton copyCLI = new SwingEX.Btn("CLI Copy", Ico.CLI,  () -> {copyCLI();});
 	private final JTextField newPeerField = new JTextField();
@@ -170,8 +170,7 @@ public class PeerView extends JPanel {
 
 	public void addPeers() {
 		String[] peers = newPeerField.getText().split("\\s+");
-		
 		for (String p : peers)
-			Fork.SVC.submit(() -> {Util.runProcessWait(f.exePath,"show","-a", p);});
+			Util.runProcessWait(f.exePath,"show","-a", p);
 	}
 }

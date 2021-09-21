@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 @SuppressWarnings("serial")
@@ -21,11 +20,18 @@ public class JFunTableModel<T> extends AbstractLambdaTableModel {
 		onisCellEditable((r,c) -> false);
 	}
 	
-	public Col<T> addColumn(Col<T> c) {
+	private Col<T> addColumn(Col<T> c) {
 		colList.add(c);
 		return c;
 	}
 	
+	public Col<T> addColumn(Col<T> c, final Class<?> type, final Function<T, Object> getValue) {
+		Col<T> newCol = new Col<T>(c.name,c.width,type,getValue).show(c.show);
+		newCol.colIndex = colList.size();
+		colList.add(newCol);
+		return newCol;
+	}
+		
 	public Col<T> addColumn(final String name, final int width,  final Class<?> type, final Function<T, Object> getValue) {
 		Col<T> c = new Col<T>(name,width,type,getValue);
 		c.colIndex = colList.size();
