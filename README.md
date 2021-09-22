@@ -6,7 +6,7 @@ Discord: https://discord.gg/vhwVg5kKNR
 
 Requires JRE 1.8 or greater to run: https://www.java.com/en/download/
 
-![ff](https://user-images.githubusercontent.com/66434789/133337859-3cb74582-9757-44a5-9ee1-c1730a03dd47.png)
+![FF](https://user-images.githubusercontent.com/66434789/134285111-7b3dd991-b1ef-4876-bdae-4a838dd1618e.png)
 
 # Frequently Asked Questions
 **How does it work:** ForkFarmer is a front end for XCH forks which interacts with the XCH fork daemon process and log files. You will still need to install and configure the specific XCH forks you would like to run. https://xchforks.com/ is a good starting point to discover forks.
