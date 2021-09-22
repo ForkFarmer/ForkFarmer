@@ -67,20 +67,20 @@ public class ForkView extends JPanel {
 			
 			addColumn(" ",   		22,	Icon.class,		f->f.ico).showMandatory();
 			addColumn("Symbol",  	50,	String.class, 	f->f.symbol).show(true);
-			addColumn("Name",   		80,	String.class,	f->f.name);
-			addColumn("Balance",		120,Balance.class,	f->f.balance).show(true).index(i -> balIndex=i);
+			addColumn("Name",   	80,	String.class,	f->f.name);
+			addColumn("Balance",	120,Balance.class,	f->f.balance).show(true).index(i -> balIndex=i);
 			addColumn("$",			60, Double.class, 	f->f.price).show(true).editable();
 			addColumn("Netspace",	80, NetSpace.class, f->f.netSpace).show(true);
 			addColumn("Height",		80, Balance.class,  f->f.height);
 			addColumn("Farm Size",	80, NetSpace.class, f->f.plotSpace);
-			addColumn("Version",		80, String.class,   f->f.version);
+			addColumn("Version",	80, String.class,   f->f.version);
 			addColumn("Sync",		80, String.class,   f->f.syncStatus);
 			addColumn("Farm",		80, String.class,   f->f.farmStatus).show(true);
-			addColumn("ETW",			70, TimeU.class,    f->f.etw);
-			addColumn("24H Win",		60,	Double.class, 	f->f.dayWin);
+			addColumn("ETW",		70, TimeU.class,    f->f.etw);
+			addColumn("24H Win",	60,	Double.class, 	f->f.dayWin);
 			addColumn("Last Win",	90, TimeU.class, 	f->f.getPreviousWin()).index(i -> lwIndex=i);
 			addColumn("Effort",		60,	Effort.class, 	Fork::getEffort);
-			addColumn("Address",		-1,	Wallet.class, 	f->f.wallet).showMandatory();
+			addColumn("Address",	-1,	Wallet.class, 	f->f.wallet).showMandatory();
 			addColumn("Reward",		40,	Double.class, 	f->f.rewardTrigger).index(i -> rewIndex=i).editable();
 			addColumn("#W",			40,	Integer.class, 	f->f.walletList.size());
 			addColumn("Time",		50,	ReadTime.class, f->f.readTime).show(true).index(i -> tIndex=i);
@@ -228,8 +228,8 @@ public class ForkView extends JPanel {
 		
 		MODEL.colList.forEach(c -> c.setSelectView(TABLE,HEADER_MENU));
 		
-		//SwingUtil.setColRight(TABLE,MODEL.balIndex);
-		//SwingUtil.setColRight(TABLE,MODEL.tIndex);
+		SwingUtil.setColRight(TABLE,MODEL.balIndex);
+		SwingUtil.setColRight(TABLE,MODEL.tIndex);
 		 
 		//TABLE.getColumnModel().getColumn(1).setCellRenderer(new SymbolRendered());
 		
@@ -324,6 +324,7 @@ public class ForkView extends JPanel {
 		List<Fork> selList = getSelected();
 		selList.forEach(f -> f.hidden = true);
 		Fork.LIST.removeAll(selList);
+		MainGui.updateNumForks();
 		update();
 	}
 

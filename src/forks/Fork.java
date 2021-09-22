@@ -136,7 +136,7 @@ public class Fork {
 		if (false == walletNode || -1 == wallet.index)
 			return;
 		
-		if ("CGN".equals(symbol)) {
+		if ("CGN".equals(symbol) && System.getProperty("os.name").startsWith("Windows")) {
 			balance = Balance.NOT_SUPPORTED;
 			return;
 		}

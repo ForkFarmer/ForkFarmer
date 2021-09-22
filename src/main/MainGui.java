@@ -10,6 +10,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 
 import forks.Fork;
@@ -33,6 +34,7 @@ public class MainGui extends JPanel {
 	private static NetSpace plotSize = new NetSpace("0 TiB");
 	private static final JLabel plotlbl = new JLabel("Farm Size: ?");
 	private static final JLabel valuelbl = new JLabel("Value: $0.0");
+	private static final JLabel forklbl = new JLabel(Integer.toString(Fork.LIST.size()) + " Forks", SwingConstants.CENTER);
 	
 	GridBagConstraints c = new GridBagConstraints();
 	
@@ -103,8 +105,11 @@ public class MainGui extends JPanel {
         PEPanel.add(new TransactionView(),BorderLayout.CENTER);
         
         JPanel topPanel = new JPanel(new BorderLayout());
+        JPanel topCenter = new JPanel(new BorderLayout());
+        topCenter.add(forklbl, BorderLayout.CENTER);
         
         topPanel.add(valuelbl,BorderLayout.LINE_START);
+        topPanel.add(topCenter, BorderLayout.CENTER);
         topPanel.add(plotlbl,BorderLayout.LINE_END);
         
         
@@ -153,6 +158,10 @@ public class MainGui extends JPanel {
 				totalValue += f.price * f.balance.balance;
 		
 		valuelbl.setText("Value: $" + Util.round(totalValue, 2));
+	}
+	
+	public static void updateNumForks() {
+		forklbl.setText(Integer.toString(Fork.LIST.size()) + " Forks");
 	}
 	
 }

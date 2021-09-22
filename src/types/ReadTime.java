@@ -10,7 +10,7 @@ public class ReadTime implements Comparable<ReadTime> {
 	
 	public ReadTime(double time) {
 		this.time = time;
-		DecimalFormat df = new DecimalFormat("###.##");
+		DecimalFormat df = new DecimalFormat("0.00");
 		timeStr = df.format(time);
 	}
 	
