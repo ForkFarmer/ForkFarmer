@@ -14,6 +14,7 @@ import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.JTableHeader;
 
+import main.ForkFarmer;
 import main.Settings;
 import types.Balance;
 import util.Ico;
@@ -40,7 +41,8 @@ public class TransactionView extends JPanel {
 			addColumn("Name", 		80,		String.class, 	t->t.f.name).show(true);
 			addColumn("Effort",		80,		Integer.class, 	t->t.effort).show(true);
 			addColumn("To",   		-1,		String.class, 	t->t.target).showMandatory();
-			addColumn("Amount", 	100,	Balance.class, 	t->t.amount).showMandatory();			
+			addColumn("Amount", 	100,	Balance.class, 	t->t.amount).showMandatory();
+			addColumn("$", 			60,		Balance.class, 	t->t.value);
 			
 			onGetRowCount(() -> Transaction.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Transaction.LIST.get(r)));
@@ -64,6 +66,7 @@ public class TransactionView extends JPanel {
 		TABLE.setComponentPopupMenu(POPUP_MENU);
 		POPUP_MENU.add(new SwingEX.JMI("View at posat.io", 	Ico.POSAT, 		() -> getSelected().forEach(Transaction::browse)));
 		POPUP_MENU.add(new SwingEX.JMI("Copy", 				Ico.CLIPBOARD,  TransactionView::copy));
+		POPUP_MENU.add(new SwingEX.JMI("Report", 			Ico.GRAPH,  	TransactionView::report));
 		
 		SwingUtil.addDoubleClickAction(TABLE, r -> {
 			if (1 != getSelected().size())
@@ -78,6 +81,7 @@ public class TransactionView extends JPanel {
 		MODEL.colList.forEach(c -> c.setSelectView(TABLE,HEADER_MENU));
 
 		SwingUtil.setColRight(TABLE, 7);
+		SwingUtil.setColRight(TABLE, 8);
 	}
 	
 	private static List<Transaction> getSelected() {
@@ -98,6 +102,11 @@ public class TransactionView extends JPanel {
 		StringSelection stringSelection = new StringSelection(sb.toString());
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
+	}
+	
+	static private void report() {
+		TxReportView trv  = new TxReportView(getSelected());
+		ForkFarmer.showPopup("TxReport: ", trv);
 	}
 	
 }

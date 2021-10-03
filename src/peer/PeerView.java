@@ -144,7 +144,7 @@ public class PeerView extends JPanel {
 		StringBuilder sb = new StringBuilder();
 		for (Peer p: peerList)
 			if (null != p.address)
-				sb.append(f.name + " show -a " + p.address + "\n");
+				sb.append(f.name.toLowerCase() + " show -a " + p.address + "\n");
 		
 		StringSelection stringSelection = new StringSelection(sb.toString());
 		

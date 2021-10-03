@@ -41,7 +41,10 @@ import util.swing.SwingEX;
 
 public class Fork {
 	public static List<Fork> LIST = new ArrayList<>();
+	public static List<Fork> I_LIST;
+
 	public transient Balance balance = new Balance();
+	public transient Balance equity = new Balance();
 	public transient Balance height = new Balance();
 		
 	public String symbol;
@@ -50,7 +53,7 @@ public class Fork {
 	transient public String version;
 	transient public ImageIcon ico;
 	transient public ImageIcon statusIcon = Ico.GRAY;
-	public transient ReadTime readTime = ReadTime.EMPTY;
+	transient public ReadTime readTime = ReadTime.EMPTY;
 	transient public NetSpace netSpace;
 	transient public NetSpace plotSpace;
 	transient public TimeU etw = new TimeU();
@@ -64,6 +67,7 @@ public class Fork {
 	transient public int selectedWallet;
 	transient boolean walletLoaded = false;
 	transient public List<Wallet> walletList = new ArrayList<>();
+	transient boolean hidden;
 	
 	public boolean fullNode = true;
 	public boolean walletNode = true;
@@ -71,7 +75,6 @@ public class Fork {
 	public double rewardTrigger;
 	
 	transient public Wallet wallet = Wallet.EMPTY;
-	transient boolean hidden;
 	public String logPath;
 	public String configPath;
 	
@@ -148,7 +151,7 @@ public class Fork {
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			
 			String l = null;
-			boolean readBalance = false;
+			Balance newBalance = new Balance();
 			while ( null != (l = br.readLine())) {
 				if (l.contains("Choose")) { // little bit of a hack for multiple wallets.. but it works for now
 					PrintWriter pw = new PrintWriter(p.getOutputStream());
@@ -165,13 +168,7 @@ public class Fork {
 					syncStatus = "";
 					break;
 				} else if (l.contains("-Total Balance: ")) {
-					Balance newBalance = new Balance(Util.getWordAfter(l, "-Total Balance: "));
-					if (!readBalance) {
-						balance = newBalance;
-						readBalance = true;
-					} else {
-						balance.add(newBalance);
-					}
+					newBalance.add(Double.parseDouble(Util.getWordAfter(l, "-Total Balance: ")));
 				} else if (l.contains("Wallet height: ")) {
 					String heightStr = l.substring("Wallet height: ".length());
 					height = new Balance(Integer.parseInt(heightStr));
@@ -180,6 +177,7 @@ public class Fork {
 				}
 			}
 			
+			updateBalance(newBalance);
 			
 			if ("" != syncStatus) {
 				Transaction.load(this);
@@ -198,7 +196,6 @@ public class Fork {
 		Util.closeQuietly(br);
 		Util.waitForProcess(p);
 		
-		MainGui.updateBalance();
 		updateIcon();
 	}
 	
@@ -241,7 +238,7 @@ public class Fork {
 	public void readLog() {
 		boolean readH = false, readT = false;
 		File logFile = new File(logPath);
-		if (true == hidden || !logFile.exists())
+		if (!logFile.exists())
 			return;
 		
 		LocalDateTime now = LocalDateTime.now();  
@@ -261,8 +258,7 @@ public class Fork {
 				} else {
 					sec = 1; // kinda a hack if logTime fails
 				}
-					
-				
+			
 				if (sec > 30 || i > 250 || (readT && readH)) {
 					logLines = i;
 					break;
@@ -296,7 +292,6 @@ public class Fork {
 		};
 		
 		Util.closeQuietly(lr);
-		updateIcon();
 		ForkView.update(this);
 	}
 
@@ -433,46 +428,6 @@ public class Fork {
 		Util.waitForProcess(p);
 	}
 	
-	public Fork(String symbol, String name, final String dataPath, final String daemonPath, double price, double rewardTrigger) {
-		this.symbol = symbol;
-		this.name = name;
-		this.price= price;
-		this.rewardTrigger = rewardTrigger;
-		
-		String userHome = System.getProperty("user.home");
-		String forkBase;
-				
-		if (System.getProperty("os.name").startsWith("Windows")) {
-			forkBase = userHome + "\\AppData\\Local\\" + daemonPath + "\\";
-			logPath = userHome + "\\" + dataPath.toLowerCase() + "\\mainnet\\log\\debug.log";
-			configPath = userHome + "\\" + dataPath.toLowerCase() + "\\mainnet\\config\\config.yaml";
-			if (symbol.equals("NCH"))
-				logPath = userHome + "\\.chia\\ext9\\log\\debug.log";
-		} else {
-			forkBase = userHome + "/" + daemonPath + "/";
-			logPath = userHome + "/" + dataPath.toLowerCase() + "/mainnet/log/debug.log";
-		}
-		
-		try {
-			if (System.getProperty("os.name").startsWith("Windows")) {
-				exePath = forkBase + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
-				if (!new File(exePath).exists())
-						exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
-				if (!new File(exePath).exists())
-					exePath = forkBase + Util.getDir(forkBase, "app") + "\\resources\\app.asar.unpacked\\daemon\\" + name + ".exe";
-			} else {
-				exePath = forkBase + "/venv/bin/" + name.toLowerCase();
-			}
-
-			if (!new File(exePath).exists())
-				return;
-			
-			LIST.add(this);
-		} catch (IOException e) {
-			// Didn't load the fork for whatever reason
-		}
-	}
-
 	public TimeU getPreviousWin() {
 		return (null == lastWin) ? TimeU.NEVER : lastWin.getTimeSince();
 	}
@@ -493,6 +448,26 @@ public class Fork {
 			loadFarmSummary();
 			ForkView.update(this);
 		}
+	}
+
+	public void updatePrice(double p) {
+		if (p != price) {
+			price = p;
+			refreshEquity();
+		}
+	}
+	
+	public void updateBalance(Balance b) {
+		if (b.amt != balance.amt) {
+			balance = b;
+			refreshEquity();
+		}
+	}
+	
+	public void refreshEquity() {
+		equity = new Balance(balance.amt * price,2);
+		MainGui.updateTotal();
+		ForkView.update(this);
 	}
 
 }

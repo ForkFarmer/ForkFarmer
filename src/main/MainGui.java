@@ -64,34 +64,52 @@ public class MainGui extends JPanel {
         tPanel.add(sendBtn,c);
         c.gridx=5;
         tPanel.add(new SwingEX.Btn("",Ico.GEAR, () -> {
-        	JPanel settingPanel = new JPanel(new GridLayout(2,1));
+        	JPanel settingPanel = new JPanel(new GridBagLayout());
         	
         	JPanel logReader = new JPanel(new GridLayout(2,1));
         	logReader.setBorder(new TitledBorder("Log Reader:"));
         	JPanel daemonReader = new JPanel(new GridLayout(2,1));
         	daemonReader.setBorder(new TitledBorder("Daemon Reader:"));
+        	JPanel curencyPanel = new JPanel(new GridLayout(1,2));
+        	curencyPanel.setBorder(new TitledBorder("Currency:"));
+        	
         	
         	LTPanel lriSleep = new SwingEX.LTPanel("    Intra Delay (ms): " , Integer.toString(Settings.GUI.logReaderIntraDelay));
     		LTPanel lreSleep = new SwingEX.LTPanel("    Exo Delay (ms): " , Integer.toString(Settings.GUI.logReaderExoDelay));
     		
     		LTPanel dWorkers = new SwingEX.LTPanel("    Worker threads (requires restart): " , Integer.toString(Settings.GUI.daemonReaderWorkers));
     		LTPanel dIntraSleep = new SwingEX.LTPanel("    Delay (ms): " , Integer.toString(Settings.GUI.daemonReaderDelay));
-        	
+    		
+    		LTPanel curencySymbol = new SwingEX.LTPanel("    Symbol: " , Settings.GUI.currencySymbol);
+    		LTPanel curencyRatio = new SwingEX.LTPanel("    Ratio x*$: " , Double.toString(Settings.GUI.currencyRatio));
+    		
+    		        	
     		logReader.add(lriSleep);
     		logReader.add(lreSleep);
     		
     		daemonReader.add(dWorkers);
     		daemonReader.add(dIntraSleep);
     		
-        	settingPanel.add(logReader);
-        	settingPanel.add(daemonReader);
+    		curencyPanel.add(curencySymbol);
+    		curencyPanel.add(curencyRatio);
+    		
+    		GridBagConstraints gbc = new GridBagConstraints();
+    		gbc.fill = GridBagConstraints.HORIZONTAL;
+        	settingPanel.add(logReader,gbc);
+        	gbc.gridy=1;
+        	settingPanel.add(daemonReader,gbc);
+        	gbc.gridy=2;
+        	settingPanel.add(curencyPanel,gbc);
         	
         	if (true == ForkFarmer.showPopup("Settings:", settingPanel)) {
         		Settings.GUI.logReaderIntraDelay = lriSleep.getAsInt();
         		Settings.GUI.logReaderExoDelay = lreSleep.getAsInt();
         		Settings.GUI.daemonReaderWorkers = dWorkers.getAsInt();
         		Settings.GUI.daemonReaderDelay = dIntraSleep.getAsInt();
+        		Settings.GUI.currencySymbol = curencySymbol.getText();
+        		Settings.GUI.currencyRatio = curencyRatio.getAsDouble();
         		
+        		MainGui.updateTotal();
         	}
         		
         	
@@ -150,14 +168,13 @@ public class MainGui extends JPanel {
 		}
 	}
 
-	public static void updateBalance() {
+	public static void updateTotal() {
 		double totalValue = 0;
 
 		for (Fork f : Fork.LIST)
-			if (f.balance.balance > 0)
-				totalValue += f.price * f.balance.balance;
+			totalValue += f.equity.amt;
 		
-		valuelbl.setText("Value: $" + Util.round(totalValue, 2));
+		valuelbl.setText("Value: " + Settings.GUI.currencySymbol + Util.round(totalValue, 2));
 	}
 	
 	public static void updateNumForks() {

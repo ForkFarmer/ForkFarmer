@@ -53,20 +53,12 @@ public class Util {
 		return val;
 	}
 	
-	public static String getDir(String base, String target) throws IOException {
-		
-		 List<String> appList = Files.list(new File(base).toPath())
+	public static List<String> getDir(String base, String target) throws IOException {
+		 return Files.list(new File(base).toPath())
 				 .map(p -> p.getFileName().toString())
 				 .filter(s->s.startsWith(target))
 				 .filter(s -> new File(base + s).isDirectory())
 				 .collect(Collectors.toList());
-		 if (appList.size() > 1) {
-			 throw new IOException("2 app directories");
-		 } else if (1 == appList.size()) {
-			 return appList.get(0);
-		 }
-
-		throw new IOException("app folder does not exist");
 	}
 	
 	public static double round(double value, int places) {

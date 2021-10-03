@@ -6,7 +6,6 @@ import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -60,7 +59,7 @@ public class ForkView extends JPanel {
 	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
 	
 	public static class ForkTableModel extends JFunTableModel<Fork> implements Reorderable {
-		public int balIndex, rewIndex, fnIndex, wnIndex, tIndex, lwIndex;
+		public int balIndex, rewIndex, fnIndex, wnIndex, tIndex, lwIndex, eqIndex;
 		
 		public ForkTableModel() {
 			super();
@@ -68,8 +67,9 @@ public class ForkView extends JPanel {
 			addColumn(" ",   		22,	Icon.class,		f->f.ico).showMandatory();
 			addColumn("Symbol",  	50,	String.class, 	f->f.symbol).show(true);
 			addColumn("Name",   	80,	String.class,	f->f.name);
-			addColumn("Balance",	120,Balance.class,	f->f.balance).show(true).index(i -> balIndex=i);
+			addColumn("Balance",	100,Balance.class,	f->f.balance).show(true).index(i -> balIndex=i);
 			addColumn("$",			60, Double.class, 	f->f.price).show(true).editable();
+			addColumn("Equity",		60, Balance.class, 	f->f.equity).index(i -> eqIndex=i);
 			addColumn("Netspace",	80, NetSpace.class, f->f.netSpace).show(true);
 			addColumn("Height",		80, Balance.class,  f->f.height);
 			addColumn("Farm Size",	80, NetSpace.class, f->f.plotSpace);
@@ -95,9 +95,9 @@ public class ForkView extends JPanel {
 		
 		public void setValueAt(Object value, int row, int col) {
 			if (balIndex == col) {
-				Fork.LIST.get(row).price = (double) value;
+				Fork.LIST.get(row).updatePrice((double) value);
 				fireTableCellUpdated(row, col);
-				MainGui.updateBalance();
+				MainGui.updateTotal();
 			} else if (rewIndex == col) {
 				Fork.LIST.get(row).rewardTrigger = (double) value;
 				fireTableCellUpdated(row, col);
@@ -198,7 +198,7 @@ public class ForkView extends JPanel {
 		ACTION_SUBMENU.add(new SwingEX.JMI("Start", 	Ico.START, 	() -> new Thread(() -> getSelected().forEach(Fork::start)).start()));
 		ACTION_SUBMENU.add(STAGGER_JMI);
 		ACTION_SUBMENU.add(new SwingEX.JMI("Stop",		Ico.STOP,  	() -> new Thread(() -> getSelected().forEach(Fork::stop)).start()));
-		ACTION_SUBMENU.add(new SwingEX.JMI("Custom",	Ico.CLI, 	ForkView::customCommand));
+		ACTION_SUBMENU.add(new SwingEX.JMI("Custom",	Ico.CLI, 	ForkView::newCustCMD));
 		
 		POPUP_MENU.add(WALLET_SUBMENU);
 		
@@ -230,6 +230,7 @@ public class ForkView extends JPanel {
 		
 		SwingUtil.setColRight(TABLE,MODEL.balIndex);
 		SwingUtil.setColRight(TABLE,MODEL.tIndex);
+		SwingUtil.setColRight(TABLE,MODEL.eqIndex);
 		 
 		//TABLE.getColumnModel().getColumn(1).setCellRenderer(new SymbolRendered());
 		
@@ -238,14 +239,14 @@ public class ForkView extends JPanel {
 		TABLE.setTransferHandler(new TableRowTransferHandler(TABLE));
 	}
 	
-	static private void customCommand() {
+	static private void newCustCMD() {
 		List<Fork> selList = getSelected();
 		JPanel customPanel = new JPanel(new GridLayout(selList.size() > 1 ? 3 : 2 ,1));
-		JCheckBox updateChk = new JCheckBox("Force GUI update after command");
+		JCheckBox updateChk = new JCheckBox("Immeditate update after command");
 		
-		LTPanel cmdP = new SwingEX.LTPanel("CMD: " , "");
-		LTPanel staggerP = new SwingEX.LTPanel("Stagger (ms): " , "0");
-		
+		LTPanel cmdP = new SwingEX.LTPanel("CMD: " , Settings.GUI.custLastCustom);
+		LTPanel staggerP = new SwingEX.LTPanel("Stagger (ms): " , Settings.GUI.custLastDelay);
+		updateChk.setSelected(Settings.GUI.custForceUpdate);
 		customPanel.add(cmdP);
 		if (selList.size() > 1)
 			customPanel.add(staggerP);
@@ -254,21 +255,33 @@ public class ForkView extends JPanel {
 		if (false == ForkFarmer.showPopup("Custom Command:", customPanel))
 			return;
 		
+		Settings.GUI.custLastCustom = cmdP.field.getText();
+		Settings.GUI.custLastDelay = staggerP.field.getText();
+		Settings.GUI.custForceUpdate = updateChk.isSelected();
+		
 		long sleepDelay = Long.parseLong(staggerP.field.getText());
+		
+		exeCustCMD(getSelected(), cmdP.field.getText(),sleepDelay,updateChk.isSelected());
+	}
+	
+	static private void exeCustCMD(List<Fork> list, String cmd, long delay, boolean immediateLoad) {
+		String[] cmds = cmd.split(",");
 
 		new Thread( () -> {
-			for (Fork f : selList) {
-				String[] args = cmdP.field.getText().split(" ");
+			for (Fork f : list) {
+				for (String s : cmds) {
+					String[] args = s.split(" ");
+					
+					String[] varArgs = new String[args.length + 1];
+					varArgs[0] = f.exePath;
+					for (int i = 0; i < args.length; i++)
+						varArgs[i+1] = args[i];
 				
-				String[] varArgs = new String[args.length + 1];
-				varArgs[0] = f.exePath;
-				for (int i = 0; i < args.length; i++)
-					varArgs[i+1] = args[i];
-			
-				Util.runProcessWait(varArgs);
-				if (updateChk.isSelected())
-					f.loadWallet();
-				Util.sleep(sleepDelay);
+					Util.runProcessWait(varArgs);
+					if (immediateLoad)
+						f.loadWallet();
+					Util.sleep(delay);
+				}
 			}
 		}).start();
 	}
@@ -302,18 +315,17 @@ public class ForkView extends JPanel {
 			Map<String,Double> priceMap = FFUtil.getPrices();
 			
 			for(Entry<String,Double> priceEntry : priceMap.entrySet()) {
-				String forkName = priceEntry.getKey();
+				String forkSymbol = priceEntry.getKey();
 				
 				Fork.LIST.stream()
-					.filter(f -> f.name.toLowerCase().equals(forkName.toLowerCase())).findAny()
-					.ifPresent(f -> f.price = priceEntry.getValue());
+					.filter(f -> f.symbol.toLowerCase().equals(forkSymbol.toLowerCase())).findAny()
+					.ifPresent(f -> f.updatePrice(priceEntry.getValue() * Settings.GUI.currencyRatio));
 			}
 		} catch (Exception e) {
 			
 		}
 		
-		update();
-		
+		MainGui.updateTotal();
 	}
 	
 	static private void refresh() {
@@ -322,7 +334,7 @@ public class ForkView extends JPanel {
 	
 	static private void removeSelected() {
 		List<Fork> selList = getSelected();
-		selList.forEach(f -> f.hidden = true);
+		Fork.LIST.forEach(f -> f.hidden = true);
 		Fork.LIST.removeAll(selList);
 		MainGui.updateNumForks();
 		update();
@@ -386,12 +398,12 @@ public class ForkView extends JPanel {
 	}
 	
 	public static void logReader() {
-		List<Fork> logList = new ArrayList<>(Fork.LIST);
-		
 		while(true) {
-			for (Fork f: logList) {
-				f.readLog();
-				Util.sleep(Settings.GUI.logReaderIntraDelay);
+			for (Fork f: Fork.I_LIST) {
+				if (false == f.hidden) {
+					f.readLog();
+					Util.sleep(Settings.GUI.logReaderIntraDelay);
+				}
 			}
 			Util.sleep(Settings.GUI.logReaderExoDelay);
 		}
@@ -399,12 +411,10 @@ public class ForkView extends JPanel {
 	
 	public static void daemonReader() {
 		ExecutorService SVC = Executors.newFixedThreadPool(Settings.GUI.daemonReaderWorkers);
-		List<Fork> list = new ArrayList<>(Fork.LIST);
 		
 		// initial load
-		for (Fork f: list) {
+		for (Fork f: Fork.I_LIST) {
 			SVC.submit(() -> {
-
 					f.loadVersion();
 					f.loadWallets();
 					f.stdUpdate();  // -> Wallet/Farm Summary/GUI
@@ -413,7 +423,7 @@ public class ForkView extends JPanel {
 
 		// main GUI refresh loop
 		while(true) {
-			for (Fork f: list) {
+			for (Fork f: Fork.I_LIST) {
 				SVC.submit(() -> f.stdUpdate()); 
 				Util.blockUntilAvail(SVC);
 				Util.sleep(Settings.GUI.daemonReaderDelay);

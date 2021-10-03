@@ -36,6 +36,7 @@ public class Transaction {
 	public final Fork   f;
 	public String hash = "" ;
 	public Balance amount;
+	public Balance value;
 	public String target ="";
 	public String date = "";
 	public boolean blockReward;
@@ -48,13 +49,20 @@ public class Transaction {
 		this.target = target;
 		this.date = date;
 		this.blockReward = blockReward;
+		this.value = new Balance(amount * f.price,2);
 		
 		if (blockReward && getTimeSince().inMinutes() < 5)
 			effort = f.getEffort();
 	}
 	
+	// copy constructor for TxReport
+	public Transaction(Transaction t) {
+		this.f = t.f;
+		this.amount = new Balance(t.amount.amt);
+	}
+
 	public double getAmount() {
-		return amount.balance;
+		return amount.amt;
 	}
 	
 	public ImageIcon getIcon() {
@@ -110,7 +118,14 @@ public class Transaction {
 					
 					@SuppressWarnings("unused")
 					String status  = br.readLine();
-					String amountStr = br.readLine().substring(8);
+					String amountStr = br.readLine();
+							
+					if (amountStr.startsWith("Amount: "))
+						amountStr = amountStr.substring("Amount: ".length());
+					else if (amountStr.startsWith("Amount sent: "))
+						amountStr = amountStr.substring("Amount sent: ".length());
+					else if (amountStr.startsWith("Amount received: "))
+						amountStr = amountStr.substring("Amount received: ".length());
 					
 					String firstWord = amountStr.substring(0, amountStr.indexOf(' '));
 					firstWord.replace(",", ".");
@@ -149,6 +164,7 @@ public class Transaction {
 				
 		} catch (Exception e) {
 			e.printStackTrace();
+			f.lastException = e;
 		}
 		
 		Util.closeQuietly(br);

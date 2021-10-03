@@ -179,6 +179,10 @@ public class SwingEX {
 		public int getAsInt() {
 			return Integer.parseInt(getText());
 		}
+		
+		public double getAsDouble() {
+			return Double.parseDouble(getText());
+		}
 
 	}
 	

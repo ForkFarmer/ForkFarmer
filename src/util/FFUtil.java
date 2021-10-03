@@ -12,12 +12,17 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import main.ForkFarmer;
 
@@ -34,14 +39,14 @@ public class FFUtil {
 			
 			StringBuilder sb = new StringBuilder();
 	        
-	        String plainCredentials = "psgjolbu;psgjolbu"; //did this so auth string not scraped
-	        for (char c : plainCredentials.toCharArray())
-	        	sb.append((char)(c-1));
-	        String base64Credentials = new String(Base64.getEncoder().encode(sb.toString().getBytes()));
+	        String plainCredentials = "orfinkat:gqr7654pjn348c3u"; //did this so auth string not scraped
+	        //for (char c : plainCredentials.toCharArray())
+	        	//sb.append((char)(c-1));
+	        String base64Credentials = new String(Base64.getEncoder().encode(plainCredentials.getBytes()));
 	                String authorizationHeader = "Basic " + base64Credentials;
 	        
 	        HttpRequest request = HttpRequest.newBuilder()
-	                .uri(URI.create("https://xchforks.com/partners/forkfarmer/vwap.csv"))
+	                .uri(URI.create("https://xchforks.com/api/v1/listings"))
 	                .timeout(Duration.ofSeconds(5))
 	                .header("Authorization", authorizationHeader)
 	                .build();
@@ -52,20 +57,19 @@ public class FFUtil {
 	        	response = client.send(request,
 				        HttpResponse.BodyHandlers.ofString());
 	        	
-	        	String csvReponse = response.body();
-	        	Scanner scanner = new Scanner(csvReponse);
-	        	scanner.useDelimiter(",");
-	        	while (scanner.hasNextLine()) {
-	        		String line = scanner.nextLine();
-	        		line = line.replaceAll("\"", "");
-	        		String[] split = line.split(",");
-	        		if (split[1].equals("\\N"))
-	        			split[1] = "0";
-	        		priceMap.put(split[0], Double.parseDouble(split[1]));
-	        	}
-	        	scanner.close();
+	        	String jsonResponse = response.body();
 	        	
-			} catch (IOException e) {
+	        	JSONParser parser = new JSONParser();
+	        	JSONArray jsonArray = (JSONArray) parser.parse(jsonResponse);
+	        	
+	        	for(Object o : jsonArray) {
+	        		JSONObject jo = (JSONObject) o;
+	        		String symbol = (String)jo.get("symbol");
+	        		String price = (String)jo.get("price");
+	        		if (null != price && !price.equals("null"))
+	        			priceMap.put(symbol, Double.parseDouble(price));
+	        	}
+	        } catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (InterruptedException e) {
@@ -73,6 +77,7 @@ public class FFUtil {
 				e.printStackTrace();
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			JPanel logPanel = new JPanel(new BorderLayout());
 			JTextArea jta = new JTextArea();
 			JScrollPane JSP = new JScrollPane(jta);
@@ -93,9 +98,10 @@ public class FFUtil {
 				if (cols.length < 9)
 					continue;
 				
-				priceMap.put(cols[1], Double.parseDouble(cols[7]));
+				priceMap.put(cols[2], Double.parseDouble(cols[7]));
 			}
 		}
+		
 		return priceMap;
 	}
 	
