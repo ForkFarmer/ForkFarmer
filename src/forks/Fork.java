@@ -211,7 +211,8 @@ public class Fork {
 				if (l.contains("Connection error") && false == fullNode) {
 					p.destroyForcibly();
 					break;
-				} else if (l.contains("Estimated network space: "))
+				} 
+				else if (l.contains("Estimated network space: "))
 					netSpace = new NetSpace(l.substring("Estimated network space: ".length()));
 				else if (l.contains("Total size of plots: ")) {
 					try {
@@ -443,11 +444,12 @@ public class Fork {
 	}
 
 	public void stdUpdate() {
-		if (!hidden) {
-			loadWallet();
-			loadFarmSummary();
-			ForkView.update(this);
-		}
+			if (!hidden) {
+				loadWallet();
+				loadFarmSummary();
+				ForkView.update(this);
+			}
+		
 	}
 
 	public void updatePrice(double p) {

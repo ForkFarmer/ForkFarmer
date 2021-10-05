@@ -138,12 +138,16 @@ public class Transaction {
 					
 						Optional<Transaction> oT = LIST.stream().filter(z -> z.f.symbol.equals(f.symbol) && z.date.equals(date)).findAny();
 					
-						if (Math.abs(Double.parseDouble(firstWord) - f.rewardTrigger) < .01)
+						if (Math.abs(amount - f.rewardTrigger) < .01)
 							blockReward = true;
 						else if (firstWord.equals("1E-10")) // probably faucet?
 							blockReward = true;
 						else if (firstWord.equals("1E-7")) // probably faucet?
 							blockReward = true;
+						
+						//System.out.println(f.name + ": " + f.rewardTrigger);
+						//System.out.println("\t TxAmount: " + amount + " D: " +Math.abs(amount - f.rewardTrigger) + " Block Reward: " + blockReward);
+						
 
 						if (oT.isPresent()) {
 							Transaction t = oT.get();

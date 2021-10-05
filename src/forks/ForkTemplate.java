@@ -80,6 +80,7 @@ public class ForkTemplate {
 	private void loadFork() {
 		Fork f = new Fork();
 		f.name = name;
+		f.rewardTrigger = rewardTrigger;
 		f.symbol = symbol;
 		f.exePath = exePath;
 		f.price = price;

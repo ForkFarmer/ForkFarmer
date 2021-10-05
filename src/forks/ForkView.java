@@ -412,22 +412,28 @@ public class ForkView extends JPanel {
 	public static void daemonReader() {
 		ExecutorService SVC = Executors.newFixedThreadPool(Settings.GUI.daemonReaderWorkers);
 		
-		// initial load
-		for (Fork f: Fork.I_LIST) {
-			SVC.submit(() -> {
-					f.loadVersion();
-					f.loadWallets();
-					f.stdUpdate();  // -> Wallet/Farm Summary/GUI
-			});
-		}
-
-		// main GUI refresh loop
-		while(true) {
+		try {
+			// initial load
 			for (Fork f: Fork.I_LIST) {
-				SVC.submit(() -> f.stdUpdate()); 
-				Util.blockUntilAvail(SVC);
-				Util.sleep(Settings.GUI.daemonReaderDelay);
+				SVC.submit(() -> {
+						f.loadVersion();
+						f.loadWallets();
+						f.stdUpdate();  // -> Wallet/Farm Summary/GUI
+				});
 			}
+	
+			// main GUI refresh loop
+			while(true) {
+				for (Fork f: Fork.I_LIST) {
+					SVC.submit(() -> f.stdUpdate()); 
+					Util.blockUntilAvail(SVC);
+					Util.sleep(Settings.GUI.daemonReaderDelay);
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("Serious UNCAUGHT EXCEPTION!!!!!!!!!!!!!!!!!!!!!!");
+			e.printStackTrace();
 		}
 	}
+	
 }
