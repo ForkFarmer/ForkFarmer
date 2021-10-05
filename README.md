@@ -13,7 +13,7 @@ Requires JRE 1.8 or greater to run: https://www.java.com/en/download/
 
 **How to use:** After you install Java, double-click on jar or Java -jar ForkFarmer.jar from the command line. On Windows most forks will automatically be detected. On Linux currently you have to create an FF_Settings.yaml and confgire their paths manually, check discord for more help.
 
-**List of supported Forks:** https://github.com/ForkFarmer/ForkFarmer/blob/main/src/main/Settings.java#L70
+**List of supported Forks:** https://github.com/ForkFarmer/ForkFarmer/blob/main/src/main/Settings.java#L46
 
 **My balance doesn't show up:** Select fork -> Right click -> Select debug. Is there any exceptions? What does the daemon/wallet say?
 
