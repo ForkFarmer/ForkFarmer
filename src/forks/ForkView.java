@@ -7,8 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,6 +37,7 @@ import types.Effort;
 import types.ReadTime;
 import types.TimeU;
 import types.Wallet;
+import types.XchForksData;
 import util.FFUtil;
 import util.Ico;
 import util.NetSpace;
@@ -75,6 +74,8 @@ public class ForkView extends JPanel {
 			addColumn("Height",		80, Balance.class,  f->f.height).index(i -> heightColumn=i);
 			addColumn("Farm Size",	80, NetSpace.class, f->f.plotSpace);
 			addColumn("Version",	80, String.class,   f->f.version);
+			addColumn("Latest Ver",	80, String.class,   f->f.latestVersion);
+			addColumn("Published",	80, String.class,   f->f.published);
 			addColumn("Sync",		80, String.class,   f->f.syncStatus);
 			addColumn("Farm",		80, String.class,   f->f.farmStatus).show(true);
 			addColumn("ETW",		70, TimeU.class,    f->f.etw);
@@ -316,15 +317,28 @@ public class ForkView extends JPanel {
 	}
 	
 	static private void updatePrices() {
+		
+		int jversion = Util.getJavaVersion();
+		if (jversion < 11) {
+			ForkFarmer.showMsg("Please update Java Runtime", 
+					"Current java version is " + jversion + ". 11+ required for this feature \n" +
+					"Please download new java release from https://www.oracle.com/java/technologies/downloads/"
+			);
+			return;
+		}
+		
 		try {
-			Map<String,Double> priceMap = FFUtil.getPrices();
+			List<XchForksData> list = FFUtil.getXCHForksData();
 			
-			for(Entry<String,Double> priceEntry : priceMap.entrySet()) {
-				String forkSymbol = priceEntry.getKey();
-				
-				Fork.LIST.stream()
-					.filter(f -> f.symbol.toLowerCase().equals(forkSymbol.toLowerCase())).findAny()
-					.ifPresent(f -> f.updatePrice(priceEntry.getValue() * Settings.GUI.currencyRatio));
+			for(XchForksData d : list) {
+				Fork.getBySymbol(d.symbol).ifPresent(f -> {
+					if (d.price > -1)
+						f.updatePrice(d.price * Settings.GUI.currencyRatio);
+					if (null != d.latestVersion && !d.latestVersion.equals("Unknown")) {
+						f.latestVersion = d.latestVersion;
+						f.published = d.published;
+					}
+				});
 			}
 		} catch (Exception e) {
 			

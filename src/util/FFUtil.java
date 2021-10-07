@@ -10,11 +10,9 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.List;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -25,19 +23,20 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import main.ForkFarmer;
+import types.XchForksData;
 
 public class FFUtil {
 	transient public static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	
-	public static Map<String,Double> getPrices() {
-		Map<String,Double> priceMap = new HashMap<>();
+	public static List<XchForksData> getXCHForksData() {
+		List<XchForksData> list = new ArrayList<>();
 		
 		try {
 			HttpClient client = HttpClient.newBuilder()
 					.connectTimeout(Duration.ofSeconds(5))
 					.build();
 			
-			StringBuilder sb = new StringBuilder();
+			//StringBuilder sb = new StringBuilder();
 	        
 	        String plainCredentials = "orfinkat:gqr7654pjn348c3u"; //did this so auth string not scraped
 	        //for (char c : plainCredentials.toCharArray())
@@ -62,13 +61,9 @@ public class FFUtil {
 	        	JSONParser parser = new JSONParser();
 	        	JSONArray jsonArray = (JSONArray) parser.parse(jsonResponse);
 	        	
-	        	for(Object o : jsonArray) {
-	        		JSONObject jo = (JSONObject) o;
-	        		String symbol = (String)jo.get("symbol");
-	        		String price = (String)jo.get("price");
-	        		if (null != price && !price.equals("null"))
-	        			priceMap.put(symbol, Double.parseDouble(price));
-	        	}
+	        	for(Object o : jsonArray)
+        			list.add(new XchForksData((JSONObject) o));
+	        	
 	        } catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -98,11 +93,15 @@ public class FFUtil {
 				if (cols.length < 9)
 					continue;
 				
-				priceMap.put(cols[2], Double.parseDouble(cols[7]));
+				XchForksData data = new XchForksData();
+				data.price = Double.parseDouble(cols[7]);
+				data.symbol = cols[2];
+				
+				list.add(data);
 			}
 		}
 		
-		return priceMap;
+		return list;
 	}
 	
 	public static LocalDateTime parseTime(String s) {

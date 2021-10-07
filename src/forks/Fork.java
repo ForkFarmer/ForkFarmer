@@ -51,6 +51,8 @@ public class Fork {
 	public String exePath;
 	public String name;
 	transient public String version;
+	transient public String latestVersion;
+	transient public String published;
 	transient public ImageIcon ico;
 	transient public ImageIcon statusIcon = Ico.GRAY;
 	transient public ReadTime readTime = ReadTime.EMPTY;
