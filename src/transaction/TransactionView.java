@@ -11,6 +11,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.JTableHeader;
 
@@ -89,7 +90,7 @@ public class TransactionView extends JPanel {
 	}
 
 	public static synchronized void refresh() {
-		MODEL.fireTableDataChanged();
+		SwingUtilities.invokeLater(() -> MODEL.fireTableDataChanged());
 	}
 	
 	static private void copy() {

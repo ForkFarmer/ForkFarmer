@@ -180,8 +180,8 @@ public class Fork {
 			updateBalance(newBalance);
 			
 			if ("" != syncStatus) {
-				Transaction.load(this);
 				synchronized(Transaction.class) {
+					Transaction.load(this);
 					dayWin = Transaction.LIST.stream()
 						.filter(t -> this == t.f && t.blockReward && t.getTimeSince().inMinutes() < (60*24))
 						.collect(Collectors.summingDouble(Transaction::getAmount));
@@ -211,8 +211,7 @@ public class Fork {
 				if (l.contains("Connection error") && false == fullNode) {
 					p.destroyForcibly();
 					break;
-				} 
-				else if (l.contains("Estimated network space: "))
+				} else if (l.contains("Estimated network space: "))
 					netSpace = new NetSpace(l.substring("Estimated network space: ".length()));
 				else if (l.contains("Total size of plots: ")) {
 					try {
@@ -293,7 +292,7 @@ public class Fork {
 		};
 		
 		Util.closeQuietly(lr);
-		ForkView.update(this);
+		ForkView.updateLog(this);
 	}
 
 	void updateIcon() {
@@ -398,11 +397,8 @@ public class Fork {
 		new Thread(() -> loadWallet()).start();
 	}
 	
-	public Optional<Integer> getIndex() {
-		synchronized (LIST) {
-			int idx = LIST.indexOf(this);
-			return (-1 != idx) ? Optional.of(idx) : Optional.empty();
-		}
+	public int getIndex() {
+		return LIST.indexOf(this);
 	}
 
 	public void sendTX(String address, String amt, String fee) {

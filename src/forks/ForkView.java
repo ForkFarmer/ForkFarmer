@@ -26,6 +26,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.table.JTableHeader;
@@ -52,14 +53,14 @@ import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
 public class ForkView extends JPanel {
-	public static final ForkTableModel MODEL = new ForkTableModel();	
+	private static final ForkTableModel MODEL = new ForkTableModel();	
 	public static final JTable TABLE = new JTable(MODEL);
 	private static final JScrollPane JSP = new JScrollPane(TABLE);
 	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
 	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
 	
 	public static class ForkTableModel extends JFunTableModel<Fork> implements Reorderable {
-		public int balIndex, rewIndex, fnIndex, wnIndex, tIndex, lwIndex, eqIndex;
+		public int balIndex, rewIndex, fnIndex, wnIndex, timeColumn, lwIndex, eqIndex, lightColumn, heightColumn;
 		
 		public ForkTableModel() {
 			super();
@@ -71,7 +72,7 @@ public class ForkView extends JPanel {
 			addColumn("$",			60, Double.class, 	f->f.price).show(true).editable();
 			addColumn("Equity",		60, Balance.class, 	f->f.equity).index(i -> eqIndex=i);
 			addColumn("Netspace",	80, NetSpace.class, f->f.netSpace).show(true);
-			addColumn("Height",		80, Balance.class,  f->f.height);
+			addColumn("Height",		80, Balance.class,  f->f.height).index(i -> heightColumn=i);
 			addColumn("Farm Size",	80, NetSpace.class, f->f.plotSpace);
 			addColumn("Version",	80, String.class,   f->f.version);
 			addColumn("Sync",		80, String.class,   f->f.syncStatus);
@@ -83,15 +84,19 @@ public class ForkView extends JPanel {
 			addColumn("Address",	-1,	Wallet.class, 	f->f.wallet).showMandatory();
 			addColumn("Reward",		40,	Double.class, 	f->f.rewardTrigger).index(i -> rewIndex=i).editable();
 			addColumn("#W",			40,	Integer.class, 	f->f.walletList.size());
-			addColumn("Time",		50,	ReadTime.class, f->f.readTime).show(true).index(i -> tIndex=i);
+			addColumn("Time",		50,	ReadTime.class, f->f.readTime).show(true).index(i -> timeColumn=i);
 			addColumn("FN",			30,	Boolean.class, 	f->f.fullNode).index(i -> fnIndex=i).editable();
 			addColumn("WN",			30,	Boolean.class, 	f->f.walletNode).index(i -> wnIndex=i).editable();
-			addColumn("", 			22, Icon.class, 	f->f.statusIcon).showMandatory();
+			addColumn("", 			22, Icon.class, 	f->f.statusIcon).showMandatory().index(i -> lightColumn=i);
 			
 			onGetRowCount(() -> Fork.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Fork.LIST.get(r)));
 			onisCellEditable((r, c) -> colList.get(c).isEditable());
 		}
+		
+		public void removeRow(int row) {
+	        Fork.LIST.remove(row);
+	    }
 		
 		public void setValueAt(Object value, int row, int col) {
 			if (balIndex == col) {
@@ -229,7 +234,7 @@ public class ForkView extends JPanel {
 		MODEL.colList.forEach(c -> c.setSelectView(TABLE,HEADER_MENU));
 		
 		SwingUtil.setColRight(TABLE,MODEL.balIndex);
-		SwingUtil.setColRight(TABLE,MODEL.tIndex);
+		SwingUtil.setColRight(TABLE,MODEL.timeColumn);
 		SwingUtil.setColRight(TABLE,MODEL.eqIndex);
 		 
 		//TABLE.getColumnModel().getColumn(1).setCellRenderer(new SymbolRendered());
@@ -334,8 +339,15 @@ public class ForkView extends JPanel {
 	
 	static private void removeSelected() {
 		List<Fork> selList = getSelected();
-		Fork.LIST.forEach(f -> f.hidden = true);
-		Fork.LIST.removeAll(selList);
+		for (Fork f : selList) {
+			f.hidden = true;
+			SwingUtilities.invokeLater(() -> {
+				MODEL.removeRow(f.getIndex());	
+			});
+			
+		}
+		
+		
 		MainGui.updateNumForks();
 		update();
 	}
@@ -387,14 +399,31 @@ public class ForkView extends JPanel {
 	}
 
 	public static void update() {
-		MODEL.fireTableDataChanged();
+		SwingUtilities.invokeLater ( () -> { 
+			MODEL.fireTableDataChanged();
+		});
 	}
 	
 	public static void update(Fork f) {
-		f.getIndex().ifPresent(row -> {
-			f.updateIcon();
-			MODEL.fireTableRowsUpdated(row, row);
+		SwingUtilities.invokeLater(() -> {
+			int row = f.getIndex();
+			if (-1 != row) {
+				f.updateIcon();
+				MODEL.fireTableRowsUpdated(row, row);
+			}
 		});
+	}
+	
+	public static void updateLog(Fork f) {
+		SwingUtilities.invokeLater(() -> {
+			int row = f.getIndex();
+			if (-1 != row) {
+				f.updateIcon();
+				MODEL.fireTableCellUpdated(row, MODEL.timeColumn);
+				MODEL.fireTableCellUpdated(row, MODEL.lightColumn);
+				MODEL.fireTableCellUpdated(row, MODEL.heightColumn);
+			}
+		}); 
 	}
 	
 	public static void logReader() {
