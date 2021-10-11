@@ -236,7 +236,7 @@ public class Fork {
 		Util.waitForProcess(p);
 		Util.closeQuietly(br);
 	}
-
+	
 	public void readLog() {
 		boolean readH = false, readT = false;
 		File logFile = new File(logPath);

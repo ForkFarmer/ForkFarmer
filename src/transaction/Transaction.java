@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -73,8 +72,7 @@ public class Transaction {
 	}
 	
 	public TimeU getTimeSince() {
-		LocalDateTime now = LocalDateTime.now();
-		return new TimeU(Duration.between(LocalDateTime.parse(date, FFUtil.DTF),now).getSeconds());
+		return TimeU.getTimeSince(LocalDateTime.parse(date, FFUtil.DTF));
 	}
 	
 	public static boolean load(Fork f) {

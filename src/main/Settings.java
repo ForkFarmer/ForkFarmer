@@ -17,6 +17,7 @@ import org.yaml.snakeyaml.Yaml;
 import forks.Fork;
 import forks.ForkTemplate;
 import forks.ForkView;
+import transaction.TransactionView;
 import util.Ico;
 import util.swing.SwingUtil;
 
@@ -24,7 +25,7 @@ public class Settings {
 	private static final String SETTINGS_PATH = "FF_Settings.yaml";
 	public static Gui GUI = new Gui();
 	
-	static Map<String, Object> Settings = new HashMap<>();
+	public static Map<String, Object> settings = new HashMap<>();
 	
 	public static class Gui {
 		public int logReaderIntraDelay;
@@ -39,7 +40,6 @@ public class Settings {
 		public String custLastCustom = "";
 		public String custLastDelay = "60";
 		public boolean custForceUpdate = false;
-		
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -94,31 +94,23 @@ public class Settings {
 		new ForkTemplate("XACH","Achi", ".achi", "achi-blockchain", 0.0,.25);
 		new ForkTemplate("STOR","Stor", ".stor", "stor-blockchain", 0.0,.5);
 		new ForkTemplate("XNT","Skynet", ".skynet", "skynet-blockchain", 0.0, .625);
-		new ForkTemplate("PEA","Peas", ".peas", "peas-blockchain", 0.0,2.625);
+		new ForkTemplate("PEA","Peas", ".peas", "peas-blockchain", 0.0,1);
 		new ForkTemplate("XKM","Mint", ".mint", "mint-blockchain", 0.0,.5);
 		new ForkTemplate("LCH","Lotus", ".lotus", "lotus-blockchain", 0.0,.25);
 		new ForkTemplate("MGA","Mogua", ".mogua", "mogua-blockchain", 0.0,1.25);
 		new ForkTemplate("TRZ","Tranzact", ".tranzact", "tranzact-blockchain", 0.0,.625);
 		new ForkTemplate("XSLV","Salvia", ".salvia", "salvia-blockchain", 0.0,.25);
 		new ForkTemplate("STAI","Staicoin", ".staicoin", "staicoin-blockchain", 0.0,1);
+		new ForkTemplate("TSLA","Tslacoin", ".tslacoin", "tslacoin-blockchain", 0.0,1);
 		
 		InputStream inputStream;
+		
 		try {
 			inputStream = new FileInputStream(new File(SETTINGS_PATH));
 			Yaml yaml = new Yaml();
-			Map<String, Object> settings = yaml.load(inputStream);
+			settings = yaml.load(inputStream);
 			GUI = (Gui) settings.get("Gui Settings");
 			Fork.LIST = (List<Fork>) settings.get("Fork List");
-			/*
-			List<Col<Fork>> colList = (List<Col<Fork>>) settings.get("Fork View Columns");
-			
-			for (Col<Fork> c : colList) {
-				Col<Fork> newCol = ForkView.MODEL.colMap.get(c.name);
-				newCol.width = c.width;
-				newCol.show = c.show;
-			}
-			*/
-			
 		} catch (Exception e) {
 			GUI.logReaderIntraDelay = 100;
 			GUI.logReaderExoDelay = 5000;
@@ -128,20 +120,23 @@ public class Settings {
 			GUI.forkViewDimension = new Dimension(700,400);
 		}
 		
+		
 		ForkTemplate.loadFix();		
 		Fork.LIST.forEach(f -> f.ico = Ico.getForkIcon(f.name));
 		Fork.I_LIST = new ArrayList<>(Fork.LIST);
 		ForkView.update();
+		
 	}
 	
 	public static void Save() {
 		synchronized (Fork.LIST) {
 			SwingUtil.mapViewToModel(ForkView.TABLE,Fork.LIST);
 		}
-		
-		Settings.put("Fork List", Fork.LIST);
-		Settings.put("Gui Settings", GUI);
-		//Settings.put("Fork View Columns", ForkView.MODEL.colList);
+		settings.clear();
+		settings.put("Fork List", Fork.LIST);
+		settings.put("Gui Settings", GUI);
+		settings.put("ForkView Columns", ForkView.MODEL.getColsDisplayOrder(ForkView.TABLE));
+		settings.put("TxView Columns", TransactionView.MODEL.getColsDisplayOrder(TransactionView.TABLE));
 		
 		DumperOptions options = new DumperOptions();
 		options.setIndent(2);
@@ -153,7 +148,7 @@ public class Settings {
 		try {
 			writer = new PrintWriter(SETTINGS_PATH);
 			Yaml yaml = new Yaml(options);
-			yaml.dump(Settings, writer);
+			yaml.dump(settings, writer);
 			
 			writer.close();
 		} catch (FileNotFoundException e) {

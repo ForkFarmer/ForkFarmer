@@ -1,5 +1,8 @@
 package types;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class TimeU implements Comparable<TimeU> {
 	public static final TimeU NEVER = new TimeU("Never",0);
 	String str = "";
@@ -113,6 +116,13 @@ public class TimeU implements Comparable<TimeU> {
 				etw_minutes += val;
 		}
 		return etw_minutes;
+	}
+	
+	public static TimeU getTimeSince(LocalDateTime before) {
+		if (null == before)
+			return TimeU.NEVER;
+		LocalDateTime now = LocalDateTime.now();
+		return new TimeU(Duration.between(before,now).getSeconds());
 	}
 	
 	

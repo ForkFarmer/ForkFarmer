@@ -48,30 +48,35 @@ import util.swing.SwingEX;
 import util.swing.SwingEX.LTPanel;
 import util.swing.SwingUtil;
 import util.swing.TableRowTransferHandler;
+import util.swing.jfuntable.Col;
 import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
 public class ForkView extends JPanel {
-	private static final ForkTableModel MODEL = new ForkTableModel();	
+	public static final ForkTableModel MODEL = new ForkTableModel();	
 	public static final JTable TABLE = new JTable(MODEL);
 	private static final JScrollPane JSP = new JScrollPane(TABLE);
 	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
 	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
 	
 	public static class ForkTableModel extends JFunTableModel<Fork> implements Reorderable {
-		public int balIndex, rewIndex, fnIndex, wnIndex, timeColumn, lwIndex, eqIndex, lightColumn, heightColumn;
+		int BAL_COLUMN, EQ_COLUMN, HEIGHT_COLUMN, TIME_COLUMN, LIGHT_COLUMN;
 		
 		public ForkTableModel() {
 			super();
 			
+			@SuppressWarnings("unchecked")
+			List<Col<Fork>> z = (List<Col<Fork>>) Settings.settings.get("ForkView Columns");
+			loadColumns(z);
+			
 			addColumn(" ",   		22,	Icon.class,		f->f.ico).showMandatory();
 			addColumn("Symbol",  	50,	String.class, 	f->f.symbol).show(true);
 			addColumn("Name",   	80,	String.class,	f->f.name);
-			addColumn("Balance",	100,Balance.class,	f->f.balance).show(true).index(i -> balIndex=i);
+			addColumn("Balance",	100,Balance.class,	f->f.balance).show(true);
 			addColumn("$",			60, Double.class, 	f->f.price).show(true).editable();
-			addColumn("Equity",		60, Balance.class, 	f->f.equity).index(i -> eqIndex=i);
+			addColumn("Equity",		60, Balance.class, 	f->f.equity);
 			addColumn("Netspace",	80, NetSpace.class, f->f.netSpace).show(true);
-			addColumn("Height",		80, Balance.class,  f->f.height).index(i -> heightColumn=i);
+			addColumn("Height",		80, Balance.class,  f->f.height);
 			addColumn("Farm Size",	80, NetSpace.class, f->f.plotSpace);
 			addColumn("Version",	80, String.class,   f->f.version);
 			addColumn("Latest Ver",	80, String.class,   f->f.latestVersion);
@@ -80,15 +85,23 @@ public class ForkView extends JPanel {
 			addColumn("Farm",		80, String.class,   f->f.farmStatus).show(true);
 			addColumn("ETW",		70, TimeU.class,    f->f.etw);
 			addColumn("24H Win",	60,	Double.class, 	f->f.dayWin);
-			addColumn("Last Win",	90, TimeU.class, 	f->f.getPreviousWin()).index(i -> lwIndex=i);
+			addColumn("Last Win",	90, TimeU.class, 	f->f.getPreviousWin());
 			addColumn("Effort",		60,	Effort.class, 	Fork::getEffort);
 			addColumn("Address",	-1,	Wallet.class, 	f->f.wallet).showMandatory();
-			addColumn("Reward",		40,	Double.class, 	f->f.rewardTrigger).index(i -> rewIndex=i).editable();
+			addColumn("Reward",		40,	Double.class, 	f->f.rewardTrigger).editable();
 			addColumn("#W",			40,	Integer.class, 	f->f.walletList.size());
-			addColumn("Time",		50,	ReadTime.class, f->f.readTime).show(true).index(i -> timeColumn=i);
-			addColumn("FN",			30,	Boolean.class, 	f->f.fullNode).index(i -> fnIndex=i).editable();
-			addColumn("WN",			30,	Boolean.class, 	f->f.walletNode).index(i -> wnIndex=i).editable();
-			addColumn("", 			22, Icon.class, 	f->f.statusIcon).showMandatory().index(i -> lightColumn=i);
+			addColumn("Time",		50,	ReadTime.class, f->f.readTime).show(true);
+			addColumn("FN",			30,	Boolean.class, 	f->f.fullNode).editable();
+			addColumn("WN",			30,	Boolean.class, 	f->f.walletNode).editable();
+			addColumn("", 			22, Icon.class, 	f->f.statusIcon).showMandatory();
+			
+			BAL_COLUMN = getIndex("Balance");
+			EQ_COLUMN = getIndex("Equity");
+
+			// these updated alot
+			HEIGHT_COLUMN = getIndex("Height");
+			TIME_COLUMN = getIndex("Time");
+			LIGHT_COLUMN = getIndex("");
 			
 			onGetRowCount(() -> Fork.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Fork.LIST.get(r)));
@@ -100,17 +113,17 @@ public class ForkView extends JPanel {
 	    }
 		
 		public void setValueAt(Object value, int row, int col) {
-			if (balIndex == col) {
+			if (BAL_COLUMN == col) {
 				Fork.LIST.get(row).updatePrice((double) value);
 				fireTableCellUpdated(row, col);
 				MainGui.updateTotal();
-			} else if (rewIndex == col) {
+			} else if (getIndex("Reward") == col) {
 				Fork.LIST.get(row).rewardTrigger = (double) value;
 				fireTableCellUpdated(row, col);
-			} else if (fnIndex == col) {
+			} else if (getIndex("FN") == col) {
 				Fork.LIST.get(row).fullNode = (boolean) value;
 				fireTableCellUpdated(row, col);
-			} else if (wnIndex == col) {
+			} else if (getIndex("WN") == col) {
 				Fork.LIST.get(row).walletNode = (boolean) value;
 				fireTableCellUpdated(row, col);
 			}
@@ -227,16 +240,15 @@ public class ForkView extends JPanel {
 		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.P2P,		() -> getSelected().forEach(Fork::showConnections)));
 		POPUP_MENU.addSeparator();
 		POPUP_MENU.add(new SwingEX.JMI("Debug",		Ico.BUG,		() -> getSelected().forEach(Fork::showLastException)));
-		//POPUP_MENU.add(new SwingEX.JMI("Debug",		Ico.BUG,		ForkView::reorderTest));
 		
 		JTableHeader header = TABLE.getTableHeader();
 		header.setComponentPopupMenu(HEADER_MENU);
 		
 		MODEL.colList.forEach(c -> c.setSelectView(TABLE,HEADER_MENU));
 		
-		SwingUtil.setColRight(TABLE,MODEL.balIndex);
-		SwingUtil.setColRight(TABLE,MODEL.timeColumn);
-		SwingUtil.setColRight(TABLE,MODEL.eqIndex);
+		SwingUtil.setColRight(TABLE,MODEL.BAL_COLUMN);
+		SwingUtil.setColRight(TABLE,MODEL.TIME_COLUMN);
+		SwingUtil.setColRight(TABLE,MODEL.EQ_COLUMN);
 		 
 		//TABLE.getColumnModel().getColumn(1).setCellRenderer(new SymbolRendered());
 		
@@ -292,15 +304,7 @@ public class ForkView extends JPanel {
 		}).start();
 	}
 	
-	/*
-	static private void reorderTest() {
-		TableColumnModel tcm = TABLE.getColumnModel();
-	    for (int i = 0; i < MODEL.getColumnCount() - 1; i++) {
-	            int location = tcm.getColumnIndex(MODEL.getColumnName(i));
-	            System.out.println("LOC: " + location);
-	            //tcm.moveColumn(location, i);
-	   }
-	}*/
+	
 	
 	static private void staggerStartDialog() {
 		String delay = JOptionPane.showInputDialog(ForkFarmer.FRAME,"Enter Start Interval: (Seconds)", "60");
@@ -433,9 +437,9 @@ public class ForkView extends JPanel {
 			int row = f.getIndex();
 			if (-1 != row) {
 				f.updateIcon();
-				MODEL.fireTableCellUpdated(row, MODEL.timeColumn);
-				MODEL.fireTableCellUpdated(row, MODEL.lightColumn);
-				MODEL.fireTableCellUpdated(row, MODEL.heightColumn);
+				MODEL.fireTableCellUpdated(row, MODEL.TIME_COLUMN);
+				MODEL.fireTableCellUpdated(row, MODEL.LIGHT_COLUMN);
+				MODEL.fireTableCellUpdated(row, MODEL.HEIGHT_COLUMN);
 			}
 		}); 
 	}

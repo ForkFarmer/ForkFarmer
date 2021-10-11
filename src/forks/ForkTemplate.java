@@ -64,6 +64,7 @@ public class ForkTemplate {
 				}
 			} else {
 				exePath = forkBase + "/venv/bin/" + name.toLowerCase();
+		
 			}
 
 			if (!new File(exePath).exists())

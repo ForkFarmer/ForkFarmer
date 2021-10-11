@@ -21,20 +21,26 @@ import types.Balance;
 import util.Ico;
 import util.swing.SwingEX;
 import util.swing.SwingUtil;
+import util.swing.jfuntable.Col;
 import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
 public class TransactionView extends JPanel {
-	
-	final static TxTableModel MODEL = new TxTableModel();
-	private final static JTable TABLE = new JTable(MODEL);
+	public final static TxTableModel MODEL = new TxTableModel();
+	public final static JTable TABLE = new JTable(MODEL);
 	public static final JScrollPane JSP = new JScrollPane(TABLE);
 	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
 	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
 	
-	static class TxTableModel extends JFunTableModel<Transaction> {
+	public static class TxTableModel extends JFunTableModel<Transaction> {
+		int DATE_COLUMN, AMOUNT_COLUMN, PRICE_COLUMN;
 		public TxTableModel() {
 			super();
+			
+			@SuppressWarnings("unchecked")
+			List<Col<Transaction>> z = (List<Col<Transaction>>) Settings.settings.get("TxView Columns");
+			loadColumns(z);
+			
 			addColumn("",   		22,		Icon.class,		t->t.getIcon()).showMandatory();
 			addColumn("Date",   	140,	String.class, 	t->t.date).showMandatory();
 			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).show(true);
@@ -44,6 +50,10 @@ public class TransactionView extends JPanel {
 			addColumn("To",   		-1,		String.class, 	t->t.target).showMandatory();
 			addColumn("Amount", 	100,	Balance.class, 	t->t.amount).showMandatory();
 			addColumn("$", 			60,		Balance.class, 	t->t.value);
+			
+			DATE_COLUMN = getIndex("Date");
+			AMOUNT_COLUMN = getIndex("Amount");
+			PRICE_COLUMN = getIndex("$");
 			
 			onGetRowCount(() -> Transaction.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Transaction.LIST.get(r)));
@@ -61,8 +71,8 @@ public class TransactionView extends JPanel {
 		SwingUtil.persistDimension(JSP, () -> Settings.GUI.txViewDimension, d -> Settings.GUI.txViewDimension = d);
 		
 		TABLE.setAutoCreateRowSorter(true);
-		TABLE.getRowSorter().toggleSortOrder(1);
-		TABLE.getRowSorter().toggleSortOrder(1);
+		TABLE.getRowSorter().toggleSortOrder(MODEL.DATE_COLUMN);
+		TABLE.getRowSorter().toggleSortOrder(MODEL.DATE_COLUMN);
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
 		POPUP_MENU.add(new SwingEX.JMI("View at posat.io", 	Ico.POSAT, 		() -> getSelected().forEach(Transaction::browse)));
@@ -81,8 +91,8 @@ public class TransactionView extends JPanel {
 		
 		MODEL.colList.forEach(c -> c.setSelectView(TABLE,HEADER_MENU));
 
-		SwingUtil.setColRight(TABLE, 7);
-		SwingUtil.setColRight(TABLE, 8);
+		SwingUtil.setColRight(TABLE, MODEL.AMOUNT_COLUMN);
+		SwingUtil.setColRight(TABLE, MODEL.PRICE_COLUMN);
 	}
 	
 	private static List<Transaction> getSelected() {
