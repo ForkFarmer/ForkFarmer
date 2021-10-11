@@ -10,29 +10,27 @@ import javax.swing.JTable;
 import javax.swing.table.TableColumn;
 
 public class Col<T> {
-	public final String name;
+	public String name;
 	public int width;
-	public int colIndex;
 	public boolean show;
 	
+	public transient int colIndex;
 	public transient boolean selectable = true;
 	public transient boolean editable = false;
-	public transient final Class<T> type;
-	public transient final Function<T, Object> getValue;
+	public transient Class<T> type;
+	public transient Function<T, Object> getValue;
 	public transient BiConsumer<T,Object> consumer;
 	public transient JCheckBoxMenuItem jmi = null;
+	public transient boolean loaded;
 	
 
 	public Col(final String name, final int width,  final Class<?> type, final Function<T, Object> getValue) {
 		this(name,width,type,getValue,null);
 	}
 	
-	public Col(final String name, final int width,  final Function<T, Object> getValue) {
-		this(name,width,String.class,getValue);
-	}
-	
 	@SuppressWarnings("unchecked")
 	public Col(final String name, final int width, final Class<?> type, final Function<T, Object> getValue, BiConsumer<T,Object> consumer) {
+		this.type = null;
 		this.name = name;
 		this.width = width;
 		this.type = (Class<T>) type;
@@ -40,6 +38,10 @@ public class Col<T> {
 		this.consumer = consumer;
 	}
 	
+	public Col() {
+		
+	}
+
 	public void resize (JTable table) {
 		if (-1 == width)
 			return;
@@ -47,7 +49,8 @@ public class Col<T> {
 		for (int z = 0; z < table.getColumnCount(); z++)
 			if (name == table.getColumnName(z)) { // bad for dulplicate col names
 				w = (null == jmi) ? width : (jmi.isSelected() ? width : 0);
-				setWidth(table.getColumnModel().getColumn(z),w); 
+				setWidth(table.getColumnModel().getColumn(z),w);
+				show = (0 != w);
 			}
 	}
 	
@@ -88,6 +91,7 @@ public class Col<T> {
 			jmi = new JCheckBoxMenuItem(name);
 			menu.add(jmi);
 			jmi.setSelected(show);
+			
 			jmi.addActionListener(ae -> resize(table));
 		}
 		resize(table);
@@ -100,7 +104,9 @@ public class Col<T> {
 	}
 	
 	public Col<T> show(boolean s) {
-		show = s;
+		if (!loaded) {
+			show = s;
+		}
 		return this;
 	}
 	
