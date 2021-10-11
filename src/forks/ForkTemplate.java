@@ -40,8 +40,10 @@ public class ForkTemplate {
 			forkBase = USER_HOME + "\\AppData\\Local\\" + daemonFolder + "\\";
 			logPath = USER_HOME + "\\" + dataFolder.toLowerCase() + "\\mainnet\\log\\debug.log";
 			configPath = USER_HOME + "\\" + dataFolder.toLowerCase() + "\\mainnet\\config\\config.yaml";
-			if (symbol.equals("NCH"))
+			if (symbol.equals("NCH")) {
 				logPath = USER_HOME + "\\.chia\\ext9\\log\\debug.log";
+				configPath = USER_HOME + "\\.chia\\ext9\\config\\config.yaml";
+			}
 		} else {
 			forkBase = USER_HOME + "/" + daemonFolder + "/";
 			logPath = USER_HOME + "/" + dataFolder.toLowerCase() + "/mainnet/log/debug.log";
