@@ -377,8 +377,8 @@ public class ForkView extends JPanel {
 		sb.append("Symbol,Balance,$,ETW\n");
 		for (Fork f : getSelected()) {
 			sb.append(Util.toString(MODEL.colList.get(MODEL.getIndex("Symbol")).getValue.apply(f)) + ",");
-			sb.append(Util.toString(MODEL.colList.get(MODEL.getIndex("Balance")).getValue.apply(f)) + ",");
-			sb.append(Util.toString(MODEL.colList.get(MODEL.getIndex("$")).getValue.apply(f)) + ",");
+			sb.append(((Balance)(MODEL.colList.get(MODEL.getIndex("Balance")).getValue.apply(f))).amt +",");
+			sb.append(((Balance)(MODEL.colList.get(MODEL.getIndex("$")).getValue.apply(f))).amt +",");
 			sb.append(Util.toString(MODEL.colList.get(MODEL.getIndex("ETW")).getValue.apply(f)) + "\n");
 		}
 		

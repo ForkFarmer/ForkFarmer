@@ -102,7 +102,6 @@ public class Settings {
 		new ForkTemplate("TRZ","Tranzact", ".tranzact", "tranzact-blockchain", 0.0,.625);
 		new ForkTemplate("XSLV","Salvia", ".salvia", "salvia-blockchain", 0.0,.25);
 		new ForkTemplate("STAI","Staicoin", ".staicoin", "staicoin-blockchain", 0.0,1);
-		new ForkTemplate("TSLA","Tslacoin", ".tslacoin", "tslacoin-blockchain", 0.0,1);
 		new ForkTemplate("XVM","Venidium", ".venidium", "venidium-blockchain", 0.0,80);
 		new ForkTemplate("MELON","mELON", ".melon", "melon-blockchain", 0.0,1);
 		
