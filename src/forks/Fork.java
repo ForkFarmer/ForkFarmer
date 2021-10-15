@@ -317,7 +317,7 @@ public class Fork {
 	}
 	
 	public void start() {
-		Util.runProcessWait(exePath,"start","farmer");
+		ForkStarter.start((this));
 		loadWallet();
 	}
 	

@@ -32,6 +32,7 @@ public final class Ico {
 	public static final ImageIcon GRAPH		= loadIcon("icons/graph.png",16);
 	
 	public static final ImageIcon POSAT		= loadIcon("icons/posat.png",16);
+	public static final ImageIcon EDIT_START = loadIcon("icons/edit_start.png",16);
 	
 	//circle icons
 	public static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");

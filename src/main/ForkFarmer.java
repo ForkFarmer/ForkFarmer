@@ -35,7 +35,7 @@ public class ForkFarmer {
 	private static void startGUI() {
 		Settings.Load();
 		
-		FRAME = new JFrame("ForkFarmer 1.9.3");
+		FRAME = new JFrame("ForkFarmer 1.9.7");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 

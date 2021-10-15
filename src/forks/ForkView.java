@@ -2,7 +2,6 @@ package forks;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -14,7 +13,6 @@ import java.util.stream.Collectors;
 
 import javax.swing.DropMode;
 import javax.swing.Icon;
-import javax.swing.JCheckBox;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -45,7 +43,6 @@ import util.Util;
 import util.apache.ReversedLinesFileReader;
 import util.swing.Reorderable;
 import util.swing.SwingEX;
-import util.swing.SwingEX.LTPanel;
 import util.swing.SwingUtil;
 import util.swing.TableRowTransferHandler;
 import util.swing.jfuntable.Col;
@@ -55,12 +52,12 @@ import util.swing.jfuntable.JFunTableModel;
 public class ForkView extends JPanel {
 	public static final ForkTableModel MODEL = new ForkTableModel();	
 	public static final JTable TABLE = new JTable(MODEL);
-	private static final JScrollPane JSP = new JScrollPane(TABLE);
+	private static final JScrollPane JSP = new JScrollPane(TABLE,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
 	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
 	
 	public static class ForkTableModel extends JFunTableModel<Fork> implements Reorderable {
-		int BAL_COLUMN, EQ_COLUMN, HEIGHT_COLUMN, TIME_COLUMN, LIGHT_COLUMN;
+		int SYM_COLUMN, BAL_COLUMN, EQ_COLUMN, HEIGHT_COLUMN, TIME_COLUMN, LIGHT_COLUMN;
 		
 		public ForkTableModel() {
 			super();
@@ -95,6 +92,7 @@ public class ForkView extends JPanel {
 			addColumn("WN",			30,	Boolean.class, 	f->f.walletNode).editable();
 			addColumn("", 			22, Icon.class, 	f->f.statusIcon).showMandatory();
 			
+			SYM_COLUMN = getIndex("Symbol");
 			BAL_COLUMN = getIndex("Balance");
 			EQ_COLUMN = getIndex("Equity");
 
@@ -163,6 +161,7 @@ public class ForkView extends JPanel {
 	static final JMenu ACTION_SUBMENU = new SwingEX.JMIco("Action", Ico.ACTION);
 	static final JMenu WALLET_SUBMENU = new SwingEX.JMIco("Wallet", Ico.WALLET);
 	static final JMenu EXPLORE_SUBMENU = new SwingEX.JMIco("Explore", Ico.EXPLORE);
+	static final JMenu COPY_SUBMENU = new SwingEX.JMIco("Copy", Ico.CLIPBOARD);
 	
 	static final JMenuItem STAGGER_JMI = new SwingEX.JMI("Stagger", 	Ico.START,	() -> ForkView.staggerStartDialog());
 	public ForkView() {
@@ -214,21 +213,31 @@ public class ForkView extends JPanel {
 		
 		
 		POPUP_MENU.add(ACTION_SUBMENU);
-		ACTION_SUBMENU.add(new SwingEX.JMI("Start", 	Ico.START, 	() -> new Thread(() -> getSelected().forEach(Fork::start)).start()));
-		ACTION_SUBMENU.add(STAGGER_JMI);
-		ACTION_SUBMENU.add(new SwingEX.JMI("Stop",		Ico.STOP,  	() -> new Thread(() -> getSelected().forEach(Fork::stop)).start()));
-		ACTION_SUBMENU.add(new SwingEX.JMI("Custom",	Ico.CLI, 	ForkView::newCustCMD));
+			ACTION_SUBMENU.add(new SwingEX.JMI("Start", 		Ico.START, 	() -> new Thread(() -> getSelected().forEach(Fork::start)).start()));
+			ACTION_SUBMENU.add(STAGGER_JMI);
+			ACTION_SUBMENU.add(new SwingEX.JMI("Stop",			Ico.STOP,  	() -> new Thread(() -> getSelected().forEach(Fork::stop)).start()));
+			ACTION_SUBMENU.add(new SwingEX.JMI("Custom",		Ico.CLI, 	() -> ForkStarter.newCustCMD(getSelected())));
+			ACTION_SUBMENU.addSeparator();
+			ACTION_SUBMENU.add(new SwingEX.JMI("Edit Start",	Ico.EDIT_START, 	ForkStarter::edit));
 		
 		POPUP_MENU.add(WALLET_SUBMENU);
 		
 		POPUP_MENU.add(EXPLORE_SUBMENU);
-		EXPLORE_SUBMENU.add(new SwingEX.JMI("View Log", 	Ico.CLIPBOARD,  		ForkView::viewLog));
-		EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Config", 	Ico.CLIPBOARD,  		() -> getSelected().forEach(Fork::openConfig)));
+			EXPLORE_SUBMENU.add(new SwingEX.JMI("View Log", 	Ico.CLIPBOARD,  		ForkView::viewLog));
+			EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Config", 	Ico.CLIPBOARD,  		() -> getSelected().forEach(Fork::openConfig)));
+			if (Util.isHostWin())
+				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Shell", 		Ico.CLI,  		ForkView::openShell));
 		
+		POPUP_MENU.add(COPY_SUBMENU);
+			COPY_SUBMENU.add(new SwingEX.JMI("Copy Address", 	Ico.CLIPBOARD,  ForkView::copyAddress));
+			COPY_SUBMENU.add(new SwingEX.JMI("Copy CSV", 		Ico.CLIPBOARD,  ForkView::copyCSV));
+			
+			
+			
 		POPUP_MENU.addSeparator();
 		
 		//POPUP_MENU.add(new SwingEX.JMI("New Addr", 	Ico.GEAR, 		() -> getSelected().forEach(Fork::generate)));
-		POPUP_MENU.add(new SwingEX.JMI("Copy", 		Ico.CLIPBOARD,  ForkView::copy));
+		
 		
 		JMenuItem update = new SwingEX.JMI("Update", 	Ico.DOLLAR,  	() -> new Thread(ForkView::updatePrices).start());
 		update.setToolTipText("from xchforks.com");
@@ -257,55 +266,6 @@ public class ForkView extends JPanel {
 		TABLE.setTransferHandler(new TableRowTransferHandler(TABLE));
 	}
 	
-	static private void newCustCMD() {
-		List<Fork> selList = getSelected();
-		JPanel customPanel = new JPanel(new GridLayout(selList.size() > 1 ? 3 : 2 ,1));
-		JCheckBox updateChk = new JCheckBox("Immeditate update after command");
-		
-		LTPanel cmdP = new SwingEX.LTPanel("CMD: " , Settings.GUI.custLastCustom);
-		LTPanel staggerP = new SwingEX.LTPanel("Stagger (ms): " , Settings.GUI.custLastDelay);
-		updateChk.setSelected(Settings.GUI.custForceUpdate);
-		customPanel.add(cmdP);
-		if (selList.size() > 1)
-			customPanel.add(staggerP);
-		customPanel.add(updateChk);
-		
-		if (false == ForkFarmer.showPopup("Custom Command:", customPanel))
-			return;
-		
-		Settings.GUI.custLastCustom = cmdP.field.getText();
-		Settings.GUI.custLastDelay = staggerP.field.getText();
-		Settings.GUI.custForceUpdate = updateChk.isSelected();
-		
-		long sleepDelay = Long.parseLong(staggerP.field.getText());
-		
-		exeCustCMD(getSelected(), cmdP.field.getText(),sleepDelay,updateChk.isSelected());
-	}
-	
-	static private void exeCustCMD(List<Fork> list, String cmd, long delay, boolean immediateLoad) {
-		String[] cmds = cmd.split(",");
-
-		new Thread( () -> {
-			for (Fork f : list) {
-				for (String s : cmds) {
-					String[] args = s.split(" ");
-					
-					String[] varArgs = new String[args.length + 1];
-					varArgs[0] = f.exePath;
-					for (int i = 0; i < args.length; i++)
-						varArgs[i+1] = args[i];
-				
-					Util.runProcessWait(varArgs);
-					if (immediateLoad)
-						f.loadWallet();
-					Util.sleep(delay);
-				}
-			}
-		}).start();
-	}
-	
-	
-	
 	static private void staggerStartDialog() {
 		String delay = JOptionPane.showInputDialog(ForkFarmer.FRAME,"Enter Start Interval: (Seconds)", "60");
 		
@@ -315,7 +275,7 @@ public class ForkView extends JPanel {
 
 		new Thread(() -> {
 			getSelected().stream().forEach(f -> {
-				f.start(); Util.sleep(delayInt * 1000);
+				ForkStarter.start(f); Util.sleep(delayInt * 1000);
 			});
 		}).start();
 	}
@@ -405,11 +365,38 @@ public class ForkView extends JPanel {
 		
 	}
 	
-	static private void copy() {
+	static private void copyAddress() {
 		String addrs = getSelected().stream()
 				.map(f -> f.wallet.toString()).filter(Objects::nonNull)
 				.collect(Collectors.joining("\n"));
 		Util.copyToClip(addrs);
+	}
+	
+	static private void copyCSV() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Symbol,Balance,$,ETW\n");
+		for (Fork f : getSelected()) {
+			sb.append(Util.toString(MODEL.colList.get(MODEL.getIndex("Symbol")).getValue.apply(f)) + ",");
+			sb.append(Util.toString(MODEL.colList.get(MODEL.getIndex("Balance")).getValue.apply(f)) + ",");
+			sb.append(Util.toString(MODEL.colList.get(MODEL.getIndex("$")).getValue.apply(f)) + ",");
+			sb.append(Util.toString(MODEL.colList.get(MODEL.getIndex("ETW")).getValue.apply(f)) + "\n");
+		}
+		
+		Util.copyToClip(sb.toString());
+	}
+	
+	static private void openShell() {
+		for (Fork f : getSelected()) {
+			String path = f.exePath;
+			String nativeDir = path.substring(0, path.lastIndexOf(File.separator));
+			try {
+				Runtime.getRuntime().exec("cmd /c start cmd.exe /K " + "cd " + nativeDir);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+		}
 	}
 	
 	private static List<Fork> getSelected() {

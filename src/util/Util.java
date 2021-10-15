@@ -330,5 +330,9 @@ public class Util {
 	        if(dot != -1) { version = version.substring(0, dot); }
 	    } return Integer.parseInt(version);
 	}
+
+	public static String toString(Object o) {
+		return (null != o) ? o.toString() : "";
+	}
 	
 }

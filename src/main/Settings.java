@@ -15,6 +15,7 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import forks.Fork;
+import forks.ForkStarter;
 import forks.ForkTemplate;
 import forks.ForkView;
 import transaction.TransactionView;
@@ -48,7 +49,7 @@ public class Settings {
 		new ForkTemplate("XFX","Flax", ".flax", "flax-blockchain", 0.4, .25);
 		new ForkTemplate("NCH","NChainExt9", ".chia", "NChainExt9-blockchain", 0.2,2);
 		new ForkTemplate("SPARE","Spare", ".spare-blockchain", "spare-blockchain", .04,.25);
-		new ForkTemplate("SIT","Silicoin", ".silicoin", "silicoin-blockchain", .3,.25);
+		new ForkTemplate("TSIT","Silicoin", ".silicoin", "silicoin-blockchain", .3,.25);
 		new ForkTemplate("XFL","Flora", ".flora", "flora-blockchain", .1,.5);
 		new ForkTemplate("XCC","Chives", ".chives", "chives-blockchain", 0.01,22.5);
 		new ForkTemplate("CGN","Chaingreen", ".chaingreen", "chaingreen-blockchain", .0003,62.5);
@@ -102,6 +103,8 @@ public class Settings {
 		new ForkTemplate("XSLV","Salvia", ".salvia", "salvia-blockchain", 0.0,.25);
 		new ForkTemplate("STAI","Staicoin", ".staicoin", "staicoin-blockchain", 0.0,1);
 		new ForkTemplate("TSLA","Tslacoin", ".tslacoin", "tslacoin-blockchain", 0.0,1);
+		new ForkTemplate("XVM","Venidium", ".venidium", "venidium-blockchain", 0.0,80);
+		new ForkTemplate("MELON","mELON", ".melon", "melon-blockchain", 0.0,1);
 		
 		InputStream inputStream;
 		
@@ -112,6 +115,7 @@ public class Settings {
 			GUI = (Gui) settings.get("Gui Settings");
 			Fork.LIST = (List<Fork>) settings.get("Fork List");
 		} catch (Exception e) {
+			e.printStackTrace();
 			GUI.logReaderIntraDelay = 100;
 			GUI.logReaderExoDelay = 5000;
 			GUI.daemonReaderWorkers = 2;
@@ -137,6 +141,8 @@ public class Settings {
 		settings.put("Gui Settings", GUI);
 		settings.put("ForkView Columns", ForkView.MODEL.getColsDisplayOrder(ForkView.TABLE));
 		settings.put("TxView Columns", TransactionView.MODEL.getColsDisplayOrder(TransactionView.TABLE));
+		settings.put("ForkStarter", ForkStarter.getSettings());
+		
 		
 		DumperOptions options = new DumperOptions();
 		options.setIndent(2);
