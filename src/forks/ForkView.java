@@ -1,10 +1,9 @@
 package forks;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -13,6 +12,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.DropMode;
 import javax.swing.Icon;
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -21,7 +21,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
@@ -40,7 +39,6 @@ import util.FFUtil;
 import util.Ico;
 import util.NetSpace;
 import util.Util;
-import util.apache.ReversedLinesFileReader;
 import util.swing.Reorderable;
 import util.swing.SwingEX;
 import util.swing.SwingUtil;
@@ -223,7 +221,7 @@ public class ForkView extends JPanel {
 		POPUP_MENU.add(WALLET_SUBMENU);
 		
 		POPUP_MENU.add(EXPLORE_SUBMENU);
-			EXPLORE_SUBMENU.add(new SwingEX.JMI("View Log", 	Ico.CLIPBOARD,  		ForkView::viewLog));
+			EXPLORE_SUBMENU.add(new SwingEX.JMI("View Log", 	Ico.CLIPBOARD,  		() -> new ForkLogViewer(getSelected())));
 			EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Config", 	Ico.CLIPBOARD,  		() -> getSelected().forEach(Fork::openConfig)));
 			if (Util.isHostWin())
 				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Shell", 		Ico.CLI,  		ForkView::openShell));
@@ -330,41 +328,6 @@ public class ForkView extends JPanel {
 		update();
 	}
 
-	static private void viewLog() {
-		JPanel logPanel = new JPanel(new BorderLayout());
-		JTabbedPane JTP = new JTabbedPane();
-		logPanel.add(JTP,BorderLayout.CENTER);
-		
-		for (Fork f : getSelected()) {
-			File logFile = new File(f.logPath);
-			JTextArea jta = new JTextArea();
-			jta.setEditable(false);
-			JScrollPane JSP = new JScrollPane(jta);
-			JSP.setPreferredSize(new Dimension(1000,800));
-			JTP.addTab(f.name + " log",f.ico,JSP);
-			
-			ReversedLinesFileReader lr = null;
-			try {
-				lr = new ReversedLinesFileReader(logFile,Charset.defaultCharset());
-				String s;
-				int i =0;
-				StringBuilder sb = new StringBuilder();
-				while (null != (s = lr.readLine()) && i < 200) {
-					i++;
-					sb.append(s + "\n");
-				}
-				jta.setText(sb.toString());
-				jta.setCaretPosition(0);
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			};
-			Util.closeQuietly(lr);
-		}
-		
-		ForkFarmer.showPopup("LogView:", logPanel);
-		
-	}
-	
 	static private void copyAddress() {
 		String addrs = getSelected().stream()
 				.map(f -> f.wallet.toString()).filter(Objects::nonNull)

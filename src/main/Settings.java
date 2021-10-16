@@ -104,6 +104,7 @@ public class Settings {
 		new ForkTemplate("STAI","Staicoin", ".staicoin", "staicoin-blockchain", 0.0,1);
 		new ForkTemplate("XVM","Venidium", ".venidium", "venidium-blockchain", 0.0,80);
 		new ForkTemplate("MELON","mELON", ".melon", "melon-blockchain", 0.0,1);
+		new ForkTemplate("XKJ","Kujenga", ".kujenga", "kujenga-blockchain", 0.0,.25);
 		
 		InputStream inputStream;
 		
