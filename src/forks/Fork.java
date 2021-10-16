@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import javax.swing.ImageIcon;
@@ -45,6 +47,7 @@ import util.apache.ReversedLinesFileReader;
 import util.swing.SwingEX;
 
 public class Fork {
+	private static final ExecutorService INST_SVC = Executors.newSingleThreadExecutor();
 	public static List<Fork> LIST = new ArrayList<>();
 	public static List<Fork> I_LIST;
 
@@ -67,7 +70,6 @@ public class Fork {
 	transient public TimeU etw = new TimeU();
 	transient public String syncStatus;
 	transient public String farmStatus;
-	transient public int logLines;
 	transient public double dayWin;
 	transient public double estEarn;
 	transient public Transaction lastWin;
@@ -76,6 +78,8 @@ public class Fork {
 	transient boolean walletLoaded = false;
 	transient public List<Wallet> walletList = new ArrayList<>();
 	transient boolean hidden;
+	transient String lastTimeStamp;
+	transient LocalDateTime lastTimeUpdate;
 	
 	public boolean fullNode = true;
 	public boolean walletNode = true;
@@ -185,11 +189,12 @@ public class Fork {
 				}
 			}
 			
-			updateBalance(newBalance);
+			boolean balancedChanged = updateBalance(newBalance);
 			
 			if ("" != syncStatus) {
 				synchronized(Transaction.class) {
-					Transaction.load(this);
+					if (balancedChanged)
+						Transaction.load(this);
 					dayWin = Transaction.LIST.stream()
 						.filter(t -> this == t.f && t.blockReward && t.getTimeSince().inMinutes() < (60*24))
 						.collect(Collectors.summingDouble(Transaction::getAmount));
@@ -249,30 +254,34 @@ public class Fork {
 		if (!logFile.exists())
 			return;
 		
-		LocalDateTime now = LocalDateTime.now();  
+		String firstTime = null;
+		LocalDateTime now = LocalDateTime.now(); 
 		LocalDateTime logTime = null;
 		ReversedLinesFileReader lr = null;
-		long sec;
+		boolean updateWallet = false;
+		
 		try {
 			String s,t;
 			lr = new ReversedLinesFileReader(logFile,Charset.defaultCharset());
-			readTime = ReadTime.EMPTY;
 			for (int i = 0; null != (s = lr.readLine()); i++) {
+				if (s.length() < 24)
+					continue;
+				
+				String timeStamp = s.substring(0,23);
+				if (null == firstTime)
+					firstTime = timeStamp;
 				logTime = FFUtil.parseTime(s);
 				
-				if (null != logTime) {
-					Duration duration = Duration.between(logTime, now);
-					sec = duration.getSeconds();
-				} else {
-					sec = 1; // kinda a hack if logTime fails
+				
+				if (!readT && null != logTime && Duration.between(logTime, now).getSeconds() > 20) {
+					readTime = ReadTime.TIMEOUT;
+					readT = true;
 				}
-			
-				if (sec > 30 || i > 250 || (readT && readH)) {
-					//System.out.println("Seconds: " + sec + " - " + i);
-					logLines = i;
+				
+				if (i > 250 || timeStamp.equals(lastTimeStamp)) {
+					lastTimeStamp = firstTime;
 					break;
 				}	
-				
 				
 				if (!readT && null != (t = Util.wordAfterIfExist(s, "Time: "))) {
 					readTime = new ReadTime(Double.parseDouble(t));
@@ -292,13 +301,22 @@ public class Fork {
 					t = t.replace(",", "");
 					height = new Balance(Integer.parseInt(t));
 					readH = true;
+				} else if (s.contains("Adding coin") || s.contains("Removing coin")) {
+					updateWallet = true;
 				}
+					
 				
 			}
 			
 		} catch (Exception e) {
 			lastException = e;
 		};
+		
+		if (updateWallet)
+			INST_SVC.submit(() -> {loadWallet(); ForkView.update(this);});
+				
+		if (readT)
+			lastTimeUpdate = now;
 		
 		Util.closeQuietly(lr);
 		ForkView.updateLog(this);
@@ -460,11 +478,12 @@ public class Fork {
 		}
 	}
 	
-	public void updateBalance(Balance b) {
-		if (b.amt != balance.amt) {
-			balance = b;
-			refreshEquity();
-		}
+	public boolean updateBalance(Balance b) {
+		if (b.amt == balance.amt)
+			return false;
+		balance = b;
+		refreshEquity();
+		return true;
 	}
 	
 	public void refreshEquity() {
@@ -494,7 +513,7 @@ public class Fork {
 			fp.harvester_rpc = (int) harvesterMap.get("rpc_port");
 			
 			fp.farmer = (int) farmerMap.get("port");
-			fp.farmer_rpc = (int) farmerMap.get("rpc_port");			
+			fp.farmer_rpc = (int) farmerMap.get("rpc_port");
 			
 		} catch (Exception e) {
 			e.printStackTrace();

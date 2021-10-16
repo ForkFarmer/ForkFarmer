@@ -23,6 +23,7 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.table.JTableHeader;
 
+import ffutilities.ForkLogViewer;
 import ffutilities.PortCheckerView;
 import main.ForkFarmer;
 import main.MainGui;
