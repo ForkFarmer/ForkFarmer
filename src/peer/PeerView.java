@@ -18,6 +18,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
@@ -68,7 +69,6 @@ public class PeerView extends JPanel {
 		
 		MODEL.colList.forEach(c -> c.setSelectView(TABLE,null));
 		
-		
 		JSP.setPreferredSize(new Dimension(600,250));
 		
 		JMenuBar MENU = new JMenuBar();
@@ -86,28 +86,34 @@ public class PeerView extends JPanel {
 		
 		add(MENU,BorderLayout.PAGE_START);
 		
-		Process p = null;
-		BufferedReader br = null;
-		try {
-			p = Util.startProcess(f.exePath, "show", "-c");
-			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			
-			String l = null;
-			while ( null != (l = br.readLine())) {
-				if (f.symbol.equals("HDD") && l.contains("FULL_NODE ")) {
-					LIST.add(Peer.factorySingleLine(l));
-            	} else if (l.contains("FULL_NODE ")) {
-            		String l2 = br.readLine();
-            		LIST.add(Peer.factoryMultiLine(l + l2));
-            	}
-            		
+		new Thread( () -> {
+		
+			Process p = null;
+			BufferedReader br = null;
+			try {
+				p = Util.startProcess(f.exePath, "show", "-c");
+				br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				
+				String l = null;
+				while ( null != (l = br.readLine())) {
+					if ((f.symbol.equals("HDD") || f.symbol.equals("XDG")) && l.contains("FULL_NODE ")) {
+						LIST.add(Peer.factorySingleLine(l));
+	            	} else if (l.contains("FULL_NODE ")) {
+	            		String l2 = br.readLine();
+	            		LIST.add(Peer.factoryMultiLine(l + l2));
+	            	}
+	            		
+				}
+				
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		Util.waitForProcess(p);
-		Util.closeQuietly(br);
+			Util.waitForProcess(p);
+			Util.closeQuietly(br);
+			SwingUtilities.invokeLater(() -> {
+				MODEL.fireTableDataChanged();
+			});
+		}).start();
 		
 		TABLE.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 		    @Override

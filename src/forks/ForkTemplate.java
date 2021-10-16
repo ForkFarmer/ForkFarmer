@@ -38,11 +38,22 @@ public class ForkTemplate {
 				
 		if (System.getProperty("os.name").startsWith("Windows")) {
 			forkBase = USER_HOME + "\\AppData\\Local\\" + daemonFolder + "\\";
+			
+			
 			logPath = USER_HOME + "\\" + dataFolder.toLowerCase() + "\\mainnet\\log\\debug.log";
 			configPath = USER_HOME + "\\" + dataFolder.toLowerCase() + "\\mainnet\\config\\config.yaml";
 			if (symbol.equals("NCH")) {
 				logPath = USER_HOME + "\\.chia\\ext9\\log\\debug.log";
 				configPath = USER_HOME + "\\.chia\\ext9\\config\\config.yaml";
+			}
+			
+			if (!new File(configPath).exists()) { // try enviroment keys
+				String envKey = name.toUpperCase() + "_ROOT";
+				String val = System.getenv().get(envKey);
+				if (null != val) {
+					logPath =  val + "\\log\\debug.log";
+					configPath = val + "\\config\\config.yaml"; 
+				}
 			}
 		} else {
 			forkBase = USER_HOME + "/" + daemonFolder + "/";
@@ -100,6 +111,12 @@ public class ForkTemplate {
 				ForkTemplate ft = MAP.get(f.symbol);
 				if (null != ft)
 					f.exePath = ft.exePath;
+			}
+			if (!new File(f.logPath).exists()) {
+				ForkTemplate ft = MAP.get(f.symbol);
+				if (null != ft)
+					f.logPath = ft.logPath;
+					f.configPath = ft.configPath;
 			}
 		}
 		

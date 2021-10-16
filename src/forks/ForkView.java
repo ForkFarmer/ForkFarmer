@@ -3,7 +3,6 @@ package forks;
 import java.awt.BorderLayout;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -12,23 +11,23 @@ import java.util.stream.Collectors;
 
 import javax.swing.DropMode;
 import javax.swing.Icon;
-import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.table.JTableHeader;
 
+import ffutilities.PortCheckerView;
 import main.ForkFarmer;
 import main.MainGui;
 import main.Settings;
+import peer.PeerView;
 import types.Balance;
 import types.Effort;
 import types.ReadTime;
@@ -160,6 +159,7 @@ public class ForkView extends JPanel {
 	static final JMenu WALLET_SUBMENU = new SwingEX.JMIco("Wallet", Ico.WALLET);
 	static final JMenu EXPLORE_SUBMENU = new SwingEX.JMIco("Explore", Ico.EXPLORE);
 	static final JMenu COPY_SUBMENU = new SwingEX.JMIco("Copy", Ico.CLIPBOARD);
+	static final JMenu STATS_SUBMENU = new SwingEX.JMIco("Stats", Ico.GRAPH);
 	
 	static final JMenuItem STAGGER_JMI = new SwingEX.JMI("Stagger", 	Ico.START,	() -> ForkView.staggerStartDialog());
 	public ForkView() {
@@ -229,8 +229,9 @@ public class ForkView extends JPanel {
 		POPUP_MENU.add(COPY_SUBMENU);
 			COPY_SUBMENU.add(new SwingEX.JMI("Copy Address", 	Ico.CLIPBOARD,  ForkView::copyAddress));
 			COPY_SUBMENU.add(new SwingEX.JMI("Copy CSV", 		Ico.CLIPBOARD,  ForkView::copyCSV));
-			
-			
+		
+		POPUP_MENU.add(STATS_SUBMENU);
+			STATS_SUBMENU.add(new SwingEX.JMI("Ports", 	Ico.PORTS, ForkView::runPortChecker));
 			
 		POPUP_MENU.addSeparator();
 		
@@ -244,7 +245,8 @@ public class ForkView extends JPanel {
 		POPUP_MENU.addSeparator();
 		POPUP_MENU.add(new SwingEX.JMI("Refresh",	Ico.REFRESH,  	ForkView::refresh));
 		POPUP_MENU.add(new SwingEX.JMI("Hide", 		Ico.HIDE,  		ForkView::removeSelected));
-		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.P2P,		() -> getSelected().forEach(Fork::showConnections)));
+		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.P2P,		() -> getSelected().forEach(f -> 
+			ForkFarmer.newFrame(f.name + ": Peer Connections", f.ico, new PeerView(f)))));
 		POPUP_MENU.addSeparator();
 		POPUP_MENU.add(new SwingEX.JMI("Debug",		Ico.BUG,		() -> getSelected().forEach(Fork::showLastException)));
 		
@@ -404,6 +406,11 @@ public class ForkView extends JPanel {
 			}
 			Util.sleep(Settings.GUI.logReaderExoDelay);
 		}
+	}
+	
+	private static void runPortChecker() {
+		Fork.LIST.forEach(Fork::loadConfig);
+		ForkFarmer.newFrame("Port Checker", Ico.PORTS, new PortCheckerView());
 	}
 	
 	public static void daemonReader() {

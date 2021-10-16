@@ -4,6 +4,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Properties;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -20,6 +21,7 @@ public class ForkFarmer {
 
 	public static void main(String[] args) {
 		try {
+		
 			Properties props = new Properties();
 			props.put("logoString", "");
 			HiFiLookAndFeel.setCurrentTheme(props);
@@ -35,7 +37,7 @@ public class ForkFarmer {
 	private static void startGUI() {
 		Settings.Load();
 		
-		FRAME = new JFrame("ForkFarmer 2.2");
+		FRAME = new JFrame("ForkFarmer 2.0.6");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 
@@ -53,7 +55,7 @@ public class ForkFarmer {
 		
 		SystemTray st = SystemTray.getSystemTray();
 	    
-		try {
+		
 			st.add(trayIcon);
 		} catch (AWTException e1) {
 			// TODO Auto-generated catch block
@@ -68,6 +70,16 @@ public class ForkFarmer {
 		    }
 		});
 		
+	}
+	
+	public static void newFrame(String title, ImageIcon ico, JPanel content) {
+		JFrame frame = new JFrame(title);
+		frame.setIconImage(null == ico ? Ico.LOGO.getImage() : ico.getImage());
+		frame.setTitle(title);
+		frame.setContentPane(content);
+		frame.pack();
+		frame.setLocationRelativeTo(FRAME);
+		frame.setVisible(true);
 	}
 
 	public static void showMsg(String title,String message) {

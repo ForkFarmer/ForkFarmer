@@ -5,7 +5,9 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -14,6 +16,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -23,9 +26,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import org.yaml.snakeyaml.Yaml;
+
+import ffutilities.ForkPorts;
 import main.ForkFarmer;
 import main.MainGui;
-import peer.PeerView;
 import transaction.Transaction;
 import types.Balance;
 import types.Effort;
@@ -50,6 +55,7 @@ public class Fork {
 	public String symbol;
 	public String exePath;
 	public String name;
+	transient public ForkPorts fp = new ForkPorts();
 	transient public String version;
 	transient public String latestVersion;
 	transient public String published;
@@ -262,6 +268,7 @@ public class Fork {
 				}
 			
 				if (sec > 30 || i > 250 || (readT && readH)) {
+					//System.out.println("Seconds: " + sec + " - " + i);
 					logLines = i;
 					break;
 				}	
@@ -343,10 +350,6 @@ public class Fork {
 			//addr = ProcessPiper.run(exePath,"wallet","get_address").replace("\n", "").replace("\r", "");
 			updateIcon();
 		}).start();
-	}
-	
-	public void showConnections () {
-		ForkFarmer.showPopup(name + ": Peer Connections", new PeerView(this));
 	}
 	
 	public void showLastException () {
@@ -468,6 +471,34 @@ public class Fork {
 		equity = new Balance(balance.amt * price,2);
 		MainGui.updateTotal();
 		ForkView.update(this);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void loadConfig() {
+		try {
+			File f = new File(configPath);
+			InputStream inputStream = new FileInputStream(f);
+			Yaml yaml = new Yaml();
+			Map<String, Object> cfgMap = yaml.load(inputStream);
+			
+			fp.daemon = (int) cfgMap.get("daemon_port");
+			
+			Map<String, Object> farmerMap = (Map<String, Object>) cfgMap.get("farmer");
+			Map<String, Object> fullNodeMap = (Map<String, Object>) cfgMap.get("full_node");
+			Map<String, Object> harvesterMap = (Map<String, Object>) cfgMap.get("harvester");
+			
+			fp.fullnode = (int) fullNodeMap.get("port");
+			fp.fullnode_rpc = (int) fullNodeMap.get("rpc_port");
+			
+			fp.harvester = (int) harvesterMap.get("port");
+			fp.harvester_rpc = (int) harvesterMap.get("rpc_port");
+			
+			fp.farmer = (int) farmerMap.get("port");
+			fp.farmer_rpc = (int) farmerMap.get("rpc_port");			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }
