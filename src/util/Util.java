@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
@@ -333,6 +335,19 @@ public class Util {
 
 	public static String toString(Object o) {
 		return (null != o) ? o.toString() : "";
+	}
+
+	public static void openLink(String url) {
+		try {
+	    	if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+	    		Desktop.getDesktop().browse(new URI(url));
+	    	}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+
 	}
 	
 }

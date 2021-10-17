@@ -1,12 +1,8 @@
 package transaction;
 
-import java.awt.Desktop;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -192,16 +188,7 @@ public class Transaction {
 	public void browse() {
 		String name = f.name;
 		String addr = target;
-	    try {
-	    	if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-	    		Desktop.getDesktop().browse(new URI("https://" + name + ".posat.io/address/" + addr));
-	    	}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
-	
+		Util.openLink("https://" + name + ".posat.io/address/" + addr);
 	}
 	
 }

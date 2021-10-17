@@ -30,6 +30,9 @@ public final class Ico {
 	public static final ImageIcon BUG		= loadIcon("icons/bug.png");
 	public static final ImageIcon WALLET	= loadIcon("icons/wallet.png",16);
 	public static final ImageIcon GRAPH		= loadIcon("icons/graph.png",16);
+	public static final ImageIcon HANDSHAKE	= loadIcon("icons/handshake.png",16);
+	public static final ImageIcon FCX		= loadIcon("icons/fcx.png",16);
+	public static final ImageIcon XCHF		= loadIcon("icons/xchforks.png",16);
 	
 	public static final ImageIcon POSAT		= loadIcon("icons/posat.png",16);
 	public static final ImageIcon EDIT_START = loadIcon("icons/edit_start.png",16);

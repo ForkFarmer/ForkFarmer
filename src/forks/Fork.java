@@ -58,6 +58,7 @@ public class Fork {
 	public String symbol;
 	public String exePath;
 	public String name;
+	
 	transient public ForkPorts fp = new ForkPorts();
 	transient public String version;
 	transient public String latestVersion;
@@ -74,7 +75,7 @@ public class Fork {
 	transient public double estEarn;
 	transient public Transaction lastWin;
 	transient public Exception lastException;
-	transient public int selectedWallet;
+	public String walletAddr;
 	transient boolean walletLoaded = false;
 	transient public List<Wallet> walletList = new ArrayList<>();
 	transient boolean hidden;
@@ -126,10 +127,15 @@ public class Fork {
 		Util.closeQuietly(br);
 		Util.waitForProcess(p);
 		
-		if (1 == walletList.size()) {
+		if (1 == walletList.size()) { 
 			wallet = walletList.get(0);
-		} else if (walletList.size() > 1)
+		} else if (walletList.size() > 1) {
 			wallet = Wallet.SELECT;
+			if (null != walletAddr)
+				walletList.stream().filter(w -> w.addr.equals(walletAddr)).findAny().ifPresent(w -> {wallet = w; walletAddr = w.addr;});
+		}
+		
+		
 	}
 	
 	public void loadVersion() {
@@ -260,6 +266,10 @@ public class Fork {
 		ReversedLinesFileReader lr = null;
 		boolean updateWallet = false;
 		
+		// If we haven't seen a time update event from log make sure we clear currently displayed one
+		if (null != lastTimeUpdate && Duration.between(lastTimeUpdate, now).getSeconds() > 30)
+			readTime = ReadTime.EMPTY;
+		
 		try {
 			String s,t;
 			lr = new ReversedLinesFileReader(logFile,Charset.defaultCharset());
@@ -272,9 +282,9 @@ public class Fork {
 					firstTime = timeStamp;
 				logTime = FFUtil.parseTime(s);
 				
-				
-				if (!readT && null != logTime && Duration.between(logTime, now).getSeconds() > 20) {
-					readTime = ReadTime.TIMEOUT;
+				// don't read long time events that are too old in the log
+				if (!readT && null != logTime && Duration.between(logTime, now).getSeconds() > 30) {
+					readTime = ReadTime.EMPTY;
 					readT = true;
 				}
 				

@@ -161,6 +161,7 @@ public class ForkView extends JPanel {
 	static final JMenu EXPLORE_SUBMENU = new SwingEX.JMIco("Explore", Ico.EXPLORE);
 	static final JMenu COPY_SUBMENU = new SwingEX.JMIco("Copy", Ico.CLIPBOARD);
 	static final JMenu STATS_SUBMENU = new SwingEX.JMIco("Stats", Ico.GRAPH);
+	static final JMenu EXCHANGE_SUBMENU = new SwingEX.JMIco("Exchange", Ico.HANDSHAKE);
 	
 	static final JMenuItem STAGGER_JMI = new SwingEX.JMI("Stagger", 	Ico.START,	() -> ForkView.staggerStartDialog());
 	public ForkView() {
@@ -200,6 +201,7 @@ public class ForkView extends JPanel {
 	            				f.farmStatus = "";
 	            				f.syncStatus = "";
 	            				f.wallet = w;
+	            				f.walletAddr = w.addr;
 	            				update(f);
 	            				f.loadWallet();
 	            			}).start();
@@ -236,8 +238,10 @@ public class ForkView extends JPanel {
 			
 		POPUP_MENU.addSeparator();
 		
-		//POPUP_MENU.add(new SwingEX.JMI("New Addr", 	Ico.GEAR, 		() -> getSelected().forEach(Fork::generate)));
-		
+		POPUP_MENU.add(EXCHANGE_SUBMENU);
+			EXCHANGE_SUBMENU.add(new SwingEX.JMI("xchforks.com", 			Ico.XCHF,() -> Util.openLink("https://xchforks.com/")));
+			EXCHANGE_SUBMENU.addSeparator();
+			EXCHANGE_SUBMENU.add(new SwingEX.JMI("forkschiaexchange.com", 	Ico.FCX, () -> Util.openLink("https://forkschiaexchange.com/?ref=orfinkat")));
 		
 		JMenuItem update = new SwingEX.JMI("Update", 	Ico.DOLLAR,  	() -> new Thread(ForkView::updatePrices).start());
 		update.setToolTipText("from xchforks.com");

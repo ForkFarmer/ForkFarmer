@@ -130,7 +130,6 @@ public class MainGui extends JPanel {
         topPanel.add(topCenter, BorderLayout.CENTER);
         topPanel.add(plotlbl,BorderLayout.LINE_END);
         
-        
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         	splitPane.setTopComponent(FV);
         	splitPane.setBottomComponent(PEPanel);
