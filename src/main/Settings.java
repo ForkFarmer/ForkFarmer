@@ -19,7 +19,6 @@ import forks.ForkStarter;
 import forks.ForkTemplate;
 import forks.ForkView;
 import transaction.TransactionView;
-import util.Ico;
 import util.swing.SwingUtil;
 
 public class Settings {
@@ -91,8 +90,8 @@ public class Settings {
 		new ForkTemplate("XCHA","XCHA", ".xcha", "xcha-blockchain", 0.0,.25);
 		new ForkTemplate("XBT","Beet", ".beet", "beet-blockchain", 0.0,.25);
 		new ForkTemplate("XTH","Thyme", ".thyme", "thyme-blockchain", 0.0, .5890);
-		new ForkTemplate("LLC","LittleLamboCoin", ".littlelambocoin", "littlelambocoin", 0.0,.25);
-		new ForkTemplate("XACH","Achi", ".achi", "achi-blockchain", 0.0,.25);
+		new ForkTemplate("LLC","LittleLamboCoin", ".littlelambocoin", "littlelambocoin-blockchain", 0.0,.25);
+		new ForkTemplate("ACH","Achi", ".achi", "achi-blockchain", 0.0,.25);
 		new ForkTemplate("STOR","Stor", ".stor", "stor-blockchain", 0.0,.5);
 		new ForkTemplate("XNT","Skynet", ".skynet", "skynet-blockchain", 0.0, .625);
 		new ForkTemplate("PEA","Peas", ".peas", "peas-blockchain", 0.0,1);
@@ -125,9 +124,7 @@ public class Settings {
 			GUI.forkViewDimension = new Dimension(700,400);
 		}
 		
-		
-		ForkTemplate.loadFix();		
-		Fork.LIST.forEach(f -> f.ico = Ico.getForkIcon(f.name));
+		ForkTemplate.loadFix();
 		Fork.I_LIST = new ArrayList<>(Fork.LIST);
 		ForkView.update();
 		

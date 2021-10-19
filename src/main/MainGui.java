@@ -149,16 +149,12 @@ public class MainGui extends JPanel {
 	private void sendTx() {
 		String address = targetAddress.getText();
 		
-		for (Fork f : Fork.LIST) {
-			if (address.startsWith(f.symbol.toLowerCase())) {
-				f.sendTX(address,targetAmt.getText(),targetFee.getText());
-				targetAddress.setText("");
-				targetAmt.setText("");
-				return;
-			}
-		}
+		Fork.getByAddress(address).ifPresentOrElse(f -> {
+			f.sendTX(address,targetAmt.getText(),targetFee.getText());
+			targetAddress.setText("");
+			targetAmt.setText("");
+		}, 	() -> ForkFarmer.showMsg("Error", "No suitable fork found for address prefix"));
 		
-		ForkFarmer.showMsg("Error", "No suitable fork found for address prefix");
 	}
 	public static void updatePlotSize(NetSpace ps) {
 		if (ps.szTB > plotSize.szTB) {

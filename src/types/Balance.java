@@ -59,8 +59,12 @@ public class Balance implements Comparable<Balance> {
 	}
 
 	private void updateStr() {
-		DecimalFormat df = (amt < 10000) ? new DecimalFormat("#,##0.######") : new DecimalFormat("#,##0.##");
-		str = df.format(amt);
+		try {
+			DecimalFormat df = (amt < 10000) ? new DecimalFormat("#,##0.######") : new DecimalFormat("#,##0.##");
+			str = df.format(amt);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }

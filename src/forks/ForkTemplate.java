@@ -6,7 +6,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import javax.swing.ImageIcon;
+
+import types.ReadTime;
+import types.Wallet;
+import util.Ico;
 import util.Util;
 
 public class ForkTemplate {
@@ -25,6 +31,7 @@ public class ForkTemplate {
 	public String logPath;
 	public String configPath;
 	public String exePath;
+	public ImageIcon ico;
 	
 	public ForkTemplate(String symbol, String name, String dataFolder, String daemonFolder, double price, double rewardTrigger) {
 		this.symbol = symbol;
@@ -33,12 +40,12 @@ public class ForkTemplate {
 		this.daemonFolder = daemonFolder;
 		this.price = price;
 		this.rewardTrigger = rewardTrigger;
+		this.ico = Ico.getForkIcon(name);
 		
 		String forkBase;
 				
 		if (System.getProperty("os.name").startsWith("Windows")) {
 			forkBase = USER_HOME + "\\AppData\\Local\\" + daemonFolder + "\\";
-			
 			
 			logPath = USER_HOME + "\\" + dataFolder.toLowerCase() + "\\mainnet\\log\\debug.log";
 			configPath = USER_HOME + "\\" + dataFolder.toLowerCase() + "\\mainnet\\config\\config.yaml";
@@ -58,6 +65,14 @@ public class ForkTemplate {
 		} else {
 			forkBase = USER_HOME + "/" + daemonFolder + "/";
 			logPath = USER_HOME + "/" + dataFolder.toLowerCase() + "/mainnet/log/debug.log";
+			configPath = USER_HOME + "/" + dataFolder.toLowerCase() + "/mainnet/config/config.yaml";
+			
+			if (symbol.equals("NCH")) {
+				logPath = USER_HOME + "/.chia/ext9/log/debug.log";
+				configPath = USER_HOME + "/.chia/ext9/config/config.yaml";
+				forkBase = USER_HOME + "/ext9-blockchain/";
+			}
+			
 		}
 		
 		try {
@@ -77,21 +92,30 @@ public class ForkTemplate {
 				}
 			} else {
 				exePath = forkBase + "/venv/bin/" + name.toLowerCase();
-		
+				if (!new File(exePath).exists())
+					exePath = forkBase + "/venv/bin/chia";
 			}
 
-			if (!new File(exePath).exists())
-				return;
 			
-			MAP.put(symbol, this);
-			LIST.add(this);
 		} catch (IOException e) {
-			// Didn't load the fork for whatever reason
+			// Didn't load properly for whatever reason
 		}
 		
+		MAP.put(symbol, this);
+		LIST.add(this);
+		
 	}
+	
+	public static Optional<ForkTemplate> getbyAddress(String address) {
+		return LIST.stream().filter(f -> address.startsWith(f.symbol.toLowerCase())).findAny();	
+	}
+	
+	
 
 	private void loadFork() {
+		if (!new File(exePath).exists())
+			return;
+		
 		Fork f = new Fork();
 		f.name = name;
 		f.rewardTrigger = rewardTrigger;
@@ -100,25 +124,36 @@ public class ForkTemplate {
 		f.price = price;
 		f.configPath = configPath;
 		f.logPath = logPath;
+		f.ico = ico;
+		
 		Fork.LIST.add(f);
 	}
 
 	public static void loadFix() {
-
-		// first see if we need to patch exepath for any forks
+		
+		// first see if we need to patch exePath for any forks
 		for (Fork f: Fork.LIST) {
-			if (!new File(f.exePath).exists()) {
-				ForkTemplate ft = MAP.get(f.symbol);
+			if (f.cold) {
+				f.statusIcon = Ico.SNOW;
+				f.wallet = new Wallet("",f.walletAddr,0);
+				f.farmStatus = "Cold";
+				f.readTime = new ReadTime(0);
+			}
+			
+			ForkTemplate ft = MAP.get(f.symbol);
+			if (null == ft)
+				continue;
+			f.ico = ft.ico;
+			
+			if (null != f.exePath && !new File(f.exePath).exists())
 				if (null != ft)
 					f.exePath = ft.exePath;
-			}
-			if (!new File(f.logPath).exists()) {
-				ForkTemplate ft = MAP.get(f.symbol);
+			
+			if (null != f.logPath && !new File(f.logPath).exists())
 				if (null != ft)
 					f.logPath = ft.logPath;
 					f.configPath = ft.configPath;
 			}
-		}
 		
 		// next, see if there is any new forks to load
 		for (ForkTemplate ft : LIST) {

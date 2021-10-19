@@ -1,8 +1,6 @@
 package forks;
 
-import java.awt.BorderLayout;
 import java.awt.Desktop;
-import java.awt.Dimension;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -23,13 +20,11 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import javax.swing.ImageIcon;
-import javax.swing.JMenuBar;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 
 import org.yaml.snakeyaml.Yaml;
 
+import debug.DebugView;
 import ffutilities.ForkPorts;
 import main.ForkFarmer;
 import main.MainGui;
@@ -44,7 +39,6 @@ import util.Ico;
 import util.NetSpace;
 import util.Util;
 import util.apache.ReversedLinesFileReader;
-import util.swing.SwingEX;
 
 public class Fork {
 	private static final ExecutorService INST_SVC = Executors.newSingleThreadExecutor();
@@ -90,12 +84,16 @@ public class Fork {
 	transient public Wallet wallet = Wallet.EMPTY;
 	public String logPath;
 	public String configPath;
+	public boolean cold;
 	
 	public Fork() { // needed for YAML
 		
 	}
 	
 	public void loadWallets() {
+		if (cold)
+			return;
+		
 		Process p = null;
 		BufferedReader br = null;
 		try {
@@ -139,6 +137,9 @@ public class Fork {
 	}
 	
 	public void loadVersion() {
+		if (cold)
+			return;
+		
 		Process p = null;
 		BufferedReader br = null;
 		try {
@@ -154,7 +155,7 @@ public class Fork {
 		
 	@SuppressWarnings("unused")
 	public void loadWallet () {
-		if (false == walletNode || -1 == wallet.index)
+		if (!walletNode || -1 == wallet.index || cold)
 			return;
 		
 		if ("CGN".equals(symbol) && System.getProperty("os.name").startsWith("Windows")) {
@@ -255,6 +256,8 @@ public class Fork {
 	}
 	
 	public void readLog() {
+		if (cold)
+			return;
 		boolean readH = false, readT = false;
 		File logFile = new File(logPath);
 		if (!logFile.exists())
@@ -349,6 +352,9 @@ public class Fork {
 				statusIcon = Ico.RED;
 		}
 		
+		if (cold)
+			statusIcon = Ico.SNOW;
+		
 	}
 	
 	public void start() {
@@ -380,50 +386,10 @@ public class Fork {
 		}).start();
 	}
 	
+	
+	
 	public void showLastException () {
-		JPanel exceptionPanel = new JPanel(new BorderLayout());
-		JTextArea jta = new JTextArea();
-		JScrollPane JSP = new JScrollPane(jta);
-		JSP.setPreferredSize(new Dimension(800,300));
-		JMenuBar MENU = new JMenuBar();
-		
-		MENU.add(new SwingEX.Btn("show wallet", Ico.CLI,  () -> {
-			StringBuilder sb = new StringBuilder();
-			sb.append("Running: wallet show");
-			sb.append("ExePath: " + exePath);
-			
-			String ret = Util.runProcessDebug(exePath,"wallet","show");
-			sb.append("\n" +  ret);
-			sb.append("Done running query\n");
-			jta.setText(sb.toString());
-		}));
-		
-		MENU.add(new SwingEX.Btn("farm summary", Ico.CLI,  () -> {
-			
-			StringBuilder sb = new StringBuilder();
-			sb.append("Running: wallet show\n");
-			sb.append("ExePath: " + exePath + "\n");
-			
-			String ret = Util.runProcessDebug(exePath,"farm","summary");
-			sb.append("\n" +  ret);
-			sb.append("Done running query\n");
-			jta.setText(sb.toString());
-		}));
-		
-		
-		exceptionPanel.add(JSP,BorderLayout.CENTER);
-		exceptionPanel.add(MENU,BorderLayout.PAGE_START);
-		
-		if (null != lastException) {
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			lastException.printStackTrace(pw);
-			String sStackTrace = sw.toString(); // stack trace as a string
-			jta.setText(sStackTrace);
-		} else
-			jta.setText("Congrats! No exceptions found");
-		
-		ForkFarmer.showPopup(name + ": Debug View",  exceptionPanel);
+		ForkFarmer.newFrame(name + ": Debug View", ico, new DebugView(this));
 	}
 	
 	public void refresh() {
@@ -473,7 +439,7 @@ public class Fork {
 	}
 
 	public void stdUpdate() {
-			if (!hidden) {
+			if (!hidden && !cold) {
 				loadWallet();
 				loadFarmSummary();
 				ForkView.update(this);
@@ -489,7 +455,7 @@ public class Fork {
 	}
 	
 	public boolean updateBalance(Balance b) {
-		if (b.amt == balance.amt)
+		if (b.amt == balance.amt && !balance.toString().equals(""))
 			return false;
 		balance = b;
 		refreshEquity();
@@ -529,5 +495,31 @@ public class Fork {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void newColdWallet(String address) {
+		Fork f = new Fork();
+		ForkTemplate.getbyAddress(address).ifPresent(ft -> {
+			f.ico = ft.ico;
+			f.price = ft.price;
+			f.name = ft.name;
+			f.symbol = ft.symbol;
+			f.wallet = new Wallet(null,address,0);
+			f.walletAddr = address;
+			f.statusIcon = Ico.SNOW;
+			f.cold = true;
+			f.farmStatus = "Cold";
+			f.readTime = new ReadTime(0);
+			f.updateBalance(FFUtil.getAllTheBlocksBalance(f));
+			System.out.println("found: " + address);
+			SwingUtilities.invokeLater(() -> {
+				Fork.LIST.add(f);	
+			});
+			ForkView.update();
+		});
+	}
 
+	public static Optional<Fork> getByAddress(String address) {
+		return LIST.stream().filter(f -> !f.cold && address.startsWith(f.symbol.toLowerCase())).findAny();	
+	}
+	
 }

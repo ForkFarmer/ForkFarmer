@@ -58,7 +58,10 @@ public class PortCheckerView extends JPanel {
                 int port = (int) value;
                 c.setForeground(Color.WHITE);
                 Fork thisFork = Fork.LIST.get(row);
+                if (thisFork.cold)
+                	return c;
                 Fork.LIST.stream()
+                	.filter(f -> !f.cold)
                 	.filter(f -> thisFork != f)
                 	.filter(f -> f.fp.anyMatch(port))
                 	.findAny()

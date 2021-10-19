@@ -33,10 +33,14 @@ public final class Ico {
 	public static final ImageIcon HANDSHAKE	= loadIcon("icons/handshake.png",16);
 	public static final ImageIcon FCX		= loadIcon("icons/fcx.png",16);
 	public static final ImageIcon XCHF		= loadIcon("icons/xchforks.png",16);
+	public static final ImageIcon ATB		= loadIcon("icons/alltheblocks.png",16);
 	
 	public static final ImageIcon POSAT		= loadIcon("icons/posat.png",16);
 	public static final ImageIcon EDIT_START = loadIcon("icons/edit_start.png",16);
 	public static final ImageIcon PORTS 	= loadIcon("icons/ports.png");
+	public static final ImageIcon PEOPLE 	= loadIcon("icons/people.png");
+	
+	public static final ImageIcon SNOW		= loadIcon("icons/snow.png",16);
 	
 	//circle icons
 	public static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");

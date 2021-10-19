@@ -22,11 +22,46 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import forks.Fork;
 import main.ForkFarmer;
+import types.Balance;
 import types.XchForksData;
 
 public class FFUtil {
 	transient public static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	
+	
+	public static Balance getAllTheBlocksBalance(Fork f) {
+		HttpClient client = HttpClient.newBuilder()
+				.connectTimeout(Duration.ofSeconds(5))
+				.build();
+		
+		HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.alltheblocks.net/" + f.name.toLowerCase()+"/address/"+f.walletAddr))
+                .timeout(Duration.ofSeconds(5))
+                .build();
+		
+		HttpResponse<String> response;
+        
+        try {
+        	response = client.send(request,
+			        HttpResponse.BodyHandlers.ofString());
+        	
+        	String jsonResponse = response.body();
+        	
+        	JSONParser parser = new JSONParser();
+        	JSONObject jo = (JSONObject) parser.parse(jsonResponse);
+        	
+        	long balance = (long)jo.get("balance");
+        	Balance b = new Balance((double)balance/(double)1000000000/(double)1000);
+        	return b;
+        	
+        } catch (Exception e) {
+        	f.lastException = e;
+			f.statusIcon = Ico.RED;
+			return new Balance("error",0);
+		} 
+	}
 	
 	public static List<XchForksData> getXCHForksData() {
 		List<XchForksData> list = new ArrayList<>();

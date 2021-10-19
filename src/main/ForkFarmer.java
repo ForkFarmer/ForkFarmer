@@ -37,7 +37,7 @@ public class ForkFarmer {
 	private static void startGUI() {
 		Settings.Load();
 		
-		FRAME = new JFrame("ForkFarmer 2.0.9");
+		FRAME = new JFrame("ForkFarmer 2.1.2");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.LOGO.getImage());
 
@@ -88,6 +88,10 @@ public class ForkFarmer {
 	
 	public static boolean showPopup(String s, JPanel jp) {
 		return (JOptionPane.OK_OPTION == JOptionPane.showConfirmDialog(FRAME,jp,s,JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE));
+	}
+	
+	public static synchronized void log(String s) {
+		
 	}
 
 }

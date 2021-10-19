@@ -36,7 +36,6 @@ public class ForkLogViewer extends JFrame {
 	JTabbedPane JTP = new JTabbedPane();
 	List<LogViewer> list = new ArrayList<>();
 	
-	
 	public ForkLogViewer(List<Fork> selected) {
 		super();
 		if (0 == selected.size()) {

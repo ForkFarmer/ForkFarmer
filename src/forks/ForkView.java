@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.DropMode;
 import javax.swing.Icon;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -41,6 +42,7 @@ import util.NetSpace;
 import util.Util;
 import util.swing.Reorderable;
 import util.swing.SwingEX;
+import util.swing.SwingEX.LIPanel;
 import util.swing.SwingUtil;
 import util.swing.TableRowTransferHandler;
 import util.swing.jfuntable.Col;
@@ -161,7 +163,8 @@ public class ForkView extends JPanel {
 	static final JMenu EXPLORE_SUBMENU = new SwingEX.JMIco("Explore", Ico.EXPLORE);
 	static final JMenu COPY_SUBMENU = new SwingEX.JMIco("Copy", Ico.CLIPBOARD);
 	static final JMenu STATS_SUBMENU = new SwingEX.JMIco("Stats", Ico.GRAPH);
-	static final JMenu EXCHANGE_SUBMENU = new SwingEX.JMIco("Exchange", Ico.HANDSHAKE);
+	static final JMenu COMMUNITY_SUBMENU = new SwingEX.JMIco("Community", Ico.PEOPLE);
+	
 	
 	static final JMenuItem STAGGER_JMI = new SwingEX.JMI("Stagger", 	Ico.START,	() -> ForkView.staggerStartDialog());
 	public ForkView() {
@@ -228,32 +231,37 @@ public class ForkView extends JPanel {
 			EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Config", 	Ico.CLIPBOARD,  		() -> getSelected().forEach(Fork::openConfig)));
 			if (Util.isHostWin())
 				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Shell", 		Ico.CLI,  		ForkView::openShell));
-		
+			
 		POPUP_MENU.add(COPY_SUBMENU);
 			COPY_SUBMENU.add(new SwingEX.JMI("Copy Address", 	Ico.CLIPBOARD,  ForkView::copyAddress));
 			COPY_SUBMENU.add(new SwingEX.JMI("Copy CSV", 		Ico.CLIPBOARD,  ForkView::copyCSV));
 		
 		POPUP_MENU.add(STATS_SUBMENU);
 			STATS_SUBMENU.add(new SwingEX.JMI("Ports", 	Ico.PORTS, ForkView::runPortChecker));
+		
+		
 			
 		POPUP_MENU.addSeparator();
 		
-		POPUP_MENU.add(EXCHANGE_SUBMENU);
-			EXCHANGE_SUBMENU.add(new SwingEX.JMI("xchforks.com", 			Ico.XCHF,() -> Util.openLink("https://xchforks.com/")));
-			EXCHANGE_SUBMENU.addSeparator();
-			EXCHANGE_SUBMENU.add(new SwingEX.JMI("forkschiaexchange.com", 	Ico.FCX, () -> Util.openLink("https://forkschiaexchange.com/?ref=orfinkat")));
+		POPUP_MENU.add(COMMUNITY_SUBMENU);
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI("xchforks.com", 		Ico.XCHF,() -> Util.openLink("https://xchforks.com/")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI("alltheblocks.net", 	Ico.ATB, () -> Util.openLink("https://alltheblocks.net/")));
+			COMMUNITY_SUBMENU.addSeparator();
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI("forkschiaexchange.com", 	Ico.FCX, () -> Util.openLink("https://forkschiaexchange.com/?ref=orfinkat")));
 		
 		JMenuItem update = new SwingEX.JMI("Update", 	Ico.DOLLAR,  	() -> new Thread(ForkView::updatePrices).start());
 		update.setToolTipText("from xchforks.com");
 		
 		POPUP_MENU.add(update);
 		POPUP_MENU.addSeparator();
+		POPUP_MENU.add(new SwingEX.JMI("Add Cold Wallet",	Ico.SNOW,		ForkView::addColdWallet));
 		POPUP_MENU.add(new SwingEX.JMI("Refresh",	Ico.REFRESH,  	ForkView::refresh));
 		POPUP_MENU.add(new SwingEX.JMI("Hide", 		Ico.HIDE,  		ForkView::removeSelected));
 		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.P2P,		() -> getSelected().forEach(f -> 
 			ForkFarmer.newFrame(f.name + ": Peer Connections", f.ico, new PeerView(f)))));
 		POPUP_MENU.addSeparator();
-		POPUP_MENU.add(new SwingEX.JMI("Debug",		Ico.BUG,		() -> getSelected().forEach(Fork::showLastException)));
+		POPUP_MENU.add(new SwingEX.JMI("Debug",			Ico.BUG,		() -> getSelected().forEach(Fork::showLastException)));
+		
 		
 		JTableHeader header = TABLE.getTableHeader();
 		header.setComponentPopupMenu(HEADER_MENU);
@@ -269,6 +277,17 @@ public class ForkView extends JPanel {
 		TABLE.setDragEnabled(true);
 		TABLE.setDropMode(DropMode.INSERT_ROWS);
 		TABLE.setTransferHandler(new TableRowTransferHandler(TABLE));
+		
+	}
+	
+	static private void addColdWallet() {
+		JPanel cwPanel = new JPanel(new BorderLayout());
+		LIPanel tf = new SwingEX.LIPanel("Enter Address: ");
+		cwPanel.add(new JLabel("cold wallet data comes from www.alltheblocks.net"), BorderLayout.PAGE_START);
+		cwPanel.add(tf,BorderLayout.CENTER);
+		if (ForkFarmer.showPopup("Enter Cold Wallet Address", cwPanel)) {
+			Fork.newColdWallet(tf.getText());
+		}
 	}
 	
 	static private void staggerStartDialog() {
@@ -300,7 +319,7 @@ public class ForkView extends JPanel {
 			List<XchForksData> list = FFUtil.getXCHForksData();
 			
 			for(XchForksData d : list) {
-				Fork.getBySymbol(d.symbol).ifPresent(f -> {
+				Fork.LIST.stream().filter(f -> f.symbol.equals(d.symbol)).forEach(f -> {
 					if (d.price > -1)
 						f.updatePrice(d.price * Settings.GUI.currencyRatio);
 					if (null != d.latestVersion && !d.latestVersion.equals("Unknown")) {
@@ -310,7 +329,13 @@ public class ForkView extends JPanel {
 				});
 			}
 		} catch (Exception e) {
-			
+			e.printStackTrace();
+		}
+		
+		try {
+			Fork.LIST.stream().filter(f -> f.cold).forEach(f -> f.updateBalance(FFUtil.getAllTheBlocksBalance(f)));
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		
 		MainGui.updateTotal();
