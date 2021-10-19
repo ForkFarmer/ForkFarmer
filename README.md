@@ -11,7 +11,7 @@ Java 11+ required for web-features like price updates: https://www.oracle.com/ja
 ![FF](https://user-images.githubusercontent.com/66434789/134285111-7b3dd991-b1ef-4876-bdae-4a838dd1618e.png)
 
 # Frequently Asked Questions
-**How does it work:** ForkFarmer is a front end for XCH forks which interacts with the XCH fork daemon process and log files. You will still need to install and configure the specific XCH forks you would like to run. https://xchforks.com/ is a good starting point to discover forks.
+**How does it work:** ForkFarmer is a front end for XCH forks which interacts with the XCH fork daemon process and log files. You will still need to install and configure the specific XCH forks you would like to run. https://xchforks.com/ & https://alltheblocks.net/ are great starting places to discover forks.
 
 **How to use:** After you install Java, double-click on jar or Java -jar ForkFarmer.jar from the command line. On Windows most forks will automatically be detected. On Linux currently you have to create an FF_Settings.yaml and configure paths manually, check discord for more help.
 
