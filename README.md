@@ -6,7 +6,7 @@ Discord: https://discord.gg/vhwVg5kKNR
 
 Requires JRE 1.8 or greater to run: https://www.java.com/en/download/
 
-Java 11+ required for web-features like price updates: https://www.oracle.com/java/technologies/downloads/
+Java 11+ required for web-features like price updates, version checks, cold wallets: https://www.oracle.com/java/technologies/downloads/
 
 ![FF](https://user-images.githubusercontent.com/66434789/134285111-7b3dd991-b1ef-4876-bdae-4a838dd1618e.png)
 
