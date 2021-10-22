@@ -6,7 +6,7 @@ Discord: https://discord.gg/vhwVg5kKNR
 
 Java 8 Minimum, Java 11+ required for web-features (price updates, version checks, cold wallets): https://www.oracle.com/java/technologies/downloads/
 
-![FF](https://user-images.githubusercontent.com/66434789/134285111-7b3dd991-b1ef-4876-bdae-4a838dd1618e.png)
+![FF_2 1 8](https://user-images.githubusercontent.com/66434789/138456293-0b077981-79ee-4146-b36f-6b0be5da22db.png)
 
 # Frequently Asked Questions
 **How does it work:** ForkFarmer is a front end for XCH forks which interacts with the XCH fork daemon process and log files. You will still need to install and configure the specific XCH forks you would like to run. https://xchforks.com/ & https://alltheblocks.net/ are great starting places to discover forks.
