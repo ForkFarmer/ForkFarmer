@@ -1,6 +1,6 @@
 
 # ForkFarmer
-Java GUI Frontend for XCH Forks.
+Java GUI Frontend for XCH Forks. Supports basic farm management: farmer status, proof latency, staggered startup, transactions, and viewing hot/cold wallets.
 
 Discord: https://discord.gg/vhwVg5kKNR
 
