@@ -26,21 +26,32 @@ public final class Ico {
 	public static final ImageIcon P2P		= loadIcon("icons/conn.png");
 	public static final ImageIcon PLUS		= loadIcon("icons/plus.png");
 	public static final ImageIcon DOLLAR	= loadIcon("icons/dollar.png");
-	public static final ImageIcon CLI		= loadIcon("icons/cli.png");
 	public static final ImageIcon BUG		= loadIcon("icons/bug.png");
 	public static final ImageIcon WALLET	= loadIcon("icons/wallet.png",16);
+	public static final ImageIcon WALLET_COLD= loadIcon("icons/wallet_cold.png",16);
 	public static final ImageIcon GRAPH		= loadIcon("icons/graph.png",16);
 	public static final ImageIcon HANDSHAKE	= loadIcon("icons/handshake.png",16);
 	public static final ImageIcon FCX		= loadIcon("icons/fcx.png",16);
 	public static final ImageIcon XCHF		= loadIcon("icons/xchforks.png",16);
 	public static final ImageIcon ATB		= loadIcon("icons/alltheblocks.png",16);
+	public static final ImageIcon DOWNLOAD	= loadIcon("icons/download.png");
 	
 	public static final ImageIcon POSAT		= loadIcon("icons/posat.png",16);
 	public static final ImageIcon EDIT_START = loadIcon("icons/edit_start.png",16);
 	public static final ImageIcon PORTS 	= loadIcon("icons/ports.png");
+	public static final ImageIcon QUESTION 	= loadIcon("icons/question.png");
+	public static final ImageIcon TOOLS 	= loadIcon("icons/tools.png");
 	public static final ImageIcon PEOPLE 	= loadIcon("icons/people.png");
-	
 	public static final ImageIcon SNOW		= loadIcon("icons/snow.png",16);
+	
+	public static final ImageIcon CLI			= loadIcon("icons/cmd.png");
+	public static final ImageIcon POWERSHHELL	= loadIcon("icons/powershell.png");
+	public static final ImageIcon TERMINAL	= loadIcon("icons/bash.png",16);
+	
+	public static final ImageIcon GITHUB	= loadIcon("icons/github.png",16);
+	public static final ImageIcon XCHCALC	= loadIcon("icons/xchcalc.png");
+	public static final ImageIcon HOME		= loadIcon("icons/home.png",16);
+	public static final ImageIcon DISCORD	= loadIcon("icons/discord.png",16);
 	
 	//circle icons
 	public static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");
@@ -74,7 +85,7 @@ public final class Ico {
 	public static ImageIcon loadIcon(final String path)
 	{
 		try {
-			return new ImageIcon(getResource(path));
+			return new ImageIcon(Util.getResource(path));
 		} catch (Exception e) {
 			throw new RuntimeException("Check your resources for missing icon: " + path);
 		}

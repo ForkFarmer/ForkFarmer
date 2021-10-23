@@ -1,6 +1,9 @@
 package forks;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -19,12 +22,15 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 
 import ffutilities.ForkLogViewer;
+import ffutilities.MissingForks;
 import ffutilities.PortCheckerView;
 import main.ForkFarmer;
 import main.MainGui;
@@ -35,18 +41,17 @@ import types.Effort;
 import types.ReadTime;
 import types.TimeU;
 import types.Wallet;
-import types.XchForksData;
-import util.FFUtil;
 import util.Ico;
 import util.NetSpace;
 import util.Util;
 import util.swing.Reorderable;
 import util.swing.SwingEX;
-import util.swing.SwingEX.LIPanel;
 import util.swing.SwingUtil;
 import util.swing.TableRowTransferHandler;
 import util.swing.jfuntable.Col;
 import util.swing.jfuntable.JFunTableModel;
+import web.AllTheBlocks;
+import web.XchForks;
 
 @SuppressWarnings("serial")
 public class ForkView extends JPanel {
@@ -55,13 +60,14 @@ public class ForkView extends JPanel {
 	private static final JScrollPane JSP = new JScrollPane(TABLE,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
 	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
+	private enum SHELL {CMD, POWERSHELL, TERMINAL}
+	static boolean warnJava = false;
 	
 	public static class ForkTableModel extends JFunTableModel<Fork> implements Reorderable {
-		int SYM_COLUMN, BAL_COLUMN, EQ_COLUMN, HEIGHT_COLUMN, TIME_COLUMN, LIGHT_COLUMN;
+		private int BALANCE_COLUMN, PRICE_COLUMN, EQ_COLUMN, HEIGHT_COLUMN, TIME_COLUMN, LIGHT_COLUMN;
 		
 		public ForkTableModel() {
 			super();
-			
 			@SuppressWarnings("unchecked")
 			List<Col<Fork>> z = (List<Col<Fork>>) Settings.settings.get("ForkView Columns");
 			loadColumns(z);
@@ -92,8 +98,8 @@ public class ForkView extends JPanel {
 			addColumn("WN",			30,	Boolean.class, 	f->f.walletNode).editable();
 			addColumn("", 			22, Icon.class, 	f->f.statusIcon).showMandatory();
 			
-			SYM_COLUMN = getIndex("Symbol");
-			BAL_COLUMN = getIndex("Balance");
+			BALANCE_COLUMN = getIndex("Balance");
+			PRICE_COLUMN = getIndex("$");
 			EQ_COLUMN = getIndex("Equity");
 
 			// these updated alot
@@ -111,7 +117,7 @@ public class ForkView extends JPanel {
 	    }
 		
 		public void setValueAt(Object value, int row, int col) {
-			if (BAL_COLUMN == col) {
+			if (PRICE_COLUMN == col) {
 				Fork.LIST.get(row).updatePrice((double) value);
 				fireTableCellUpdated(row, col);
 				MainGui.updateTotal();
@@ -162,9 +168,8 @@ public class ForkView extends JPanel {
 	static final JMenu WALLET_SUBMENU = new SwingEX.JMIco("Wallet", Ico.WALLET);
 	static final JMenu EXPLORE_SUBMENU = new SwingEX.JMIco("Explore", Ico.EXPLORE);
 	static final JMenu COPY_SUBMENU = new SwingEX.JMIco("Copy", Ico.CLIPBOARD);
-	static final JMenu STATS_SUBMENU = new SwingEX.JMIco("Stats", Ico.GRAPH);
+	static final JMenu TOOLS_SUBMENU = new SwingEX.JMIco("Tools", Ico.TOOLS);
 	static final JMenu COMMUNITY_SUBMENU = new SwingEX.JMIco("Community", Ico.PEOPLE);
-	
 	
 	static final JMenuItem STAGGER_JMI = new SwingEX.JMI("Stagger", 	Ico.START,	() -> ForkView.staggerStartDialog());
 	public ForkView() {
@@ -174,6 +179,7 @@ public class ForkView extends JPanel {
 		SwingUtil.persistDimension(JSP, () -> Settings.GUI.forkViewDimension, d -> Settings.GUI.forkViewDimension = d);
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
+		JSP.setComponentPopupMenu(POPUP_MENU);
 		
 		POPUP_MENU.addPopupMenuListener(new PopupMenuListener() {
 			@Override public void popupMenuCanceled(PopupMenuEvent pme) {
@@ -185,6 +191,11 @@ public class ForkView extends JPanel {
 			@Override public void popupMenuWillBecomeVisible(PopupMenuEvent pme) {
 				List<Fork> sel = getSelected();
 
+				// clean submenus
+				WALLET_SUBMENU.removeAll();
+				while (COMMUNITY_SUBMENU.getItemCount() > 5)
+            		COMMUNITY_SUBMENU.remove(5);
+            	
 				if (sel.size() < 2) {
 					STAGGER_JMI.setEnabled(false);
 				} else {
@@ -194,14 +205,43 @@ public class ForkView extends JPanel {
 				
 				if (1 == sel.size()) {
 					Fork f = sel.get(0);
-	            	WALLET_SUBMENU.removeAll();
-	            	for (int i = 0; i < f.walletList.size(); i++) {
-	            		WALLET_SUBMENU.setEnabled(true);
-	            		Wallet w = f.walletList.get(i);
+					populateMenu(f);
+				} 
+			}
+
+			
+			private void populateMenu(Fork f) {
+            	
+            	ForkData fd = ForkData.MAP.get(f.symbol);
+            	if (null != fd) {
+	            	if (null != fd.websiteURL)
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Homepage", 	Ico.HOME, () -> Util.openLink(fd.websiteURL)));
+            		if (null != fd.discordURL)
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Discord", 	Ico.DISCORD, () -> Util.openLink(fd.discordURL)));
+	            	if (null != fd.gitURL)
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " GitHub", 	Ico.GITHUB, () -> Util.openLink(fd.gitURL)));
+	            	if (null != fd.calculatorURL)
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Calculator",	Ico.XCHCALC, () -> Util.openLink(fd.calculatorURL)));
+            	}
+            	
+            		
+            	
+            	for (int i = 0; i < f.walletList.size(); i++) {
+            		WALLET_SUBMENU.setEnabled(true);
+            		Wallet w = f.walletList.get(i);
+
+            		if (w.cold) {
+            			JMenuItem jmi = new SwingEX.JMI("0) " + w.addr, 	Ico.WALLET_COLD, () ->  {
+            				f.wallet = w;
+            				f.walletAddr = w.addr;
+            				AllTheBlocks.updateColdBalance(f);
+            			});
+            			((Component)jmi).setForeground(new Color(140,171,255));
+            			WALLET_SUBMENU.add(jmi);
+            		} else {
 	            		WALLET_SUBMENU.add(new SwingEX.JMI(w.index + ") " + w.fingerprint + ": " + w.addr, 	Ico.WALLET, () -> {
 	            			new Thread(() -> {
 	            				f.balance = new Balance();
-	            				f.farmStatus = "";
 	            				f.syncStatus = "";
 	            				f.wallet = w;
 	            				f.walletAddr = w.addr;
@@ -209,13 +249,18 @@ public class ForkView extends JPanel {
 	            				f.loadWallet();
 	            			}).start();
 	            		}));
-	            	}
-		            	
-				} 
+            		}
+            	}
+            	
+            	if (WALLET_SUBMENU.getItemCount() > 0)
+            		WALLET_SUBMENU.addSeparator();
+            	WALLET_SUBMENU.add(new SwingEX.JMI("Add Cold Wallet",	Ico.WALLET_COLD,	() -> addColdWallet(f)));
+            	
+	
 			}
 		});
 		
-		
+
 		POPUP_MENU.add(ACTION_SUBMENU);
 			ACTION_SUBMENU.add(new SwingEX.JMI("Start", 		Ico.START, 	() -> new Thread(() -> getSelected().forEach(Fork::start)).start()));
 			ACTION_SUBMENU.add(STAGGER_JMI);
@@ -229,32 +274,35 @@ public class ForkView extends JPanel {
 		POPUP_MENU.add(EXPLORE_SUBMENU);
 			EXPLORE_SUBMENU.add(new SwingEX.JMI("View Log", 	Ico.CLIPBOARD,  		() -> new ForkLogViewer(getSelected())));
 			EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Config", 	Ico.CLIPBOARD,  		() -> getSelected().forEach(Fork::openConfig)));
-			if (Util.isHostWin())
-				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Shell", 		Ico.CLI,  		ForkView::openShell));
+			if (Util.isHostWin()) {
+				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open CMD", 		Ico.CLI,  			() -> ForkView.openShell(SHELL.CMD)));
+				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Powershell",	Ico.POWERSHHELL,  	() -> ForkView.openShell(SHELL.POWERSHELL)));
+			} else {
+				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Terminal", 		Ico.TERMINAL,  		() -> ForkView.openShell(SHELL.TERMINAL)));
+			}
 			
 		POPUP_MENU.add(COPY_SUBMENU);
 			COPY_SUBMENU.add(new SwingEX.JMI("Copy Address", 	Ico.CLIPBOARD,  ForkView::copyAddress));
 			COPY_SUBMENU.add(new SwingEX.JMI("Copy CSV", 		Ico.CLIPBOARD,  ForkView::copyCSV));
 		
-		POPUP_MENU.add(STATS_SUBMENU);
-			STATS_SUBMENU.add(new SwingEX.JMI("Ports", 	Ico.PORTS, ForkView::runPortChecker));
-		
-		
+		POPUP_MENU.add(TOOLS_SUBMENU);
+			TOOLS_SUBMENU.add(new SwingEX.JMI("Ports", 	Ico.PORTS, ForkView::runPortChecker));
+			TOOLS_SUBMENU.add(new SwingEX.JMI("Missing",Ico.QUESTION, () -> ForkFarmer.newFrame("Missing Forks", Ico.QUESTION, new MissingForks())));
+			JMenuItem update = new SwingEX.JMI("Force Update", 	Ico.DOLLAR,  	() -> new Thread(ForkView::webUpdateForced).start());
+			update.setToolTipText("from xchforks.com / alltheblocks.net");
+			TOOLS_SUBMENU.add(update);
+			
+		POPUP_MENU.add(COMMUNITY_SUBMENU);
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI("xchforks.com", 			Ico.XCHF,() -> Util.openLink("https://xchforks.com/")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI("alltheblocks.net", 		Ico.ATB, () -> Util.openLink("https://alltheblocks.net/")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI("forkschiaexchange.com", 	Ico.FCX, () -> Util.openLink("https://forkschiaexchange.com/?ref=orfinkat")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI("chiaforksblockchain.com", Ico.DOWNLOAD, () -> Util.openLink("https://chiaforksblockchain.com/")));
+			COMMUNITY_SUBMENU.addSeparator();
 			
 		POPUP_MENU.addSeparator();
 		
-		POPUP_MENU.add(COMMUNITY_SUBMENU);
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI("xchforks.com", 		Ico.XCHF,() -> Util.openLink("https://xchforks.com/")));
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI("alltheblocks.net", 	Ico.ATB, () -> Util.openLink("https://alltheblocks.net/")));
-			COMMUNITY_SUBMENU.addSeparator();
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI("forkschiaexchange.com", 	Ico.FCX, () -> Util.openLink("https://forkschiaexchange.com/?ref=orfinkat")));
 		
-		JMenuItem update = new SwingEX.JMI("Update", 	Ico.DOLLAR,  	() -> new Thread(ForkView::updatePrices).start());
-		update.setToolTipText("from xchforks.com");
-		
-		POPUP_MENU.add(update);
-		POPUP_MENU.addSeparator();
-		POPUP_MENU.add(new SwingEX.JMI("Add Cold Wallet",	Ico.SNOW,		ForkView::addColdWallet));
+		POPUP_MENU.add(new SwingEX.JMI("Add Cold Wallet",	Ico.SNOW,  	() -> ForkView.addColdWallet(null)));
 		POPUP_MENU.add(new SwingEX.JMI("Refresh",	Ico.REFRESH,  	ForkView::refresh));
 		POPUP_MENU.add(new SwingEX.JMI("Hide", 		Ico.HIDE,  		ForkView::removeSelected));
 		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.P2P,		() -> getSelected().forEach(f -> 
@@ -268,7 +316,7 @@ public class ForkView extends JPanel {
 		
 		MODEL.colList.forEach(c -> c.setSelectView(TABLE,HEADER_MENU));
 		
-		SwingUtil.setColRight(TABLE,MODEL.BAL_COLUMN);
+		SwingUtil.setColRight(TABLE,MODEL.BALANCE_COLUMN);
 		SwingUtil.setColRight(TABLE,MODEL.TIME_COLUMN);
 		SwingUtil.setColRight(TABLE,MODEL.EQ_COLUMN);
 		 
@@ -278,15 +326,54 @@ public class ForkView extends JPanel {
 		TABLE.setDropMode(DropMode.INSERT_ROWS);
 		TABLE.setTransferHandler(new TableRowTransferHandler(TABLE));
 		
+		DefaultTableCellRenderer balanceRendererR = new DefaultTableCellRenderer(){
+	        @Override
+	        public Component getTableCellRendererComponent(JTable table,Object value,boolean isSelected,boolean hasFocus,int row,int column) {
+	            Component c = super.getTableCellRendererComponent(table,value,isSelected,hasFocus,row,column);
+
+	            c.setForeground(Color.WHITE);
+	            Fork f = Fork.LIST.get(row);
+	            Wallet w =  f.wallet;
+	            if (f.cold || (null != w && w.cold))
+	            	c.setForeground(new Color(140,171,255));
+	
+	            return c;
+	        }
+	    };
+	    balanceRendererR.setHorizontalAlignment(JLabel.RIGHT);
+		
+		TABLE.getColumnModel().getColumn(MODEL.BALANCE_COLUMN).setCellRenderer(balanceRendererR);
 	}
 	
-	static private void addColdWallet() {
+	static private void addColdWallet(Fork f) {
 		JPanel cwPanel = new JPanel(new BorderLayout());
-		LIPanel tf = new SwingEX.LIPanel("Enter Address: ");
-		cwPanel.add(new JLabel("cold wallet data comes from www.alltheblocks.net"), BorderLayout.PAGE_START);
-		cwPanel.add(tf,BorderLayout.CENTER);
-		if (ForkFarmer.showPopup("Enter Cold Wallet Address", cwPanel)) {
-			Fork.newColdWallet(tf.getText());
+		JTextPane jtp = new JTextPane();
+		JScrollPane JSP = new JScrollPane(jtp);
+		jtp.setPreferredSize(new Dimension(500,200));
+		cwPanel.add(new JLabel("Enter one address per line"), BorderLayout.PAGE_START);
+		cwPanel.add(JSP,BorderLayout.CENTER);
+		
+		if (ForkFarmer.showPopup("Cold wallet data comes from www.alltheblocks.net", cwPanel)) {
+			String[] addrArray = jtp.getText().split(System.lineSeparator());
+			
+			new Thread(() -> {
+				for (String addr : addrArray) {
+					addr = addr.toLowerCase();
+					if (null == f)
+						Fork.newColdWallet(addr);
+					else {
+						if (!addr.startsWith(f.symbol.toLowerCase()))
+							return;
+						f.walletAddr = addr;
+						f.wallet = new Wallet(addr);
+						f.walletList.add(f.wallet);
+						f.coldAddrList.add(addr);
+					}
+				}
+				Util.sleep(2000);
+				AllTheBlocks.updateColdForced();
+			}).start();
+			
 		}
 	}
 	
@@ -304,41 +391,32 @@ public class ForkView extends JPanel {
 		}).start();
 	}
 	
-	static private void updatePrices() {
-		
+	public static boolean javaOld() {
 		int jversion = Util.getJavaVersion();
-		if (jversion < 11) {
+		if (!warnJava && jversion < 11) {
 			ForkFarmer.showMsg("Please update Java Runtime", 
-					"Current java version is " + jversion + ". 11+ required for this feature \n" +
+					"Current java version is " + jversion + ". Java 11+ required for many features in FF\n" +
 					"Please download new java release from https://www.oracle.com/java/technologies/downloads/"
 			);
+			warnJava = true;
+			return true;
+		}
+		return false;
+	}
+	
+	static private void webUpdateForced() {
+		if (!javaOld()) {
+			XchForks.updatePricesForced();
+			AllTheBlocks.updateColdForced();
+		}
+	}
+	
+	static private void webUpdate() {
+		if (javaOld() || !Settings.GUI.autoUpdate)
 			return;
-		}
-		
-		try {
-			List<XchForksData> list = FFUtil.getXCHForksData();
-			
-			for(XchForksData d : list) {
-				Fork.LIST.stream().filter(f -> f.symbol.equals(d.symbol)).forEach(f -> {
-					if (d.price > -1)
-						f.updatePrice(d.price * Settings.GUI.currencyRatio);
-					if (null != d.latestVersion && !d.latestVersion.equals("Unknown")) {
-						f.latestVersion = d.latestVersion;
-						f.published = d.published;
-					}
-				});
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		try {
-			Fork.LIST.stream().filter(f -> f.cold).forEach(f -> f.updateBalance(FFUtil.getAllTheBlocksBalance(f)));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		MainGui.updateTotal();
+				
+		XchForks.updatePrices();
+		AllTheBlocks.updateColdBalances();
 	}
 	
 	static private void refresh() {
@@ -380,12 +458,17 @@ public class ForkView extends JPanel {
 		Util.copyToClip(sb.toString());
 	}
 	
-	static private void openShell() {
+	static private void openShell(SHELL s) {
 		for (Fork f : getSelected()) {
 			String path = f.exePath;
 			String nativeDir = path.substring(0, path.lastIndexOf(File.separator));
 			try {
-				Runtime.getRuntime().exec("cmd /c start cmd.exe /K " + "cd " + nativeDir);
+				if (SHELL.POWERSHELL == s)
+					Runtime.getRuntime().exec("cmd /c start powershell.exe -noexit -command " + "cd " + nativeDir);
+				else if (SHELL.CMD == s)
+					Runtime.getRuntime().exec("cmd /c start cmd.exe /K " + "cd " + nativeDir);
+				else if (SHELL.TERMINAL == s)
+					Runtime.getRuntime().exec("gnome-terminal --working-directory=" + nativeDir);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -446,8 +529,12 @@ public class ForkView extends JPanel {
 	public static void daemonReader() {
 		ExecutorService SVC = Executors.newFixedThreadPool(Settings.GUI.daemonReaderWorkers);
 		
+		
+		
+		
 		try {
 			// initial load
+			webUpdate();
 			for (Fork f: Fork.I_LIST) {
 				SVC.submit(() -> {
 						f.loadVersion();
@@ -458,11 +545,14 @@ public class ForkView extends JPanel {
 	
 			// main GUI refresh loop
 			while(true) {
+				webUpdate();
 				for (Fork f: Fork.I_LIST) {
 					SVC.submit(() -> f.stdUpdate()); 
 					Util.blockUntilAvail(SVC);
 					Util.sleep(Settings.GUI.daemonReaderDelay);
 				}
+				Util.sleep(1000);
+				
 			}
 		} catch (Exception e) {
 			System.out.println("Serious UNCAUGHT EXCEPTION!!!!!!!!!!!!!!!!!!!!!!");

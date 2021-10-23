@@ -1,7 +1,6 @@
 package util;
 
 import java.awt.Desktop;
-import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -9,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URI;
@@ -18,6 +18,7 @@ import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
@@ -27,8 +28,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import javax.swing.ImageIcon;
 
 public class Util {
 	
@@ -55,12 +54,16 @@ public class Util {
 		return val;
 	}
 	
-	public static List<String> getDir(String base, String target) throws IOException {
-		 return Files.list(new File(base).toPath())
-				 .map(p -> p.getFileName().toString())
-				 .filter(s->s.startsWith(target))
-				 .filter(s -> new File(base + s).isDirectory())
-				 .collect(Collectors.toList());
+	public static List<String> getDir(String base, String target) {
+		try { 
+			return Files.list(new File(base).toPath())
+					 .map(p -> p.getFileName().toString())
+					 .filter(s->s.startsWith(target))
+					 .filter(s -> new File(base + s).isDirectory())
+					 .collect(Collectors.toList());
+		} catch (IOException e) {
+			return new ArrayList<>();
+		}
 	}
 	
 	public static double round(double value, int places) {
@@ -115,9 +118,12 @@ public class Util {
 	}
 
 
-	public static URL getResource(final String path)
-	{
-		return Util.class.getResource(path);
+	public static URL getResource(final String path) {
+		return Util.class.getClassLoader().getResource(path);
+	}
+	
+	public static InputStream getResourceAsStream(final String path) {
+		return Util.class.getClassLoader().getResourceAsStream(path);
 	}
 
 
@@ -129,24 +135,6 @@ public class Util {
 	                             + Character.digit(s.charAt(i+1), 16));
 	    }
 	    return data;
-	}
-	
-	public static ImageIcon loadIcon(final String path)
-	{
-		try {
-			return new ImageIcon(getResource(path));
-		} catch (Exception e) {
-			throw new RuntimeException("Check your resources for missing icon: " + path);
-		}
-	}
-	
-	public static ImageIcon loadIcon(final String path, final String txt)
-	{
-		return new ImageIcon(getResource(path),txt);
-	}
-	
-	public static ImageIcon loadIcon(final String path, final String txt, final int sz) {
-		return new ImageIcon(Util.loadIcon(path).getImage().getScaledInstance(sz,sz, Image.SCALE_SMOOTH),txt);
 	}
 	
 	public static void openDirectory(String dirPath) {

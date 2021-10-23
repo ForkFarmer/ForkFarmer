@@ -20,7 +20,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import javax.swing.ImageIcon;
-import javax.swing.SwingUtilities;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -48,11 +47,14 @@ public class Fork {
 	public transient Balance balance = new Balance();
 	public transient Balance equity = new Balance();
 	public transient Balance height = new Balance();
-		
+
 	public String symbol;
 	public String exePath;
 	public String name;
 	
+	public List<String> coldAddrList = new ArrayList<>();
+	
+	transient public ForkData fd;
 	transient public ForkPorts fp = new ForkPorts();
 	transient public String version;
 	transient public String latestVersion;
@@ -69,19 +71,18 @@ public class Fork {
 	transient public double estEarn;
 	transient public Transaction lastWin;
 	transient public Exception lastException;
-	public String walletAddr;
-	transient boolean walletLoaded = false;
 	transient public List<Wallet> walletList = new ArrayList<>();
 	transient boolean hidden;
 	transient String lastTimeStamp;
 	transient LocalDateTime lastTimeUpdate;
+	transient public Wallet wallet = Wallet.EMPTY;
 	
+	public String walletAddr;
 	public boolean fullNode = true;
 	public boolean walletNode = true;
 	public double price;
 	public double rewardTrigger;
 	
-	transient public Wallet wallet = Wallet.EMPTY;
 	public String logPath;
 	public String configPath;
 	public boolean cold;
@@ -155,9 +156,9 @@ public class Fork {
 		
 	@SuppressWarnings("unused")
 	public void loadWallet () {
-		if (!walletNode || -1 == wallet.index || cold)
+		if (!walletNode || -1 == wallet.index || wallet.cold)
 			return;
-		
+
 		if ("CGN".equals(symbol) && System.getProperty("os.name").startsWith("Windows")) {
 			balance = Balance.NOT_SUPPORTED;
 			return;
@@ -220,6 +221,9 @@ public class Fork {
 	}
 	
 	public void loadFarmSummary() {
+		if (cold)
+			return;
+		
 		Process p = null;
 		BufferedReader br = null;
 		try {
@@ -439,12 +443,11 @@ public class Fork {
 	}
 
 	public void stdUpdate() {
-			if (!hidden && !cold) {
+			if (!hidden) {
 				loadWallet();
 				loadFarmSummary();
 				ForkView.update(this);
 			}
-		
 	}
 
 	public void updatePrice(double p) {
@@ -497,24 +500,24 @@ public class Fork {
 	}
 	
 	public static void newColdWallet(String address) {
-		Fork f = new Fork();
-		ForkTemplate.getbyAddress(address).ifPresent(ft -> {
-			f.ico = ft.ico;
-			f.price = ft.price;
-			f.name = ft.name;
-			f.symbol = ft.symbol;
-			f.wallet = new Wallet(null,address,0);
-			f.walletAddr = address;
-			f.statusIcon = Ico.SNOW;
-			f.cold = true;
-			f.farmStatus = "Cold";
-			f.readTime = new ReadTime(0);
-			f.updateBalance(FFUtil.getAllTheBlocksBalance(f));
-			System.out.println("found: " + address);
-			SwingUtilities.invokeLater(() -> {
-				Fork.LIST.add(f);	
-			});
-			ForkView.update();
+		ForkData.getbyAddress(address).ifPresent(fd -> {
+			if (null != fd.atbPath) {
+				Fork f = new Fork();
+					
+				f.ico = fd.ico;
+				f.price = fd.price;
+				f.name = fd.displayName;
+				f.symbol = fd.coinPrefix;
+				f.wallet = new Wallet(address);
+				f.walletAddr = address;
+				f.statusIcon = Ico.SNOW;
+				f.cold = true;
+				f.farmStatus = "Cold";
+				f.readTime = new ReadTime(0);
+				f.fd = fd;
+				Fork.LIST.add(f);
+				ForkView.update();
+			}
 		});
 	}
 

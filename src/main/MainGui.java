@@ -6,6 +6,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
@@ -21,6 +22,7 @@ import util.NetSpace;
 import util.Util;
 import util.swing.SwingEX;
 import util.swing.SwingEX.LTPanel;
+import web.XchForks;
 
 @SuppressWarnings("serial")
 public class MainGui extends JPanel {
@@ -33,7 +35,7 @@ public class MainGui extends JPanel {
 	static JButton sendBtn = new JButton("Send");
 	private static NetSpace plotSize = new NetSpace("0 TiB");
 	private static final JLabel plotlbl = new JLabel("Farm Size: ?");
-	private static final JLabel valuelbl = new JLabel("Value: $0.0");
+	private static final JLabel valuelbl = new JLabel("Value: " + Settings.GUI.currencySymbol + "0.0");
 	private static final JLabel forklbl = new JLabel(Integer.toString(Fork.LIST.size()) + " Forks", SwingConstants.CENTER);
 	
 	GridBagConstraints c = new GridBagConstraints();
@@ -73,6 +75,8 @@ public class MainGui extends JPanel {
         	JPanel curencyPanel = new JPanel(new GridLayout(1,2));
         	curencyPanel.setBorder(new TitledBorder("Currency:"));
         	
+        	JPanel autoUpdatePanel = new JPanel(new GridLayout(1,2));
+        	autoUpdatePanel.setBorder(new TitledBorder("Automatic price/cold wallet updates"));
         	
         	LTPanel lriSleep = new SwingEX.LTPanel("    Intra Delay (ms): " , Integer.toString(Settings.GUI.logReaderIntraDelay));
     		LTPanel lreSleep = new SwingEX.LTPanel("    Exo Delay (ms): " , Integer.toString(Settings.GUI.logReaderExoDelay));
@@ -82,6 +86,9 @@ public class MainGui extends JPanel {
     		
     		LTPanel curencySymbol = new SwingEX.LTPanel("    Symbol: " , Settings.GUI.currencySymbol);
     		LTPanel curencyRatio = new SwingEX.LTPanel("    Ratio x*$: " , Double.toString(Settings.GUI.currencyRatio));
+    		
+    		JCheckBox autoUpdate = new JCheckBox("xchforks.com/alltheblocks.net");
+    		autoUpdate.setSelected(Settings.GUI.autoUpdate);
     		
     		        	
     		logReader.add(lriSleep);
@@ -93,6 +100,8 @@ public class MainGui extends JPanel {
     		curencyPanel.add(curencySymbol);
     		curencyPanel.add(curencyRatio);
     		
+    		autoUpdatePanel.add(autoUpdate);
+    		
     		GridBagConstraints gbc = new GridBagConstraints();
     		gbc.fill = GridBagConstraints.HORIZONTAL;
         	settingPanel.add(logReader,gbc);
@@ -100,19 +109,23 @@ public class MainGui extends JPanel {
         	settingPanel.add(daemonReader,gbc);
         	gbc.gridy=2;
         	settingPanel.add(curencyPanel,gbc);
+        	gbc.gridy=3;
+        	settingPanel.add(autoUpdatePanel,gbc);
         	
         	if (true == ForkFarmer.showPopup("Settings:", settingPanel)) {
+
         		Settings.GUI.logReaderIntraDelay = lriSleep.getAsInt();
         		Settings.GUI.logReaderExoDelay = lreSleep.getAsInt();
         		Settings.GUI.daemonReaderWorkers = dWorkers.getAsInt();
         		Settings.GUI.daemonReaderDelay = dIntraSleep.getAsInt();
-        		Settings.GUI.currencySymbol = curencySymbol.getText();
-        		Settings.GUI.currencyRatio = curencyRatio.getAsDouble();
+        		Settings.GUI.autoUpdate = autoUpdate.isSelected();
         		
-        		MainGui.updateTotal();
+        		if (!Settings.GUI.currencySymbol.equals(curencySymbol.getText()))
+        			Settings.GUI.currencySymbol = curencySymbol.getText();
+        		Settings.GUI.currencyRatio = curencyRatio.getAsDouble();
+        		XchForks.updatePricesForced();
         	}
         		
-        	
         }));
         	
         
