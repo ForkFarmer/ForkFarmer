@@ -13,7 +13,7 @@ Java 8 Minimum, Java 11+ required for web-features (price updates, version check
 
 **How to use:** After you install Java, double-click on jar or Java -jar ForkFarmer.jar from the command line. On Windows most forks will automatically be detected. On Linux currently you have to create an FF_Settings.yaml and configure paths manually, check discord for more help.
 
-**List of supported Forks:** https://github.com/ForkFarmer/ForkFarmer/blob/main/src/main/Settings.java#L46
+**List of supported Forks:** https://github.com/ForkFarmer/ForkFarmer/blob/main/resources/forks.json
 
 **My balance doesn't show up:** Select fork -> Right click -> Select debug. Is there any exceptions? What does the daemon/wallet say?
 
