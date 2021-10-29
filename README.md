@@ -15,7 +15,7 @@ Java 8 Minimum, Java 11+ required for web-features (price updates, version check
 
 **List of supported Forks:** https://github.com/ForkFarmer/ForkFarmer/blob/main/resources/forks.json
 
-**My balance doesn't show up:** Select fork -> Right click -> Select debug. Is there any exceptions? What does the daemon/wallet say?
+**See Wiki for more information:** https://github.com/ForkFarmer/ForkFarmer/wiki/FAQ
 
 # Donations
 xch1r60uccv33w26qrzws57zqx9nrvt9gw5n2jdycjkqujc68n7rkvuqec8twe
