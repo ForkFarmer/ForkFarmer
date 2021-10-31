@@ -78,6 +78,7 @@ public class TransactionView extends JPanel {
 		POPUP_MENU.add(new SwingEX.JMI("View at posat.io", 	Ico.POSAT, 		() -> getSelected().forEach(Transaction::browse)));
 		POPUP_MENU.add(new SwingEX.JMI("Copy", 				Ico.CLIPBOARD,  TransactionView::copy));
 		POPUP_MENU.add(new SwingEX.JMI("Report", 			Ico.GRAPH,  	TransactionView::report));
+		POPUP_MENU.add(new SwingEX.JMI("Update Reward", 	Ico.TARGET,  	TransactionView::setReward));
 		
 		SwingUtil.addDoubleClickAction(TABLE, r -> {
 			if (1 != getSelected().size())
@@ -101,6 +102,14 @@ public class TransactionView extends JPanel {
 
 	public static synchronized void refresh() {
 		SwingUtilities.invokeLater(() -> MODEL.fireTableDataChanged());
+	}
+	
+	public static synchronized void setReward() {
+		List<Transaction> txList = getSelected();
+		
+		for (Transaction t : txList) {
+			t.f.fullReward = t.getAmount();
+		}
 	}
 	
 	static private void copy() {

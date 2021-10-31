@@ -17,6 +17,8 @@ import util.Ico;
 import util.Util;
 
 public class ForkData {
+	public static final String GITHUB_URL = "https://www.github.com/";
+	
 	public static Map<String,ForkData> MAP = new HashMap<>();
 	public static List<ForkData> LIST = new ArrayList<>();
 	private static String USER_HOME = System.getProperty("user.home");
@@ -27,44 +29,54 @@ public class ForkData {
 	public String daemonFolder;
 	public String daemonFolder2;
 	public double price;
-	public double rewardTrigger;
+	public double nftReward;
+	public double baseRatio;
+	public double fullReward;
 	public long mojoPerCoin;
 	
 	// computed values
+	public String rootPath;
 	public String logPath;
 	public String configPath;
 	public String exePath;
 	public ImageIcon ico;
 	
 	public String discordURL;
-	public String gitURL;
+	public String gitPath;
 	public String xchForksURL;
 	public String calculatorURL;
 	public String websiteURL;
+	public String exeName;
+	String basePath;
 	
 	public String atbPath;
 	
-	
-	
 	public ForkData(JSONObject jo) {
-		coinPrefix = ((String) jo.get("coinPrefix")).toUpperCase();
-		displayName = (String) jo.get("displayName");
-		userFolder = (String) jo.get("userFolder");
-		daemonFolder = (String) jo.get("daemonFolder");
-		daemonFolder2 = (String) jo.get("daemonFolder2");
-		price = (Double) jo.get("price");
-		rewardTrigger = (Double) jo.get("rewardTrigger");
-		ico = Ico.getForkIcon(coinPrefix.toLowerCase());
-	
-		atbPath = (String) jo.get("pathName");
-		discordURL = (String) jo.get("discordURL");
-		gitURL = (String) jo.get("gitURL");
-		xchForksURL = (String) jo.get("xchForksURL");
-		websiteURL = (String) jo.get("websiteURL");
+		try {
+			coinPrefix = ((String) jo.get("coinPrefix")).toUpperCase();
+			displayName = (String) jo.get("displayName");
+			userFolder = (String) jo.get("userFolder");
+			daemonFolder = (String) jo.get("daemonFolder");
+			daemonFolder2 = (String) jo.get("daemonFolder2");
+			price = (Double) jo.get("price");
+			fullReward = (Double) jo.get("reward");
+			baseRatio = (Double) jo.get("baseRatio");
+			nftReward = fullReward * baseRatio;
+			ico = Ico.getForkIcon(coinPrefix.toLowerCase());
 		
-		calculatorURL = (String) jo.get("cfcalc");
-		Long mojoPerCoinL = (Long) jo.get("mojoPerCoin");
-		mojoPerCoin = (null != mojoPerCoinL) ? mojoPerCoinL : 0;
+			atbPath = (String) jo.get("pathName");
+			discordURL = (String) jo.get("discordURL");
+			gitPath = (String) jo.get("gitPath");
+			xchForksURL = (String) jo.get("xchForksURL");
+			websiteURL = (String) jo.get("websiteURL");
+			exeName = (String) jo.get("exeName");
+			
+			calculatorURL = (String) jo.get("cfcalc");
+			Long mojoPerCoinL = (Long) jo.get("mojoPerCoin");
+			mojoPerCoin = (null != mojoPerCoinL) ? mojoPerCoinL : 0;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		if (System.getProperty("os.name").startsWith("Windows"))
 			setDirectoriesWin();
@@ -76,31 +88,33 @@ public class ForkData {
 	}
 
 	private void setDirectriesLinux() {
-		String forkBase = USER_HOME + "/" + daemonFolder + "/";
+		basePath = USER_HOME + "/" + daemonFolder + "/";
 		logPath = USER_HOME + "/" + userFolder.toLowerCase() + "/mainnet/log/debug.log";
 		configPath = USER_HOME + "/" + userFolder.toLowerCase() + "/mainnet/config/config.yaml";
 		
 		if (coinPrefix.equals("NCH")) {
 			logPath = USER_HOME + "/.chia/ext9/log/debug.log";
 			configPath = USER_HOME + "/.chia/ext9/config/config.yaml";
-			forkBase = USER_HOME + "/ext9-blockchain/";
+			basePath = USER_HOME + "/ext9-blockchain/";
 		}
 
-		exePath = forkBase + "/venv/bin/" + displayName.toLowerCase();
+		exePath = basePath + "/venv/bin/" + displayName.toLowerCase();
 		if (!new File(exePath).exists())
-			exePath = forkBase + "/venv/bin/chia";
+			exePath = basePath + "/venv/bin/chia";
 		
 		if (!new File(exePath).exists() && null != daemonFolder2) {
 			exePath = USER_HOME + "/" + daemonFolder2 + "/venv/bin/" + displayName.toLowerCase();
 		}
 		
 	}
-
+	
 	private void setDirectoriesWin() {
-		String forkBase = USER_HOME + "\\AppData\\Local\\" + daemonFolder + "\\";
+		basePath = USER_HOME + "\\AppData\\Local\\" + daemonFolder + "\\";
+		rootPath = USER_HOME + "\\" + userFolder.toLowerCase() + "\\mainnet\\";
 		
 		logPath = USER_HOME + "\\" + userFolder.toLowerCase() + "\\mainnet\\log\\debug.log";
 		configPath = USER_HOME + "\\" + userFolder.toLowerCase() + "\\mainnet\\config\\config.yaml";
+		
 		if (coinPrefix.equals("NCH")) {
 			logPath = USER_HOME + "\\.chia\\ext9\\log\\debug.log";
 			configPath = USER_HOME + "\\.chia\\ext9\\config\\config.yaml";
@@ -115,14 +129,19 @@ public class ForkData {
 			}
 		}
 		
-		exePath = forkBase + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
+		exePath = basePath + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
 		if (!new File(exePath).exists()) {
-			List<String> dirs = Util.getDir(forkBase, "app"); // check all the "app" folders
+			List<String> dirs = Util.getDir(basePath, "app"); // check all the "app" folders
 			for (String appDir : dirs) {
-				exePath = forkBase + appDir + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
+				
+				if (null != exeName)
+					exePath = basePath + appDir + "\\resources\\app.asar.unpacked\\daemon\\" + exeName + ".exe";
 				if (new File(exePath).exists())
 					break;
-				exePath = forkBase + appDir + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
+				exePath = basePath + appDir + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
+				if (new File(exePath).exists())
+					break;
+				exePath = basePath + appDir + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
 				if (new File(exePath).exists())
 					break;
 			}
@@ -140,7 +159,7 @@ public class ForkData {
 		
 		Fork f = new Fork();
 		f.name = displayName;
-		f.rewardTrigger = rewardTrigger;
+		f.fullReward = fullReward;
 		f.symbol = coinPrefix;
 		f.exePath = exePath;
 		f.price = price;

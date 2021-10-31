@@ -54,6 +54,15 @@ public class Util {
 		return val;
 	}
 	
+	public static void openFile(String path) {
+		try {
+			Desktop.getDesktop().open(new File(path));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public static List<String> getDir(String base, String target) {
 		try { 
 			return Files.list(new File(base).toPath())
@@ -260,7 +269,8 @@ public class Util {
 	
 	public static String getWordAfter(String str, String target) {
 		str = str.substring(str.indexOf(target) + target.length());
-		return str.substring(0,str.indexOf(" "));
+		int endIndex = str.indexOf(" ");
+		return (-1 != endIndex) ? str.substring(0,endIndex) : str;
 	}
 	
 	public static String wordAfterIfExist(String str, String target) {

@@ -14,6 +14,7 @@ import javax.swing.ImageIcon;
 
 import forks.Fork;
 import forks.ForkView;
+import logging.LogView;
 import types.Balance;
 import types.Effort;
 import types.TimeU;
@@ -44,11 +45,16 @@ public class Transaction {
 		this.target = target;
 		this.date = date;
 		this.blockReward = blockReward;
-		this.value = new Balance(amount * f.price,2);
+		this.updateValue();
 		
 		if (blockReward && getTimeSince().inMinutes() < 5)
 			effort = f.getEffort();
 	}
+	
+	public void updateValue() {
+		this.value = new Balance(amount.amt * f.price,2);
+	}
+	
 	
 	// copy constructor for TxReport
 	public Transaction(Transaction t) {
@@ -76,6 +82,8 @@ public class Transaction {
 
 		if (-1 == f.wallet.index)
 			return false;
+		
+		LogView.add(f.name + " getting transactions");
 
 		Process p = null;
 		PrintWriter pw = null;
@@ -132,22 +140,22 @@ public class Transaction {
 					
 						Optional<Transaction> oT = LIST.stream().filter(z -> z.f.symbol.equals(f.symbol) && z.date.equals(date)).findAny();
 					
-						if (Math.abs(amount - f.rewardTrigger) < .01)
+						if (Math.abs(amount - f.fd.nftReward) < .01)
 							blockReward = true;
 						else if (firstWord.equals("1E-10")) // probably faucet?
 							blockReward = true;
 						else if (firstWord.equals("1E-7")) // probably faucet?
 							blockReward = true;
-						
-						//System.out.println(f.name + ": " + f.rewardTrigger);
-						//System.out.println("\t TxAmount: " + amount + " D: " +Math.abs(amount - f.rewardTrigger) + " Block Reward: " + blockReward);
-						
-
+					
 						if (oT.isPresent()) {
 							Transaction t = oT.get();
 							t.amount.add(amount);
+							t.updateValue();
 							t.blockReward |= blockReward;
-							t.effort = f.getEffort();
+							if (Math.abs(amount - f.fullReward) < .01)
+								t.blockReward = true;
+							if (t.effort == Effort.EMPTY)
+								t.effort = f.getEffort();
 						} else {
 							Transaction t = new Transaction(f, tHash,amount,address,date, blockReward); 
 							if (0 != amount)
@@ -180,6 +188,8 @@ public class Transaction {
 			ForkView.update(f);
 			TransactionView.refresh();
 		}
+		
+		LogView.add(f.name + " done getting transactions");
 
 		return newTX;
 		

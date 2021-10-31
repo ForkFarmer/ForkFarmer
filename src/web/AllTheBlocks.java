@@ -15,13 +15,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import forks.Fork;
+import logging.LogView;
 import main.MainGui;
 import types.Balance;
 import util.Ico;
 
 // Interacts with alltheblocks.net API. Thanks!
 public class AllTheBlocks {
-	public static LocalDateTime lastUpdateATB;
+	public static LocalDateTime lastUpdate;
 	private static int UPDATE_RATE_SEC = 60*5;
 	
 	@SuppressWarnings("unchecked")
@@ -32,15 +33,18 @@ public class AllTheBlocks {
 	}
 	
 	public static void updateColdBalances() {
-		if (null == lastUpdateATB)
-			lastUpdateATB = LocalDateTime.now();
-		else if (Duration.between(lastUpdateATB, LocalDateTime.now()).getSeconds() < UPDATE_RATE_SEC)
+		if (null == lastUpdate)
+			lastUpdate = LocalDateTime.now();
+		else if (Duration.between(lastUpdate, LocalDateTime.now()).getSeconds() < UPDATE_RATE_SEC)
 			return; // too early to update
+		updateColdForced();
 	}
 	
 	@SuppressWarnings("unchecked")
 	public static void updateColdForced() {
-		lastUpdateATB = LocalDateTime.now();
+		lastUpdate = LocalDateTime.now();
+		
+		LogView.add("alltheblocks.net cold wallet update");
 		
 		try {
 			List<String> addrList = new ArrayList<>();
@@ -51,9 +55,6 @@ public class AllTheBlocks {
 			
 			if (0 == addrList.size())
 				return;
-			
-			System.out.println("Updaing " + addrList.size());
-			
 			
 			HttpClient client = HttpClient.newBuilder()
 					.connectTimeout(Duration.ofSeconds(5))

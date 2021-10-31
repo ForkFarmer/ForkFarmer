@@ -36,7 +36,7 @@ public class MissingForks extends JPanel {
 			addColumn("UserFolder",  	140,	String.class,	f->f.userFolder).showMandatory();
 			addColumn("DaemonFolder", 	160,	String.class, 	f->f.daemonFolder).showMandatory();
 			addColumn("1",   			22,		Icon.class,		f->(null != f.websiteURL) ? Ico.HOME : null).showMandatory();
-			addColumn("2",   			22,		Icon.class,		f->(null != f.gitURL) ? Ico.GITHUB: null).showMandatory();
+			addColumn("2",   			22,		Icon.class,		f->(null != f.gitPath) ? Ico.GITHUB: null).showMandatory();
 			addColumn("3",   			22,		Icon.class,		f->(null != f.discordURL) ? Ico.DISCORD : null).showMandatory();
 			
 			onGetRowCount(() -> LIST.size());
@@ -71,7 +71,7 @@ public class MissingForks extends JPanel {
 			      if (colName.equals("1"))
 			      	Util.openLink(LIST.get(row).websiteURL);
 			      else if (colName.equals("2"))
-			      	Util.openLink(LIST.get(row).gitURL);
+			      	Util.openLink(ForkData.GITHUB_URL + LIST.get(row).gitPath);
 			      else if (colName.equals("3"))
 			      	Util.openLink(LIST.get(row).discordURL);
 			    }

@@ -25,6 +25,67 @@ public class ForkStarter {
 		return LIST.stream().filter(kv -> kv.key.equals(key)).findAny().get().value;
 	}
 	
+	static public void activate(List<Fork> fList) {
+		Process p = null;
+
+		for (Fork f: fList) {
+			
+			System.out.println("Running activate on " + f.name);
+			System.out.println("Base Dir is: " + f.fd.basePath);
+		
+			StringBuilder sb = new StringBuilder();
+			sb.append("'cd ");
+			sb.append(f.fd.basePath);
+			sb.append(" && . ./activate && ");
+			sb.append(f.name.toLowerCase());
+			sb.append(" start farmer-no-wallet'");
+			
+			String script = sb.toString();
+			try {
+				
+				System.out.println("Starting activate script");
+				System.out.println("Script: + " + script);
+				
+				ProcessBuilder pb = new ProcessBuilder("bash", "-c", script);
+				p = pb.start();
+				p.wait();
+				System.out.println("Done running activate script");
+				
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	static public void custom(List<Fork> fList, String script) {
+		Process p = null;
+
+		for (Fork f: fList) {
+			
+			System.out.println("Running activate on " + f.name);
+			System.out.println("Base Dir is: " + f.fd.basePath);
+		
+			try {
+				
+				System.out.println("Starting custom activate script");
+				System.out.println("Script: + " + script);
+				
+				ProcessBuilder pb = new ProcessBuilder("bash", "-c", script);
+				p = pb.start();
+				p.wait();
+				System.out.println("Stopping activate script");
+				
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	
 	static public void edit() {
 		getSettings();
 		JPanel ESPanel = new JPanel(new BorderLayout());

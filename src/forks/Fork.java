@@ -1,6 +1,5 @@
 package forks;
 
-import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 import javax.swing.ImageIcon;
@@ -25,6 +25,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import debug.DebugView;
 import ffutilities.ForkPorts;
+import logging.LogView;
 import main.ForkFarmer;
 import main.MainGui;
 import transaction.Transaction;
@@ -40,7 +41,7 @@ import util.Util;
 import util.apache.ReversedLinesFileReader;
 
 public class Fork {
-	private static final ExecutorService INST_SVC = Executors.newSingleThreadExecutor();
+	private static final ExecutorService SVC = Executors.newFixedThreadPool(2);
 	public static List<Fork> LIST = new ArrayList<>();
 	public static List<Fork> I_LIST;
 
@@ -76,12 +77,13 @@ public class Fork {
 	transient String lastTimeStamp;
 	transient LocalDateTime lastTimeUpdate;
 	transient public Wallet wallet = Wallet.EMPTY;
+	transient public boolean xchfSupport;
 	
 	public String walletAddr;
 	public boolean fullNode = true;
 	public boolean walletNode = true;
 	public double price;
-	public double rewardTrigger;
+	public double fullReward;
 	
 	public String logPath;
 	public String configPath;
@@ -95,11 +97,21 @@ public class Fork {
 		if (cold)
 			return;
 		
+		LogView.add(name + " getting receive address");
+		
 		Process p = null;
 		BufferedReader br = null;
 		try {
 			p = Util.startProcess(exePath, "keys", "show");
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+			//check for passPhrase
+			char f = (char)br.read();
+			if (f == '(') {
+				p.destroyForcibly();
+				wallet = new Wallet("Error! remove passphrase");
+				hidden = true;
+			}
 			
 			int walletIndex = 1;
 			String l = null;
@@ -134,12 +146,14 @@ public class Fork {
 				walletList.stream().filter(w -> w.addr.equals(walletAddr)).findAny().ifPresent(w -> {wallet = w; walletAddr = w.addr;});
 		}
 		
-		
+		LogView.add(name + " done getting receive address");
 	}
 	
 	public void loadVersion() {
 		if (cold)
 			return;
+		
+		LogView.add(name + " getting software verion");
 		
 		Process p = null;
 		BufferedReader br = null;
@@ -152,6 +166,8 @@ public class Fork {
 		}
 		Util.closeQuietly(br);
 		Util.waitForProcess(p);
+		
+		LogView.add(name + " done getting software verion");
 	}
 		
 	@SuppressWarnings("unused")
@@ -159,10 +175,12 @@ public class Fork {
 		if (!walletNode || -1 == wallet.index || wallet.cold)
 			return;
 
-		if ("CGN".equals(symbol) && System.getProperty("os.name").startsWith("Windows")) {
+		if ("CGN".equals(symbol)) {
 			balance = Balance.NOT_SUPPORTED;
 			return;
 		}
+		
+		LogView.add(name + " loading wallet");
 		
 		Process p = null;
 		BufferedReader br = null;
@@ -173,13 +191,23 @@ public class Fork {
 			String l = null;
 			Balance newBalance = new Balance();
 			while ( null != (l = br.readLine())) {
+				
+				// No online backup file found
+				// Press S to skip restore from backup file
+				// Press F to use your own backup file:
+				if (l.contains(" Press S")) { 
+					System.out.println("detected press S/F");
+					PrintWriter pw = new PrintWriter(p.getOutputStream());
+					pw.println("S"); 
+					pw.close();
+				}
+				
 				if (l.contains("Choose")) { // little bit of a hack for multiple wallets.. but it works for now
 					PrintWriter pw = new PrintWriter(p.getOutputStream());
 					char[] buf = new char[4096];
 					br.read(buf);
 					int numWallets = new String(buf).split("\r\n|\r|\n").length - 1;
 					pw.println(wallet.index);
-					pw.flush();
 					pw.close();
 				}
 				
@@ -190,7 +218,8 @@ public class Fork {
 				} else if (l.contains("-Total Balance: ")) {
 					newBalance.add(Double.parseDouble(Util.getWordAfter(l, "-Total Balance: ")));
 				} else if (l.contains("Wallet height: ")) {
-					String heightStr = l.substring("Wallet height: ".length());
+					
+					String heightStr = Util.getWordAfter(l, "Wallet height: ");
 					height = new Balance(Integer.parseInt(heightStr));
 				} else if (l.contains("Sync status: ")) {
 					syncStatus = l.substring("Sync status: ".length());
@@ -218,11 +247,14 @@ public class Fork {
 		Util.waitForProcess(p);
 		
 		updateIcon();
+		LogView.add(name + " done loading wallet");
 	}
 	
 	public void loadFarmSummary() {
 		if (cold)
 			return;
+		
+		LogView.add(name + " loading farm summary");
 		
 		Process p = null;
 		BufferedReader br = null;
@@ -232,10 +264,13 @@ public class Fork {
 			
 			String l = null;
 			while ( null != (l = br.readLine())) {
+				/*
 				if (l.contains("Connection error") && false == fullNode) {
 					p.destroyForcibly();
 					break;
-				} else if (l.contains("Estimated network space: "))
+				} else 
+				*/
+				if (l.contains("Estimated network space: "))
 					netSpace = new NetSpace(l.substring("Estimated network space: ".length()));
 				else if (l.contains("Total size of plots: ")) {
 					try {
@@ -257,11 +292,14 @@ public class Fork {
 		}
 		Util.waitForProcess(p);
 		Util.closeQuietly(br);
+		
+		LogView.add(name + " done loading farm summary");
 	}
 	
 	public void readLog() {
 		if (cold)
 			return;
+		
 		boolean readH = false, readT = false;
 		File logFile = new File(logPath);
 		if (!logFile.exists())
@@ -274,7 +312,7 @@ public class Fork {
 		boolean updateWallet = false;
 		
 		// If we haven't seen a time update event from log make sure we clear currently displayed one
-		if (null != lastTimeUpdate && Duration.between(lastTimeUpdate, now).getSeconds() > 30)
+		if (null != lastTimeUpdate && Duration.between(lastTimeUpdate, now).getSeconds() > 40)
 			readTime = ReadTime.EMPTY;
 		
 		try {
@@ -290,7 +328,7 @@ public class Fork {
 				logTime = FFUtil.parseTime(s);
 				
 				// don't read long time events that are too old in the log
-				if (!readT && null != logTime && Duration.between(logTime, now).getSeconds() > 30) {
+				if (!readT && null != logTime && Duration.between(logTime, now).getSeconds() > 40) {
 					readTime = ReadTime.EMPTY;
 					readT = true;
 				}
@@ -329,8 +367,13 @@ public class Fork {
 			lastException = e;
 		};
 		
-		if (updateWallet)
-			INST_SVC.submit(() -> {loadWallet(); ForkView.update(this);});
+		if (updateWallet) {
+			if (((ThreadPoolExecutor)SVC).getQueue().size() < 2) {
+				SVC.submit(() -> {loadWallet(); ForkView.update(this);});
+			} else {
+				System.out.println("Worker threads are stuck");
+			}
+		}
 				
 		if (readT)
 			lastTimeUpdate = now;
@@ -354,6 +397,8 @@ public class Fork {
 				statusIcon = Ico.YELLOW;
 			if (farmStatus.startsWith("Not Synched"))
 				statusIcon = Ico.RED;
+			if (farmStatus.startsWith("Not running") && !walletNode)
+				statusIcon = Ico.GREEN;
 		}
 		
 		if (cold)
@@ -371,15 +416,6 @@ public class Fork {
 		statusIcon = Ico.RED;
 		farmStatus = null;
 		ForkView.update(this);
-	}
-	
-	public void openConfig() {
-		try {
-			Desktop.getDesktop().open(new File(configPath));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 	
 	public void generate() {
@@ -437,19 +473,11 @@ public class Fork {
 	}
 	
 	public Effort getEffort() {
-		return new Effort((etw.inMinutes() > 0 && null != lastWin) ?
-				(int) (((double)lastWin.getTimeSince().inMinutes() / (double)etw.inMinutes()) * (double)100) : 0);
-		
+		return (etw.inMinutes() > 0 && null != lastWin) ?
+				new Effort((int) (((double)lastWin.getTimeSince().inMinutes() / (double)etw.inMinutes()) * (double)100)) : Effort.EMPTY;
 	}
 
-	public void stdUpdate() {
-			if (!hidden) {
-				loadWallet();
-				loadFarmSummary();
-				ForkView.update(this);
-			}
-	}
-
+	
 	public void updatePrice(double p) {
 		if (p != price) {
 			price = p;

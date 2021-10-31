@@ -10,7 +10,7 @@ public class Effort implements Comparable<Effort> {
 	}
 	
 	public String toString() {
-		return (effort > 0) ? effort + "%" : "";
+		return (effort >= 0) ? effort + "%" : "";
 	}
 	
 	public int compareTo(Effort e) {

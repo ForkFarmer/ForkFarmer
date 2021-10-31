@@ -32,6 +32,7 @@ import javax.swing.table.JTableHeader;
 import ffutilities.ForkLogViewer;
 import ffutilities.MissingForks;
 import ffutilities.PortCheckerView;
+import logging.LogView;
 import main.ForkFarmer;
 import main.MainGui;
 import main.Settings;
@@ -51,6 +52,7 @@ import util.swing.TableRowTransferHandler;
 import util.swing.jfuntable.Col;
 import util.swing.jfuntable.JFunTableModel;
 import web.AllTheBlocks;
+import web.Github;
 import web.XchForks;
 
 @SuppressWarnings("serial")
@@ -91,7 +93,7 @@ public class ForkView extends JPanel {
 			addColumn("Last Win",	90, TimeU.class, 	f->f.getPreviousWin());
 			addColumn("Effort",		60,	Effort.class, 	Fork::getEffort);
 			addColumn("Address",	-1,	Wallet.class, 	f->f.wallet).showMandatory();
-			addColumn("Reward",		40,	Double.class, 	f->f.rewardTrigger).editable();
+			addColumn("Reward",		40,	Double.class, 	f->f.fullReward).editable();
 			addColumn("#W",			40,	Integer.class, 	f->f.walletList.size());
 			addColumn("Time",		50,	ReadTime.class, f->f.readTime).show(true);
 			addColumn("FN",			30,	Boolean.class, 	f->f.fullNode).editable();
@@ -122,7 +124,7 @@ public class ForkView extends JPanel {
 				fireTableCellUpdated(row, col);
 				MainGui.updateTotal();
 			} else if (getIndex("Reward") == col) {
-				Fork.LIST.get(row).rewardTrigger = (double) value;
+				Fork.LIST.get(row).fullReward = (double) value;
 				fireTableCellUpdated(row, col);
 			} else if (getIndex("FN") == col) {
 				Fork.LIST.get(row).fullNode = (boolean) value;
@@ -218,13 +220,11 @@ public class ForkView extends JPanel {
 	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Homepage", 	Ico.HOME, () -> Util.openLink(fd.websiteURL)));
             		if (null != fd.discordURL)
 	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Discord", 	Ico.DISCORD, () -> Util.openLink(fd.discordURL)));
-	            	if (null != fd.gitURL)
-	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " GitHub", 	Ico.GITHUB, () -> Util.openLink(fd.gitURL)));
+	            	if (null != fd.gitPath)
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " GitHub", 	Ico.GITHUB, () -> Util.openLink(ForkData.GITHUB_URL + fd.gitPath)));
 	            	if (null != fd.calculatorURL)
 	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Calculator",	Ico.XCHCALC, () -> Util.openLink(fd.calculatorURL)));
             	}
-            	
-            		
             	
             	for (int i = 0; i < f.walletList.size(); i++) {
             		WALLET_SUBMENU.setEnabled(true);
@@ -267,13 +267,18 @@ public class ForkView extends JPanel {
 			ACTION_SUBMENU.add(new SwingEX.JMI("Stop",			Ico.STOP,  	() -> new Thread(() -> getSelected().forEach(Fork::stop)).start()));
 			ACTION_SUBMENU.add(new SwingEX.JMI("Custom",		Ico.CLI, 	() -> ForkStarter.newCustCMD(getSelected())));
 			ACTION_SUBMENU.addSeparator();
+			if (!Util.isHostWin()) {
+				ACTION_SUBMENU.add(new SwingEX.JMI("Activate",			Ico.POWER, 			() -> ForkStarter.activate(getSelected())));
+				ACTION_SUBMENU.add(new SwingEX.JMI("Activate (custom)",	Ico.POWER, 			ForkView::custom));
+			}
+			
 			ACTION_SUBMENU.add(new SwingEX.JMI("Edit Start",	Ico.EDIT_START, 	ForkStarter::edit));
 		
 		POPUP_MENU.add(WALLET_SUBMENU);
 		
 		POPUP_MENU.add(EXPLORE_SUBMENU);
 			EXPLORE_SUBMENU.add(new SwingEX.JMI("View Log", 	Ico.CLIPBOARD,  		() -> new ForkLogViewer(getSelected())));
-			EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Config", 	Ico.CLIPBOARD,  		() -> getSelected().forEach(Fork::openConfig)));
+			EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Config", 	Ico.CLIPBOARD,  		() -> getSelected().forEach(f -> Util.openFile(f.configPath))));
 			if (Util.isHostWin()) {
 				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open CMD", 		Ico.CLI,  			() -> ForkView.openShell(SHELL.CMD)));
 				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Powershell",	Ico.POWERSHHELL,  	() -> ForkView.openShell(SHELL.POWERSHELL)));
@@ -309,6 +314,7 @@ public class ForkView extends JPanel {
 			ForkFarmer.newFrame(f.name + ": Peer Connections", f.ico, new PeerView(f)))));
 		POPUP_MENU.addSeparator();
 		POPUP_MENU.add(new SwingEX.JMI("Debug",			Ico.BUG,		() -> getSelected().forEach(Fork::showLastException)));
+		POPUP_MENU.add(new SwingEX.JMI("FF Logs",		Ico.CLIPBOARD,		() -> ForkFarmer.newFrame("ForkFarmer Logs: ", Ico.LOGO, new LogView() )));
 		
 		
 		JTableHeader header = TABLE.getTableHeader();
@@ -343,6 +349,28 @@ public class ForkView extends JPanel {
 	    balanceRendererR.setHorizontalAlignment(JLabel.RIGHT);
 		
 		TABLE.getColumnModel().getColumn(MODEL.BALANCE_COLUMN).setCellRenderer(balanceRendererR);
+		
+		/*
+		TABLE.getRowSorter().addRowSorterListener(new RowSorterListener() {
+		    @Override
+		    public void sorterChanged(RowSorterEvent e) {
+		        System.out.println("sort event");
+		    }
+		});
+		*/
+	}
+	
+	
+	
+	static private void custom() {
+		List<Fork> fList = getSelected();
+		
+		SwingEX.LIPanel scriptPanel = new SwingEX.LIPanel("Enter Script: ");
+		if (true == ForkFarmer.showPopup("activate script: ", scriptPanel)) { 
+			String script = scriptPanel.getText();
+			ForkStarter.custom(fList, script);
+		}
+		
 	}
 	
 	static private void addColdWallet(Fork f) {
@@ -414,9 +442,11 @@ public class ForkView extends JPanel {
 	static private void webUpdate() {
 		if (javaOld() || !Settings.GUI.autoUpdate)
 			return;
-				
+		
+		LogView.add("Running web update");
 		XchForks.updatePrices();
 		AllTheBlocks.updateColdBalances();
+		Github.getVersion(Fork.I_LIST);
 	}
 	
 	static private void refresh() {
@@ -529,9 +559,6 @@ public class ForkView extends JPanel {
 	public static void daemonReader() {
 		ExecutorService SVC = Executors.newFixedThreadPool(Settings.GUI.daemonReaderWorkers);
 		
-		
-		
-		
 		try {
 			// initial load
 			webUpdate();
@@ -539,7 +566,9 @@ public class ForkView extends JPanel {
 				SVC.submit(() -> {
 						f.loadVersion();
 						f.loadWallets();
-						f.stdUpdate();  // -> Wallet/Farm Summary/GUI
+						f.loadWallet();
+						f.loadFarmSummary();
+						update(f);
 				});
 			}
 	
@@ -547,10 +576,15 @@ public class ForkView extends JPanel {
 			while(true) {
 				webUpdate();
 				for (Fork f: Fork.I_LIST) {
-					SVC.submit(() -> f.stdUpdate()); 
+					SVC.submit(() -> {
+						f.loadFarmSummary();
+						f.loadWallet();
+						update(f);
+					}); 
 					Util.blockUntilAvail(SVC);
 					Util.sleep(Settings.GUI.daemonReaderDelay);
 				}
+				
 				Util.sleep(1000);
 				
 			}

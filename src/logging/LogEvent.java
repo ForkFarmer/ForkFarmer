@@ -1,18 +1,20 @@
 package logging;
 
+import java.time.LocalDateTime;
+
 public class LogEvent {
 
 	private final String time;
-	private final String description;
+	private final String str;
 	
-	public LogEvent(String time, String description) {
-		this.time = time;
-		this.description = description;
+	public LogEvent(String str) {
+		this.time = LocalDateTime.now().toString();
+		this.str = str;
 	}
 	
 	
 	public String toString() {
-		return time + description;
+		return time + str;
 	}
 	
 	public String getTime() {
@@ -20,7 +22,7 @@ public class LogEvent {
 	}
 	
 	public String getDetails() {
-		return description;
+		return str;
 	}
 	
 }

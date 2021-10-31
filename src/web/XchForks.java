@@ -15,26 +15,29 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import forks.Fork;
+import logging.LogView;
 import main.MainGui;
 import main.Settings;
 import types.XchForksData;
 
 public class XchForks {
-	private static LocalDateTime lastUpdateATB;
+	private static LocalDateTime lastUpdate;
 	private static int UPDATE_RATE_SEC = 60*60;
 	
 	// Interacts with xchforks.com API. Thanks!
 	public static void updatePrices() {
-		if (null == lastUpdateATB)
-			lastUpdateATB = LocalDateTime.now();
-		else if (Duration.between(lastUpdateATB, LocalDateTime.now()).getSeconds() < UPDATE_RATE_SEC)
+		if (null == lastUpdate)
+			lastUpdate = LocalDateTime.now();
+		else if (Duration.between(lastUpdate, LocalDateTime.now()).getSeconds() < UPDATE_RATE_SEC)
 			return; // too early to update
 		
 		updatePricesForced();
 	}
 	
 	public static void updatePricesForced() {
-		lastUpdateATB = LocalDateTime.now();
+		lastUpdate = LocalDateTime.now();
+		
+		LogView.add("XchForks.com price update");
 		
 		List<XchForksData> list = new ArrayList<>();
 		
@@ -58,7 +61,6 @@ public class XchForks {
 	
 	        HttpResponse<String> response;
 	        
-	        
         	response = client.send(request,
 			        HttpResponse.BodyHandlers.ofString());
         	
@@ -77,6 +79,7 @@ public class XchForks {
     				if (null != d.latestVersion && !d.latestVersion.equals("Unknown")) {
     					f.latestVersion = d.latestVersion;
     					f.published = d.published;
+    					f.xchfSupport = true;
     				}
     			});
     		}

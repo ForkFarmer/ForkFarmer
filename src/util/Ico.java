@@ -35,9 +35,11 @@ public final class Ico {
 	public static final ImageIcon XCHF		= loadIcon("icons/xchforks.png",16);
 	public static final ImageIcon ATB		= loadIcon("icons/alltheblocks.png",16);
 	public static final ImageIcon DOWNLOAD	= loadIcon("icons/download.png");
+	public static final ImageIcon TARGET	= loadIcon("icons/target.png");
 	
 	public static final ImageIcon POSAT		= loadIcon("icons/posat.png",16);
 	public static final ImageIcon EDIT_START = loadIcon("icons/edit_start.png",16);
+	public static final ImageIcon POWER 	= loadIcon("icons/power.png");
 	public static final ImageIcon PORTS 	= loadIcon("icons/ports.png");
 	public static final ImageIcon QUESTION 	= loadIcon("icons/question.png");
 	public static final ImageIcon TOOLS 	= loadIcon("icons/tools.png");

@@ -6,21 +6,22 @@ import java.awt.Dimension;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 
 import util.LimitedQueue;
 import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
 public class LogView extends JPanel {
-	private final LimitedQueue<LogEvent> MSG_QUEUE = new LimitedQueue<>(20);
-	private final LogTableModel MODEL = new LogTableModel();
-	private final JTable TABLE = new JTable(MODEL);
-	private final JScrollPane JSP = new JScrollPane(TABLE);
+	private static final LimitedQueue<LogEvent> MSG_QUEUE = new LimitedQueue<>(50);
+	private static final LogTableModel MODEL = new LogTableModel();
+	private static final JTable TABLE = new JTable(MODEL);
+	private static final JScrollPane JSP = new JScrollPane(TABLE);
 	
-	class LogTableModel extends JFunTableModel<LogEvent> {
+	static class LogTableModel extends JFunTableModel<LogEvent> {
 		public LogTableModel() {
 			
-			addColumn("Time",   		150,	String.class, LogEvent::getTime);
+			addColumn("Time",   		200,	String.class, LogEvent::getTime);
 			addColumn("Description",  	 -1,	String.class, LogEvent::getDetails);
 			
 			onGetRowCount(() -> MSG_QUEUE.size());
@@ -39,11 +40,17 @@ public class LogView extends JPanel {
 		JSP.setPreferredSize(new Dimension(300,200));
 	}
 	
-	public synchronized void addToView(LogEvent le) {
+	public static synchronized void addToView(LogEvent le) {
 		MSG_QUEUE.add(le);
 		int idx = MSG_QUEUE.indexOf(le);
-		MODEL.fireTableDataChanged();
-		TABLE.scrollRectToVisible(TABLE.getCellRect(idx, 0, true));
+		SwingUtilities.invokeLater(() -> {
+			MODEL.fireTableDataChanged();
+			TABLE.scrollRectToVisible(TABLE.getCellRect(idx, 0, true));
+		});
+	}
+	
+	public static synchronized void add(String msg) {
+		addToView(new LogEvent(msg));
 	}
 
 	
