@@ -18,6 +18,8 @@ import javax.swing.table.JTableHeader;
 import main.ForkFarmer;
 import main.Settings;
 import types.Balance;
+import types.Percentage;
+import types.TimeU;
 import util.Ico;
 import util.swing.SwingEX;
 import util.swing.SwingUtil;
@@ -33,7 +35,6 @@ public class TransactionView extends JPanel {
 	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
 	
 	public static class TxTableModel extends JFunTableModel<Transaction> {
-		int DATE_COLUMN, AMOUNT_COLUMN, PRICE_COLUMN;
 		public TxTableModel() {
 			super();
 			
@@ -41,20 +42,18 @@ public class TransactionView extends JPanel {
 			List<Col<Transaction>> z = (List<Col<Transaction>>) Settings.settings.get("TxView Columns");
 			loadColumns(z);
 			
-			addColumn("",   		22,		Icon.class,		t->t.getIcon()).showMandatory();
+			addColumn("",   		22,		Icon.class,		t->t.getIcon()).showMandatory().fixed();
 			addColumn("Date",   	140,	String.class, 	t->t.date).showMandatory();
-			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).show(true);
+			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).show(true).fixed();
 			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol).show(true);
 			addColumn("Name", 		80,		String.class, 	t->t.f.name).show(true);
-			addColumn("Effort",		80,		Integer.class, 	t->t.effort).show(true);
-			addColumn("To",   		-1,		String.class, 	t->t.target).showMandatory();
-			addColumn("Amount", 	100,	Balance.class, 	t->t.amount).showMandatory();
-			addColumn("$", 			60,		Balance.class, 	t->t.value);
-			
-			DATE_COLUMN = getIndex("Date");
-			AMOUNT_COLUMN = getIndex("Amount");
-			PRICE_COLUMN = getIndex("$");
-			
+			addColumn("Effort",		80,		Percentage.class, 	t->t.effort).show(true);
+			addColumn("Prev Win",	90, 	TimeU.class, 	t->t.lastWinTime).show(true);
+			addColumn("To",   		450,	String.class, 	t->t.target).show(true).flex();
+			addColumn("Amount", 	80,		Balance.class, 	t->t.amount).show(true);
+			addColumn("$", 			60,		Balance.class, 	t->t.value).show(true);
+			addColumn("RW", 		22,		Icon.class, 	Transaction::getIco).show(true).fixed();
+		
 			onGetRowCount(() -> Transaction.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Transaction.LIST.get(r)));
 			onisCellEditable((r, c) -> false);
@@ -70,12 +69,14 @@ public class TransactionView extends JPanel {
 		
 		SwingUtil.persistDimension(JSP, () -> Settings.GUI.txViewDimension, d -> Settings.GUI.txViewDimension = d);
 		
+		SwingUtil.setColumnIcon(TABLE,MODEL.getIndex("RW"), Ico.TROPHY_GR);
+		
 		TABLE.setAutoCreateRowSorter(true);
-		TABLE.getRowSorter().toggleSortOrder(MODEL.DATE_COLUMN);
-		TABLE.getRowSorter().toggleSortOrder(MODEL.DATE_COLUMN);
+		TABLE.getRowSorter().toggleSortOrder(MODEL.getIndex("Date"));
+		TABLE.getRowSorter().toggleSortOrder(MODEL.getIndex("Date"));
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
-		POPUP_MENU.add(new SwingEX.JMI("View at posat.io", 	Ico.POSAT, 		() -> getSelected().forEach(Transaction::browse)));
+		POPUP_MENU.add(new SwingEX.JMI("View at ATB.net", 	Ico.ATB, 		() -> getSelected().forEach(Transaction::browse)));
 		POPUP_MENU.add(new SwingEX.JMI("Copy", 				Ico.CLIPBOARD,  TransactionView::copy));
 		POPUP_MENU.add(new SwingEX.JMI("Report", 			Ico.GRAPH,  	TransactionView::report));
 		POPUP_MENU.add(new SwingEX.JMI("Update Reward", 	Ico.TARGET,  	TransactionView::setReward));
@@ -92,8 +93,8 @@ public class TransactionView extends JPanel {
 		
 		MODEL.colList.forEach(c -> c.setSelectView(TABLE,HEADER_MENU));
 
-		SwingUtil.setColRight(TABLE, MODEL.AMOUNT_COLUMN);
-		SwingUtil.setColRight(TABLE, MODEL.PRICE_COLUMN);
+		SwingUtil.setColRight(TABLE, MODEL.getIndex("Amount"));
+		SwingUtil.setColRight(TABLE, MODEL.getIndex("$"));
 	}
 	
 	private static List<Transaction> getSelected() {
@@ -125,8 +126,7 @@ public class TransactionView extends JPanel {
 	}
 	
 	static private void report() {
-		TxReportView trv  = new TxReportView(getSelected());
-		ForkFarmer.showPopup("TxReport: ", trv);
+		ForkFarmer.newFrame("TxReport: ", Ico.LOGO, new TxReportView(getSelected()));
 	}
 	
 }

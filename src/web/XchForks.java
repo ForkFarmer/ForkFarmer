@@ -10,15 +10,14 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-
 import forks.Fork;
 import logging.LogView;
 import main.MainGui;
 import main.Settings;
 import types.XchForksData;
+import util.json.JsonArray;
+import util.json.JsonObject;
+import util.json.Jsoner;
 
 public class XchForks {
 	private static LocalDateTime lastUpdate;
@@ -66,11 +65,10 @@ public class XchForks {
         	
         	String jsonResponse = response.body();
         	
-        	JSONParser parser = new JSONParser();
-        	JSONArray jsonArray = (JSONArray) parser.parse(jsonResponse);
+        	JsonArray jsonArray = (JsonArray) Jsoner.deserialize(jsonResponse);
         	
         	for(Object o : jsonArray)
-    			list.add(new XchForksData((JSONObject) o));
+    			list.add(new XchForksData((JsonObject) o));
         	
         	for(XchForksData d : list) {
     			Fork.LIST.stream().filter(f -> f.symbol.equals(d.symbol)).forEach(f -> {

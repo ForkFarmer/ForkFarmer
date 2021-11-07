@@ -278,7 +278,8 @@ public class Util {
 		if (-1 == targetIndex)
 			return null; 
 		str = str.substring(str.indexOf(target) + target.length());
-		return str.substring(0,str.indexOf(" "));
+		int endIndex = str.indexOf(" ");
+		return (-1 != endIndex) ? str.substring(0,endIndex) : str;
 	}
 	
 	public static String runProcessWait(String... args) {
@@ -336,6 +337,8 @@ public class Util {
 	}
 
 	public static void openLink(String url) {
+		if (null == url)
+			return;
 		try {
 	    	if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 	    		Desktop.getDesktop().browse(new URI(url));

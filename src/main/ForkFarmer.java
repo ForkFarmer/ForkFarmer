@@ -33,13 +33,12 @@ public class ForkFarmer {
 		javax.swing.SwingUtilities.invokeLater(ForkFarmer::startGUI);
 	}
 	
-	
 	private static void startGUI() {
 		Settings.Load();
 		
-		FRAME = new JFrame("ForkFarmer 2.3");
+		FRAME = new JFrame("ForkFarmer 2.4");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		FRAME.setIconImage(Ico.LOGO.getImage());
+		FRAME.setIconImage(Ico.FFLOGO.getImage());
 
 		//Create and set up the content pane.
 		final MainGui mainPanel = new MainGui();
@@ -72,7 +71,7 @@ public class ForkFarmer {
 		
 	}
 	
-	public static void newFrame(String title, ImageIcon ico, JPanel content) {
+	public static JFrame newFrame(String title, ImageIcon ico, JPanel content) {
 		JFrame frame = new JFrame(title);
 		frame.setIconImage(null == ico ? Ico.LOGO.getImage() : ico.getImage());
 		frame.setTitle(title);
@@ -80,6 +79,7 @@ public class ForkFarmer {
 		frame.pack();
 		frame.setLocationRelativeTo(FRAME);
 		frame.setVisible(true);
+		return frame;
 	}
 
 	public static void showMsg(String title,String message) {

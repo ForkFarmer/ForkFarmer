@@ -13,6 +13,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -20,6 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
@@ -28,12 +30,20 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.table.TableCellRenderer;
 
 import util.Util;
 
 @SuppressWarnings("serial")
 public class SwingEX {
 	// most of these classes are to save a few lines of code for commonly used component idioms
+	
+	public static class JComponentTableCellRenderer implements TableCellRenderer {
+		  public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+		      boolean hasFocus, int row, int column) {
+		    return (JComponent) value;
+		  }
+		}
 
 	public static class JPM extends JPopupMenu {
 		Runnable onVisible;
@@ -181,9 +191,21 @@ public class SwingEX {
 		}
 		
 		public double getAsDouble() {
+			if (getText().equals(""))
+				return 0;
 			return Double.parseDouble(getText());
 		}
 
+		public void setChangeListener(final Runnable r) {
+			field.getDocument().addDocumentListener(new DocumentListener() {
+				  public void changedUpdate(DocumentEvent e) {r.run();}
+				  public void removeUpdate(DocumentEvent e) {r.run();}
+				  public void insertUpdate(DocumentEvent e) {r.run();}
+			});
+			
+		}
+		
+		
 	}
 	
 	
@@ -304,23 +326,6 @@ public class SwingEX {
 		public String getText() {
 			return field.getText();
 		}
-
-		/*
-		public void addLoadButton() {
-			JFileChooser FC = new JFileChooser();
-			add(new SwingEX.Btn("Load", Ico.DIRMON, () -> {
-				if (JFileChooser.APPROVE_OPTION  == FC.showOpenDialog(MainGui.FRAME)) {
-					try {
-						field.setText(Util.loadToString(FC.getSelectedFile()));
-					} catch (IOException e) {
-						field.setText("Error: " + FC.getSelectedFile() + "(" + e.getMessage() +")");
-					}	
-				}
-				
-			}), BorderLayout.LINE_END);
-			
-		}
-		*/
 	}
 	
 	public static class JMIco extends JMenu {

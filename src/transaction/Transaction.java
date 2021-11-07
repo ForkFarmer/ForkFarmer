@@ -16,7 +16,7 @@ import forks.Fork;
 import forks.ForkView;
 import logging.LogView;
 import types.Balance;
-import types.Effort;
+import types.Percentage;
 import types.TimeU;
 import util.FFUtil;
 import util.Ico;
@@ -36,7 +36,9 @@ public class Transaction {
 	public String target ="";
 	public String date = "";
 	public boolean blockReward;
-	Effort effort = Effort.EMPTY;
+	public TimeU lastWinTime = TimeU.BLANK;
+	Percentage effort = Percentage.EMPTY;
+	
 	
 	public Transaction(Fork f, String hash, double amount, String target, String date, boolean blockReward) {
 		this.f = f;
@@ -46,6 +48,7 @@ public class Transaction {
 		this.date = date;
 		this.blockReward = blockReward;
 		this.updateValue();
+		//new TimeU(date);
 		
 		if (blockReward && getTimeSince().inMinutes() < 5)
 			effort = f.getEffort();
@@ -53,6 +56,10 @@ public class Transaction {
 	
 	public void updateValue() {
 		this.value = new Balance(amount.amt * f.price,2);
+	}
+	
+	public ImageIcon getIco() {
+		return blockReward ? Ico.TROPHY : null;
 	}
 	
 	
@@ -77,11 +84,11 @@ public class Transaction {
 		return TimeU.getTimeSince(LocalDateTime.parse(date, FFUtil.DTF));
 	}
 	
-	public static boolean load(Fork f) {
-		boolean newTX = false;
+	public static Transaction load(Fork f) {
+		Transaction newTX = null;
 
 		if (-1 == f.wallet.index)
-			return false;
+			return null;
 		
 		LogView.add(f.name + " getting transactions");
 
@@ -116,7 +123,6 @@ public class Transaction {
 					if (TSET.contains(tHash)) // stop parsing if we already have this transaction
 						continue;
 					TSET.add(tHash);
-					newTX = true;
 					
 					@SuppressWarnings("unused")
 					String status  = br.readLine();
@@ -136,11 +142,11 @@ public class Transaction {
 					String address = br.readLine().substring(12);
 					String date = br.readLine().substring(12);
 					
+					
 					synchronized (Transaction.LIST) { 
+ 						Optional<Transaction> oT = LIST.stream().filter(z -> z.f.symbol.equals(f.symbol) && z.date.equals(date)).findAny();
 					
-						Optional<Transaction> oT = LIST.stream().filter(z -> z.f.symbol.equals(f.symbol) && z.date.equals(date)).findAny();
-					
-						if (Math.abs(amount - f.fd.nftReward) < .01)
+						if (Math.abs(amount - f.fd.nftReward) < .02)
 							blockReward = true;
 						else if (firstWord.equals("1E-10")) // probably faucet?
 							blockReward = true;
@@ -149,15 +155,17 @@ public class Transaction {
 					
 						if (oT.isPresent()) {
 							Transaction t = oT.get();
+							newTX = t;
 							t.amount.add(amount);
 							t.updateValue();
 							t.blockReward |= blockReward;
-							if (Math.abs(amount - f.fullReward) < .01)
+							if (Math.abs(t.getAmount() - f.fullReward) < .02)
 								t.blockReward = true;
-							if (t.effort == Effort.EMPTY)
+							if (t.effort == Percentage.EMPTY)
 								t.effort = f.getEffort();
 						} else {
-							Transaction t = new Transaction(f, tHash,amount,address,date, blockReward); 
+							Transaction t = new Transaction(f, tHash,amount,address,date, blockReward);
+							newTX = t;
 							if (0 != amount)
 								LIST.add(t);
 						}
@@ -177,12 +185,16 @@ public class Transaction {
 		Util.closeQuietly(pw);
 		Util.waitForProcess(p);
 			
-		if (newTX) {
+		if (null != newTX) {
 			synchronized(Transaction.LIST) {
 			// update fork last win handle
+			if (null != f.lastWin && newTX.blockReward)
+				newTX.lastWinTime = f.lastWin.getTimeSince();
+				
 			f.lastWin = LIST.stream()
-					.filter(t -> f == t.f && t.blockReward)
-					.reduce((a,b) -> a.getTimeSince().inMinutes() < b.getTimeSince().inMinutes() ? a:b).orElse(null);
+				.filter(t -> f == t.f && t.blockReward)
+				.reduce((a,b) -> a.getTimeSince().inMinutes() < b.getTimeSince().inMinutes() ? a:b).orElse(null);
+			
 			}
 			
 			ForkView.update(f);
@@ -196,9 +208,12 @@ public class Transaction {
 	}
 	
 	public void browse() {
-		String name = f.name;
-		String addr = target;
-		Util.openLink("https://" + name + ".posat.io/address/" + addr);
+		
+		String atbPath = f.fd.atbPath;
+		if (null != atbPath) {
+			String addr = target;
+			Util.openLink("https://alltheblocks.net/" + atbPath + "/address/" + addr);
+		}
 	}
 	
 }

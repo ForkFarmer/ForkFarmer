@@ -22,7 +22,8 @@ public class Col<T> {
 	public transient BiConsumer<T,Object> consumer;
 	public transient JCheckBoxMenuItem jmi = null;
 	public transient boolean loaded;
-	
+	public boolean fixed;
+	public boolean flex;
 
 	public Col(final String name, final int width,  final Class<?> type, final Function<T, Object> getValue) {
 		this(name,width,type,getValue,null);
@@ -64,7 +65,7 @@ public class Col<T> {
 				continue;
 			for (int z = 0; z < cols.length; z++) { // this is annoying
 				if (table.getColumnName(z) == cols[i].name)
-					setWidth(table.getColumnModel().getColumn(z),cols[i].width);
+					cols[i].setWidth(table.getColumnModel().getColumn(z),cols[i].width);
 			}
 		}
 	}
@@ -74,9 +75,15 @@ public class Col<T> {
 		return getValue.apply((T)o);
 	}
 
-	private static void setWidth(TableColumn column, int w) {
-		column.setMinWidth(w);
-		column.setMaxWidth(w);
+	private void setWidth(TableColumn column, int w) {
+		
+		column.setMinWidth(flex ? 0 : w);
+		
+		if (fixed)
+			column.setMaxWidth(w);
+		else
+			column.setMaxWidth(2*w);
+		
 		column.setPreferredWidth(w);
 	}
 
@@ -121,6 +128,16 @@ public class Col<T> {
 	
 	public Col<T> editable() {
 		editable = true;
+		return this;
+	}
+
+	public Col<T> fixed() {
+		fixed = true;
+		return this;
+	}
+
+	public Col<T> flex() {
+		flex = true;
 		return this;
 	}
 	

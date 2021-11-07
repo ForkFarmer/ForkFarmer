@@ -31,6 +31,7 @@ import javax.swing.table.JTableHeader;
 
 import ffutilities.ForkLogViewer;
 import ffutilities.MissingForks;
+import ffutilities.PlotCalc;
 import ffutilities.PortCheckerView;
 import logging.LogView;
 import main.ForkFarmer;
@@ -38,7 +39,7 @@ import main.MainGui;
 import main.Settings;
 import peer.PeerView;
 import types.Balance;
-import types.Effort;
+import types.Percentage;
 import types.ReadTime;
 import types.TimeU;
 import types.Wallet;
@@ -66,7 +67,7 @@ public class ForkView extends JPanel {
 	static boolean warnJava = false;
 	
 	public static class ForkTableModel extends JFunTableModel<Fork> implements Reorderable {
-		private int BALANCE_COLUMN, PRICE_COLUMN, EQ_COLUMN, HEIGHT_COLUMN, TIME_COLUMN, LIGHT_COLUMN;
+		private int BALANCE_COLUMN, PRICE_COLUMN, EQ_COLUMN, HEIGHT_COLUMN, TIME_COLUMN, LIGHT_COLUMN, ATB_COLUMN, LOAD_COLUMN;
 		
 		public ForkTableModel() {
 			super();
@@ -74,13 +75,13 @@ public class ForkView extends JPanel {
 			List<Col<Fork>> z = (List<Col<Fork>>) Settings.settings.get("ForkView Columns");
 			loadColumns(z);
 			
-			addColumn(" ",   		22,	Icon.class,		f->f.ico).showMandatory();
+			addColumn("Logo",   	22,	Icon.class,		f->f.ico).show(true).fixed();
 			addColumn("Symbol",  	50,	String.class, 	f->f.symbol).show(true);
 			addColumn("Name",   	80,	String.class,	f->f.name);
-			addColumn("Balance",	100,Balance.class,	f->f.balance).show(true);
+			addColumn("Balance",	80, Balance.class,	f->f.balance).show(true);
 			addColumn("$",			60, Double.class, 	f->f.price).show(true).editable();
 			addColumn("Equity",		60, Balance.class, 	f->f.equity);
-			addColumn("Netspace",	80, NetSpace.class, f->f.netSpace).show(true);
+			addColumn("Netspace",	80, NetSpace.class, f->f.fd.netspace).show(true);
 			addColumn("Height",		80, Balance.class,  f->f.height);
 			addColumn("Farm Size",	80, NetSpace.class, f->f.plotSpace);
 			addColumn("Version",	80, String.class,   f->f.version);
@@ -88,17 +89,21 @@ public class ForkView extends JPanel {
 			addColumn("Published",	80, String.class,   f->f.published);
 			addColumn("Sync",		80, String.class,   f->f.syncStatus);
 			addColumn("Farm",		80, String.class,   f->f.farmStatus).show(true);
-			addColumn("ETW",		70, TimeU.class,    f->f.etw);
+			addColumn("ETW",		70, TimeU.class,    f->f.fd.etw).show(true);
 			addColumn("24H Win",	60,	Double.class, 	f->f.dayWin);
-			addColumn("Last Win",	90, TimeU.class, 	f->f.getPreviousWin());
-			addColumn("Effort",		60,	Effort.class, 	Fork::getEffort);
-			addColumn("Address",	-1,	Wallet.class, 	f->f.wallet).showMandatory();
+			addColumn("24H BW",		60,	Long.class, 	f->f.dayWinBC);
+			addColumn("Prev Win",	90, TimeU.class, 	f->f.getPreviousWin());
+			addColumn("Effort",		50,	Percentage.class, 	Fork::getEffort);
+			addColumn("Address",	450,Wallet.class, 	f->f.wallet).show(true).flex();
 			addColumn("Reward",		40,	Double.class, 	f->f.fullReward).editable();
 			addColumn("#W",			40,	Integer.class, 	f->f.walletList.size());
+			addColumn("Load", 		40, String.class, 	f->f.load);
 			addColumn("Time",		50,	ReadTime.class, f->f.readTime).show(true);
 			addColumn("FN",			30,	Boolean.class, 	f->f.fullNode).editable();
 			addColumn("WN",			30,	Boolean.class, 	f->f.walletNode).editable();
-			addColumn("", 			22, Icon.class, 	f->f.statusIcon).showMandatory();
+			addColumn("", 			22, Icon.class, 	f->f.statusIcon).showMandatory().fixed();
+			addColumn("Nothing", 	22, Boolean.class, 	f->f.nothing).editable().fixed();
+			addColumn("ATB",		22, Icon.class, 	f->f.fd.atbIcon).show(true).fixed();
 			
 			BALANCE_COLUMN = getIndex("Balance");
 			PRICE_COLUMN = getIndex("$");
@@ -107,7 +112,9 @@ public class ForkView extends JPanel {
 			// these updated alot
 			HEIGHT_COLUMN = getIndex("Height");
 			TIME_COLUMN = getIndex("Time");
+			LOAD_COLUMN = getIndex("Load");
 			LIGHT_COLUMN = getIndex("");
+			ATB_COLUMN = getIndex("ATB");
 			
 			onGetRowCount(() -> Fork.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Fork.LIST.get(r)));
@@ -131,6 +138,9 @@ public class ForkView extends JPanel {
 				fireTableCellUpdated(row, col);
 			} else if (getIndex("WN") == col) {
 				Fork.LIST.get(row).walletNode = (boolean) value;
+				fireTableCellUpdated(row, col);
+			} else if (getIndex("Nothing") == col) {
+				Fork.LIST.get(row).nothing = (boolean) value;
 				fireTableCellUpdated(row, col);
 			}
 			
@@ -174,6 +184,7 @@ public class ForkView extends JPanel {
 	static final JMenu COMMUNITY_SUBMENU = new SwingEX.JMIco("Community", Ico.PEOPLE);
 	
 	static final JMenuItem STAGGER_JMI = new SwingEX.JMI("Stagger", 	Ico.START,	() -> ForkView.staggerStartDialog());
+	
 	public ForkView() {
 		setLayout(new BorderLayout());
 		add(JSP,BorderLayout.CENTER);
@@ -182,7 +193,12 @@ public class ForkView extends JPanel {
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
 		JSP.setComponentPopupMenu(POPUP_MENU);
-		
+			    
+	    SwingUtil.setColumnEmpty(TABLE,MODEL.getIndex("Logo"));
+	    SwingUtil.setColumnEmpty(TABLE,MODEL.getIndex("Nothing"));
+	    SwingUtil.setColumnIcon(TABLE,MODEL.getIndex("ATB"), Ico.ATB_GRAY);
+	    SwingUtil.setColumnLabel(TABLE,MODEL.getIndex("Reward"), "RW");
+	    
 		POPUP_MENU.addPopupMenuListener(new PopupMenuListener() {
 			@Override public void popupMenuCanceled(PopupMenuEvent pme) {
 				
@@ -217,11 +233,13 @@ public class ForkView extends JPanel {
             	ForkData fd = ForkData.MAP.get(f.symbol);
             	if (null != fd) {
 	            	if (null != fd.websiteURL)
-	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Homepage", 	Ico.HOME, () -> Util.openLink(fd.websiteURL)));
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Homepage", Ico.HOME, () -> Util.openLink(fd.websiteURL)));
             		if (null != fd.discordURL)
 	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Discord", 	Ico.DISCORD, () -> Util.openLink(fd.discordURL)));
 	            	if (null != fd.gitPath)
 	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " GitHub", 	Ico.GITHUB, () -> Util.openLink(ForkData.GITHUB_URL + fd.gitPath)));
+	            	if (null != fd.twitterURL)
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Twitter",	Ico.TWITTER, () -> Util.openLink(fd.twitterURL)));
 	            	if (null != fd.calculatorURL)
 	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Calculator",	Ico.XCHCALC, () -> Util.openLink(fd.calculatorURL)));
             	}
@@ -296,6 +314,7 @@ public class ForkView extends JPanel {
 			JMenuItem update = new SwingEX.JMI("Force Update", 	Ico.DOLLAR,  	() -> new Thread(ForkView::webUpdateForced).start());
 			update.setToolTipText("from xchforks.com / alltheblocks.net");
 			TOOLS_SUBMENU.add(update);
+			TOOLS_SUBMENU.add(new SwingEX.JMI("Plot Calc",Ico.EXPAND, () -> ForkFarmer.newFrame("Plot Calculator", Ico.EXPAND, new PlotCalc()).setResizable(false)));
 			
 		POPUP_MENU.add(COMMUNITY_SUBMENU);
 			COMMUNITY_SUBMENU.add(new SwingEX.JMI("xchforks.com", 			Ico.XCHF,() -> Util.openLink("https://xchforks.com/")));
@@ -314,8 +333,7 @@ public class ForkView extends JPanel {
 			ForkFarmer.newFrame(f.name + ": Peer Connections", f.ico, new PeerView(f)))));
 		POPUP_MENU.addSeparator();
 		POPUP_MENU.add(new SwingEX.JMI("Debug",			Ico.BUG,		() -> getSelected().forEach(Fork::showLastException)));
-		POPUP_MENU.add(new SwingEX.JMI("FF Logs",		Ico.CLIPBOARD,		() -> ForkFarmer.newFrame("ForkFarmer Logs: ", Ico.LOGO, new LogView() )));
-		
+		POPUP_MENU.add(new SwingEX.JMI("FF Logs",		Ico.CLIPBOARD,	() -> ForkFarmer.newFrame("ForkFarmer Logs: ", Ico.LOGO, new LogView() )));
 		
 		JTableHeader header = TABLE.getTableHeader();
 		header.setComponentPopupMenu(HEADER_MENU);
@@ -359,8 +377,6 @@ public class ForkView extends JPanel {
 		});
 		*/
 	}
-	
-	
 	
 	static private void custom() {
 		List<Fork> fList = getSelected();
@@ -444,13 +460,19 @@ public class ForkView extends JPanel {
 			return;
 		
 		LogView.add("Running web update");
+		
 		XchForks.updatePrices();
-		AllTheBlocks.updateColdBalances();
+		AllTheBlocks.updateATB();
 		Github.getVersion(Fork.I_LIST);
 	}
 	
 	static private void refresh() {
-		getSelected().forEach(Fork::refresh);
+		getSelected().forEach(f -> {
+			new Thread(() -> { 
+				f.loadVersion();
+				f.loadWallet();
+			}).start();
+		});
 	}
 	
 	static private void removeSelected() {
@@ -534,7 +556,9 @@ public class ForkView extends JPanel {
 				f.updateIcon();
 				MODEL.fireTableCellUpdated(row, MODEL.TIME_COLUMN);
 				MODEL.fireTableCellUpdated(row, MODEL.LIGHT_COLUMN);
+				MODEL.fireTableCellUpdated(row, MODEL.ATB_COLUMN);
 				MODEL.fireTableCellUpdated(row, MODEL.HEIGHT_COLUMN);
+				MODEL.fireTableCellUpdated(row, MODEL.LOAD_COLUMN);
 			}
 		}); 
 	}

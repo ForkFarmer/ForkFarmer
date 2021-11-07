@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.event.DocumentEvent;
@@ -21,6 +22,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.text.JTextComponent;
 
 import forks.Fork;
@@ -185,6 +188,29 @@ public class SwingUtil {
 			}
 		});
 	}
+
+
+	private static TableCellRenderer renderer;
+	public static void setColumnIcon(JTable table, int idx, ImageIcon ico) {
+		if (null == renderer)
+			renderer = new SwingEX.JComponentTableCellRenderer();
+		TableColumn atbColumn = table.getColumnModel().getColumn(idx);
+	    atbColumn.setHeaderRenderer(renderer);
+	    atbColumn.setHeaderValue(new JLabel("", ico, JLabel.CENTER));
+	}
+	
+	public static void setColumnEmpty(JTable table, int idx) {
+		setColumnLabel(table,idx,"");
+	}
+
+	public static void setColumnLabel(JTable table, int idx, String str) {
+		if (null == renderer)
+			renderer = new SwingEX.JComponentTableCellRenderer();
+		TableColumn atbColumn = table.getColumnModel().getColumn(idx);
+	    atbColumn.setHeaderRenderer(renderer);
+	    atbColumn.setHeaderValue(new JLabel(str, JLabel.CENTER));
+	}
+
 	
 	
 }

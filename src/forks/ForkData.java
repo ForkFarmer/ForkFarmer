@@ -1,6 +1,7 @@
 package forks;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,12 +10,13 @@ import java.util.Optional;
 
 import javax.swing.ImageIcon;
 
-import org.json.simple.JSONObject;
-
 import types.ReadTime;
+import types.TimeU;
 import types.Wallet;
 import util.Ico;
+import util.NetSpace;
 import util.Util;
+import util.json.JsonObject;
 
 public class ForkData {
 	public static final String GITHUB_URL = "https://www.github.com/";
@@ -46,21 +48,30 @@ public class ForkData {
 	public String xchForksURL;
 	public String calculatorURL;
 	public String websiteURL;
+	public String twitterURL;
 	public String exeName;
 	String basePath;
 	
+	public long peakHeight;
+	public long peakAge;
+	public ImageIcon atbIcon;
+	
+	public NetSpace netspace;
+	public TimeU etw = TimeU.BLANK;
+	
 	public String atbPath;
 	
-	public ForkData(JSONObject jo) {
+	public ForkData(JsonObject jo) {
+		
 		try {
 			coinPrefix = ((String) jo.get("coinPrefix")).toUpperCase();
 			displayName = (String) jo.get("displayName");
 			userFolder = (String) jo.get("userFolder");
 			daemonFolder = (String) jo.get("daemonFolder");
 			daemonFolder2 = (String) jo.get("daemonFolder2");
-			price = (Double) jo.get("price");
-			fullReward = (Double) jo.get("reward");
-			baseRatio = (Double) jo.get("baseRatio");
+			price =  ((BigDecimal)jo.get("price")).doubleValue();
+			fullReward = ((BigDecimal)jo.get("reward")).doubleValue();
+			baseRatio = ((BigDecimal)jo.get("baseRatio")).doubleValue();
 			nftReward = fullReward * baseRatio;
 			ico = Ico.getForkIcon(coinPrefix.toLowerCase());
 		
@@ -69,11 +80,11 @@ public class ForkData {
 			gitPath = (String) jo.get("gitPath");
 			xchForksURL = (String) jo.get("xchForksURL");
 			websiteURL = (String) jo.get("websiteURL");
+			twitterURL = (String) jo.get("twitterURL");
 			exeName = (String) jo.get("exeName");
 			
 			calculatorURL = (String) jo.get("cfcalc");
-			Long mojoPerCoinL = (Long) jo.get("mojoPerCoin");
-			mojoPerCoin = (null != mojoPerCoinL) ? mojoPerCoinL : 0;
+			mojoPerCoin = jo.containsKey("mojoPerCoin") ? ((BigDecimal)jo.get("mojoPerCoin")).longValue() : 0;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -148,10 +159,6 @@ public class ForkData {
 			
 		}
 	}
-
-	public static Optional<ForkData> getbyAddress(String address) {
-		return LIST.stream().filter(f -> address.startsWith(f.coinPrefix.toLowerCase())).findAny();	
-	}
 	
 	private void loadFork() {
 		if (!new File(exePath).exists())
@@ -215,4 +222,11 @@ public class ForkData {
 		
 	}
 	
+	public static Optional<ForkData> getbyAddress(String address) {
+		return LIST.stream().filter(f -> address.startsWith(f.coinPrefix.toLowerCase())).findAny();	
+	}
+
+	public static Optional<ForkData> getBySymbol(String prefix) {
+		return LIST.stream().filter(f -> prefix.equals(f.coinPrefix.toLowerCase())).findAny();
+	}
 }

@@ -1,15 +1,8 @@
 package web;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import forks.Fork;
 import forks.ForkView;
@@ -36,30 +29,12 @@ public class Github {
 			
 			if (null == f.fd.gitPath)
 				continue;
-			
-			HttpClient client = HttpClient.newBuilder()
-					.connectTimeout(Duration.ofSeconds(5))
-					.build();
-			
-			HttpRequest request = HttpRequest.newBuilder()
-	                .uri(URI.create("https://api.github.com/repos/" + f.fd.gitPath + "/releases/latest"))
-	                .timeout(Duration.ofSeconds(5))
-	                .build();
-			
-			HttpResponse<String> response;
-			
 	        
 	        try {
-	        	response = client.send(request,
-				        HttpResponse.BodyHandlers.ofString());
+	        	JSObj jo = HttpUtil.requestJSO("https://api.github.com/repos/" + f.fd.gitPath + "/releases/latest");
 	        	
-	        	String jsonResponse = response.body();
-	        	
-	        	JSONParser parser = new JSONParser();
-	        	JSONObject jo = (JSONObject) parser.parse(jsonResponse);
-	        	
-	        	String tagName = (String) jo.get("tag_name");
-	        	String releasedOn = (String) jo.get("published_at");
+	        	String tagName = jo.getStr("tag_name"); 
+	        	String releasedOn = jo.getStr("published_at");
 	        	
 	        	if (null != tagName && null != releasedOn) {
 	        		f.latestVersion = tagName;

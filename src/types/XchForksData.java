@@ -1,6 +1,6 @@
 package types;
 
-import org.json.simple.JSONObject;
+import util.json.JsonObject;
 
 public class XchForksData {
 	public String name;
@@ -11,7 +11,7 @@ public class XchForksData {
 	public String latestVersion;
 	public String published;
 
-	public XchForksData(JSONObject jo) {
+	public XchForksData(JsonObject jo) {
 		name = (String)jo.get("name");
 		symbol = (String)jo.get("symbol");
 		

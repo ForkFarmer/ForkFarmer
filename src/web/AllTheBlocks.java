@@ -1,5 +1,6 @@
 package web;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -10,37 +11,38 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-
 import forks.Fork;
+import forks.ForkData;
+import forks.ForkView;
 import logging.LogView;
 import main.MainGui;
 import types.Balance;
 import util.Ico;
+import util.NetSpace;
+import util.json.JsonArray;
+import util.json.JsonObject;
+import util.json.Jsoner;
 
 // Interacts with alltheblocks.net API. Thanks!
 public class AllTheBlocks {
 	public static LocalDateTime lastUpdate;
 	private static int UPDATE_RATE_SEC = 60*5;
 	
-	@SuppressWarnings("unchecked")
 	public static String createJSonReq(List<String> addrList) {
-		JSONObject reqObject = new JSONObject();
+		JsonObject reqObject = new JsonObject();
 		reqObject.put("addresses", addrList);
-		return reqObject.toJSONString();
+		return Jsoner.serialize(reqObject);
 	}
 	
-	public static void updateColdBalances() {
+	public static void updateATB() {
 		if (null == lastUpdate)
 			lastUpdate = LocalDateTime.now();
 		else if (Duration.between(lastUpdate, LocalDateTime.now()).getSeconds() < UPDATE_RATE_SEC)
 			return; // too early to update
 		updateColdForced();
+		updateStatsForced();
 	}
 	
-	@SuppressWarnings("unchecked")
 	public static void updateColdForced() {
 		lastUpdate = LocalDateTime.now();
 		
@@ -73,29 +75,32 @@ public class AllTheBlocks {
 	        	
         	String jsonResponse = response.body();
 	        	
-        	JSONParser parser = new JSONParser();
-        	JSONArray ja = (JSONArray) parser.parse(jsonResponse);
-	
-        	ja.forEach(item -> {
-        	    JSONObject jo = (JSONObject) item;
-        	    String address = (String)jo.get("address");
-	            	
-           	for (Fork f: Fork.LIST) {
-            		if (null != f.wallet && f.wallet.addr.equals(address))
-            			updateFork(f,jo);
-           		}
-	        });
+        	Object o = Jsoner.deserialize(jsonResponse);
+        	
+        	if (o instanceof JsonObject) {
+        		updateForkWallet((JsonObject)o);
+        	} else if (o instanceof JsonArray) {
+        		JsonArray ja = (JsonArray)o;
+        		ja.forEach(item -> {
+        			updateForkWallet((JsonObject)item);
+        		});
+        	}
         	MainGui.updateTotal();
         } catch (Exception e) {
         	e.printStackTrace();
 		} 
 	}
 	
+	private static void updateForkWallet(JsonObject jo) {
+		String address = (String)jo.get("address");
+		for (Fork f: Fork.LIST) {
+				if (null != f.wallet && f.wallet.addr.equals(address))
+					updateFork(f,jo);
+		}
+	}
+	
 	public static void updateColdBalance(Fork f) {
-		HttpClient client = HttpClient.newBuilder()
-				.connectTimeout(Duration.ofSeconds(5))
-				.build();
-
+		
 		if (null == f.fd.atbPath) {
 			f.lastException = new Exception(f.name + " not supported by alltheblocks.net");
 			f.statusIcon = Ico.RED;
@@ -108,23 +113,8 @@ public class AllTheBlocks {
 			f.updateBalance(new Balance("error",0));
 		}
 		
-		HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.alltheblocks.net/" + f.fd.atbPath + "/address/" +f.walletAddr))
-                .timeout(Duration.ofSeconds(5))
-                .build();
-		
-		HttpResponse<String> response;
-        
         try {
-        	response = client.send(request,
-			        HttpResponse.BodyHandlers.ofString());
-        	
-        	String jsonResponse = response.body();
-        	
-        	JSONParser parser = new JSONParser();
-        	JSONObject jo = (JSONObject) parser.parse(jsonResponse);
-        	
-        	updateFork(f,jo);
+        	updateFork(f,HttpUtil.requestJSO("https://api.alltheblocks.net/" + f.fd.atbPath + "/address/" +f.walletAddr).jo);
         } catch (Exception e) {
         	f.lastException = e;
 			f.statusIcon = Ico.RED;
@@ -132,12 +122,49 @@ public class AllTheBlocks {
 		} 
 	}
 
-	private static void updateFork(Fork f, JSONObject jo) {
-		long balance = (long)jo.get("balance");
-    	long balanceBefore = (long)jo.get("balanceBefore");
+	private static void updateFork(Fork f, JsonObject jo) {
+		long balance = ((BigDecimal)jo.get("balance")).longValue();
+    	long balanceBefore = ((BigDecimal)jo.get("balanceBefore")).longValue();
     	        	
     	f.dayWin = (double)(balance-balanceBefore)/(double)f.fd.mojoPerCoin;
     	Balance b = new Balance((double)balance/(double)f.fd.mojoPerCoin);
     	f.updateBalance(b);
 	}
+	
+	public static void updateStatsForced() {
+        try {
+        	String jsonResponse = HttpUtil.request("https://api.alltheblocks.net/atb/blockchain/settings-and-stats").body();
+        	JsonArray ja = (JsonArray) Jsoner.deserialize(jsonResponse);
+        	
+        	ja.forEach(item -> {
+        	    JsonObject jo = (JsonObject) item;
+        	    String symbol = (String)jo.get("coinPrefix");
+        	    
+        	    JsonObject stats = (JsonObject) jo.get("stats");
+        	    
+        	    NetSpace ns = new NetSpace(((BigDecimal)(stats.get("netspaceBytes"))));
+        	    long peakHeight = ((BigDecimal)stats.get("peakHeight")).longValue();
+        	    long peakAge = ((BigDecimal)stats.get("peakAgeSeconds")).longValue();
+        	    
+        	    ForkData.getBySymbol(symbol.toLowerCase()).ifPresent(fd -> {
+        	    	fd.peakHeight = peakHeight;
+        	    	fd.peakAge = peakAge;
+        	    	fd.netspace = ns;
+        	    	
+        	    	if (0 == peakHeight)
+        	    		fd.atbIcon = null;
+        	    	else
+        	    		fd.atbIcon = peakAge < 600 ? Ico.ATB_G : Ico.ATB_R;  
+        	    	
+        	    });
+        	    
+        	    ForkView.update();
+        	});
+        } catch (Exception e) {
+        	e.printStackTrace();
+		} 	
+		
+		
+	}
+	
 }

@@ -60,12 +60,16 @@ public class PortCheckerView extends JPanel {
                 Fork thisFork = Fork.LIST.get(row);
                 if (thisFork.cold)
                 	return c;
-                Fork.LIST.stream()
-                	.filter(f -> !f.cold)
-                	.filter(f -> thisFork != f)
-                	.filter(f -> f.fp.anyMatch(port))
-                	.findAny()
-                	.ifPresent(f -> c.setForeground(Color.RED));
+                
+                for (Fork f : Fork.LIST) {
+                	if (f.cold || f == thisFork)
+                		continue;
+                	if (f.fp.anyMatch(port)) {
+                		System.out.println("Port conflict: " + f.name + "with: " + thisFork.name);
+                		c.setForeground(Color.RED);
+                		break;
+                	}
+                }
                 return c;
             }
         });

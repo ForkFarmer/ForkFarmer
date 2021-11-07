@@ -34,6 +34,10 @@ public final class Ico {
 	public static final ImageIcon FCX		= loadIcon("icons/fcx.png",16);
 	public static final ImageIcon XCHF		= loadIcon("icons/xchforks.png",16);
 	public static final ImageIcon ATB		= loadIcon("icons/alltheblocks.png",16);
+	public static final ImageIcon ATB_G		= loadIcon("icons/atb_green.png",16);
+	public static final ImageIcon ATB_GRAY	= loadIcon("icons/atb_gray.png",16);
+	public static final ImageIcon ATB_R		= loadIcon("icons/atb_red.png",16);
+	public static final ImageIcon ATB_Y		= loadIcon("icons/atb_yellow.png",16);
 	public static final ImageIcon DOWNLOAD	= loadIcon("icons/download.png");
 	public static final ImageIcon TARGET	= loadIcon("icons/target.png");
 	
@@ -54,6 +58,13 @@ public final class Ico {
 	public static final ImageIcon XCHCALC	= loadIcon("icons/xchcalc.png");
 	public static final ImageIcon HOME		= loadIcon("icons/home.png",16);
 	public static final ImageIcon DISCORD	= loadIcon("icons/discord.png",16);
+	public static final ImageIcon TWITTER	= loadIcon("icons/twitter.png");
+	public static final ImageIcon FFLOGO	= loadIcon("icons/fflogo.png",16);
+	
+	public static final ImageIcon TROPHY	= loadIcon("icons/trophy.png",14);
+	public static final ImageIcon TROPHY_GR	= loadIcon("icons/trophy_g.png",14);
+	
+	public static final ImageIcon EXPAND	= loadIcon("icons/expand.png",16);
 	
 	//circle icons
 	public static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");

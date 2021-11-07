@@ -30,7 +30,7 @@ import main.ForkFarmer;
 import main.MainGui;
 import transaction.Transaction;
 import types.Balance;
-import types.Effort;
+import types.Percentage;
 import types.ReadTime;
 import types.TimeU;
 import types.Wallet;
@@ -63,21 +63,22 @@ public class Fork {
 	transient public ImageIcon ico;
 	transient public ImageIcon statusIcon = Ico.GRAY;
 	transient public ReadTime readTime = ReadTime.EMPTY;
-	transient public NetSpace netSpace;
 	transient public NetSpace plotSpace;
-	transient public TimeU etw = new TimeU();
 	transient public String syncStatus;
 	transient public String farmStatus;
 	transient public double dayWin;
+	transient public long dayWinBC;
 	transient public double estEarn;
 	transient public Transaction lastWin;
 	transient public Exception lastException;
 	transient public List<Wallet> walletList = new ArrayList<>();
+	transient public boolean nothing;
 	transient boolean hidden;
 	transient String lastTimeStamp;
 	transient LocalDateTime lastTimeUpdate;
 	transient public Wallet wallet = Wallet.EMPTY;
 	transient public boolean xchfSupport;
+	transient public Percentage load = Percentage.EMPTY;
 	
 	public String walletAddr;
 	public boolean fullNode = true;
@@ -218,7 +219,6 @@ public class Fork {
 				} else if (l.contains("-Total Balance: ")) {
 					newBalance.add(Double.parseDouble(Util.getWordAfter(l, "-Total Balance: ")));
 				} else if (l.contains("Wallet height: ")) {
-					
 					String heightStr = Util.getWordAfter(l, "Wallet height: ");
 					height = new Balance(Integer.parseInt(heightStr));
 				} else if (l.contains("Sync status: ")) {
@@ -235,6 +235,8 @@ public class Fork {
 					dayWin = Transaction.LIST.stream()
 						.filter(t -> this == t.f && t.blockReward && t.getTimeSince().inMinutes() < (60*24))
 						.collect(Collectors.summingDouble(Transaction::getAmount));
+					dayWinBC = Transaction.LIST.stream()
+							.filter(t -> this == t.f && t.blockReward && t.getTimeSince().inMinutes() < (60*24)).count();
 				}
 			}
 				
@@ -264,25 +266,23 @@ public class Fork {
 			
 			String l = null;
 			while ( null != (l = br.readLine())) {
-				/*
-				if (l.contains("Connection error") && false == fullNode) {
-					p.destroyForcibly();
-					break;
-				} else 
-				*/
-				if (l.contains("Estimated network space: "))
-					netSpace = new NetSpace(l.substring("Estimated network space: ".length()));
+				if (l.contains("Estimated network space: ")) {
+					NetSpace.parse(l.substring("Estimated network space: ".length())).ifPresent(n -> fd.netspace = n);
+				}
+				
 				else if (l.contains("Total size of plots: ")) {
 					try {
-						plotSpace = new NetSpace(l.substring("Total size of plots: ".length()));
-						MainGui.updatePlotSize(plotSpace);
+						NetSpace.parse(l.substring("Total size of plots: ".length()))
+							.ifPresent(ps -> {plotSpace = ps; MainGui.updatePlotSize(ps);});
 					} catch (Exception e) {
 						// nothing to do
 					}
 				} else if (l.contains("Expected time to win: ")) {
-					etw = new TimeU(l.substring("Expected time to win: ".length()));
-					if (etw.inMinutes()  > 0 && price > 0)
-						estEarn = 43800 / etw.inMinutes() * price;
+					TimeU.parse(l.substring("Expected time to win: ".length()))
+						.ifPresent(etw -> fd.etw = etw);
+					
+					//if (etw.inMinutes()  > 0 && price > 0)
+						//estEarn = 43800 / etw.inMinutes() * price;
 				} else if (l.contains("Farming status: ")) {
 					farmStatus = l.substring("Farming status: ".length());
 				} 
@@ -292,6 +292,10 @@ public class Fork {
 		}
 		Util.waitForProcess(p);
 		Util.closeQuietly(br);
+		
+		if (!fd.etw.known() && fd.netspace.known() && plotSpace.known()) {
+			fd.etw = new TimeU((int) (fd.netspace.szTB / plotSpace.szTB * 18.75));
+		}
 		
 		LogView.add(name + " done loading farm summary");
 	}
@@ -312,8 +316,10 @@ public class Fork {
 		boolean updateWallet = false;
 		
 		// If we haven't seen a time update event from log make sure we clear currently displayed one
-		if (null != lastTimeUpdate && Duration.between(lastTimeUpdate, now).getSeconds() > 40)
+		if (null != lastTimeUpdate && Duration.between(lastTimeUpdate, now).getSeconds() > 40) {
 			readTime = ReadTime.EMPTY;
+			load = Percentage.EMPTY;
+		}
 		
 		try {
 			String s,t;
@@ -330,6 +336,7 @@ public class Fork {
 				// don't read long time events that are too old in the log
 				if (!readT && null != logTime && Duration.between(logTime, now).getSeconds() > 40) {
 					readTime = ReadTime.EMPTY;
+					load = Percentage.EMPTY;
 					readT = true;
 				}
 				
@@ -337,6 +344,9 @@ public class Fork {
 					lastTimeStamp = firstTime;
 					break;
 				}	
+				
+				if (null != (t = Util.wordAfterIfExist(s, "percent full: ")))
+					load = new Percentage(t);
 				
 				if (!readT && null != (t = Util.wordAfterIfExist(s, "Time: "))) {
 					readTime = new ReadTime(Double.parseDouble(t));
@@ -401,6 +411,9 @@ public class Fork {
 				statusIcon = Ico.GREEN;
 		}
 		
+		if (Ico.GREEN == statusIcon || Ico.YELLOW == statusIcon)
+			fd.atbIcon = Ico.ATB_G;
+		
 		if (cold)
 			statusIcon = Ico.SNOW;
 		
@@ -430,10 +443,6 @@ public class Fork {
 	
 	public void showLastException () {
 		ForkFarmer.newFrame(name + ": Debug View", ico, new DebugView(this));
-	}
-	
-	public void refresh() {
-		new Thread(() -> loadWallet()).start();
 	}
 	
 	public int getIndex() {
@@ -472,12 +481,12 @@ public class Fork {
 		return LIST.stream().filter(f -> f.symbol.equals(symbol)).findAny();
 	}
 	
-	public Effort getEffort() {
-		return (etw.inMinutes() > 0 && null != lastWin) ?
-				new Effort((int) (((double)lastWin.getTimeSince().inMinutes() / (double)etw.inMinutes()) * (double)100)) : Effort.EMPTY;
+	public Percentage getEffort() {
+		TimeU etw = fd.etw;
+		return (etw.known() && null != lastWin) ?
+				new Percentage((int) (((double)lastWin.getTimeSince().inMinutes() / (double)etw.inMinutes()) * (double)100)) : Percentage.EMPTY;
 	}
-
-	
+		
 	public void updatePrice(double p) {
 		if (p != price) {
 			price = p;
@@ -551,6 +560,14 @@ public class Fork {
 
 	public static Optional<Fork> getByAddress(String address) {
 		return LIST.stream().filter(f -> !f.cold && address.startsWith(f.symbol.toLowerCase())).findAny();	
+	}
+
+	public ImageIcon getATBIcon() {
+		if (statusIcon == Ico.GREEN)
+			return Ico.ATB_G;
+		if (statusIcon == Ico.YELLOW)
+			return Ico.ATB_Y;
+		return Ico.ATB_R;
 	}
 	
 }

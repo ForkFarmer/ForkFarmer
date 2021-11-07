@@ -163,8 +163,8 @@ public class ForkStarter {
 		if (null == LIST) { // if no settings populate with defaults
 			LIST = new ArrayList<>();
 			LIST.add(new KVPair("FN & WN","start farmer"));
-			LIST.add(new KVPair("FN","start harvester,start wallet"));
-			LIST.add(new KVPair("WN","start farmer-no-wallet"));
+			LIST.add(new KVPair("FN","start farmer-no-wallet"));
+			LIST.add(new KVPair("WN","start wallet"));
 			LIST.add(new KVPair("Neither","start harvester"));
 		}
 		return LIST;

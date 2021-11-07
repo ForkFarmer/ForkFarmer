@@ -15,9 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -27,6 +24,9 @@ import forks.ForkStarter;
 import forks.ForkView;
 import transaction.TransactionView;
 import util.Util;
+import util.json.JsonArray;
+import util.json.JsonObject;
+import util.json.Jsoner;
 import util.swing.SwingUtil;
 
 public class Settings {
@@ -62,18 +62,19 @@ public class Settings {
 		public String custLastDelay = "60";
 		public boolean custForceUpdate = false;
 		public boolean autoUpdate = true;
+		public boolean lockColumns = false;
+		public int httpServerPort = 12321;
 	}
 	
 	@SuppressWarnings("unchecked")
 	public static void Load() {
 		InputStream is = Util.getResourceAsStream("forks.json");
-		JSONParser parser = new JSONParser();
 		
     	try {
-    		JSONArray forkArray = (JSONArray) parser.parse(new InputStreamReader(is, "UTF-8"));
+    		JsonArray forkArray = (JsonArray)Jsoner.deserialize(new InputStreamReader(is, "UTF-8"));
     		
     		for (Object o : forkArray)
-    			new ForkData((JSONObject)o);
+    			new ForkData((JsonObject)o);
     		
 		} catch (Exception e) {
 			System.out.println("Error parsing internal forks.json");
@@ -118,7 +119,6 @@ public class Settings {
 		settings.put("ForkView Columns", ForkView.MODEL.getColsDisplayOrder(ForkView.TABLE));
 		settings.put("TxView Columns", TransactionView.MODEL.getColsDisplayOrder(TransactionView.TABLE));
 		settings.put("ForkStarter", ForkStarter.getSettings());
-		
 		
 		DumperOptions options = new DumperOptions();
 		options.setIndent(2);

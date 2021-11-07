@@ -17,6 +17,7 @@ import javax.swing.border.TitledBorder;
 import forks.Fork;
 import forks.ForkView;
 import transaction.TransactionView;
+import util.HttpServer;
 import util.Ico;
 import util.NetSpace;
 import util.Util;
@@ -74,6 +75,8 @@ public class MainGui extends JPanel {
         	daemonReader.setBorder(new TitledBorder("Daemon Reader:"));
         	JPanel curencyPanel = new JPanel(new GridLayout(1,2));
         	curencyPanel.setBorder(new TitledBorder("Currency:"));
+        	JPanel httpServerPanel = new JPanel(new GridLayout(1,2));
+        	httpServerPanel.setBorder(new TitledBorder("GUI Http Server:"));
         	
         	JPanel autoUpdatePanel = new JPanel(new GridLayout(1,2));
         	autoUpdatePanel.setBorder(new TitledBorder("Automatic price/cold wallet updates"));
@@ -90,7 +93,12 @@ public class MainGui extends JPanel {
     		JCheckBox autoUpdate = new JCheckBox("xchforks.com/alltheblocks.net");
     		autoUpdate.setSelected(Settings.GUI.autoUpdate);
     		
-    		        	
+    		JCheckBox lockColumns = new JCheckBox("Lock Columns");
+    		lockColumns.setSelected(Settings.GUI.lockColumns);
+    		
+    		JCheckBox httpServerChk = new JCheckBox("Enabled");
+    		LTPanel httpServerPort = new SwingEX.LTPanel("Port: " , Integer.toString(Settings.GUI.httpServerPort));
+    		
     		logReader.add(lriSleep);
     		logReader.add(lreSleep);
     		
@@ -102,6 +110,9 @@ public class MainGui extends JPanel {
     		
     		autoUpdatePanel.add(autoUpdate);
     		
+    		httpServerPanel.add(httpServerChk);
+    		httpServerPanel.add(httpServerPort);
+    		    		
     		GridBagConstraints gbc = new GridBagConstraints();
     		gbc.fill = GridBagConstraints.HORIZONTAL;
         	settingPanel.add(logReader,gbc);
@@ -111,6 +122,27 @@ public class MainGui extends JPanel {
         	settingPanel.add(curencyPanel,gbc);
         	gbc.gridy=3;
         	settingPanel.add(autoUpdatePanel,gbc);
+        	gbc.gridy=4;
+        	settingPanel.add(httpServerPanel,gbc);
+        	gbc.gridy=5;
+        	settingPanel.add(lockColumns,gbc);
+        	
+        	httpServerChk.setSelected(HttpServer.isRunning);
+        	httpServerPort.field.setEnabled(!httpServerChk.isSelected());
+        	
+        	httpServerChk.addActionListener(al -> {
+        		if (httpServerChk.isSelected())
+        			HttpServer.start(httpServerPort.getAsInt());
+        		else
+        			HttpServer.stop();
+        		httpServerChk.setSelected(HttpServer.isRunning);
+        		httpServerPort.field.setEnabled(!httpServerChk.isSelected());
+        	});
+        	
+        	lockColumns.addActionListener(al -> {
+        		Settings.GUI.lockColumns = lockColumns.isSelected();
+        		setColumnLock(lockColumns.isSelected());
+        	});
         	
         	if (true == ForkFarmer.showPopup("Settings:", settingPanel)) {
 
@@ -119,6 +151,7 @@ public class MainGui extends JPanel {
         		Settings.GUI.daemonReaderWorkers = dWorkers.getAsInt();
         		Settings.GUI.daemonReaderDelay = dIntraSleep.getAsInt();
         		Settings.GUI.autoUpdate = autoUpdate.isSelected();
+        		Settings.GUI.httpServerPort =  httpServerPort.getAsInt();
         		
         		if (!Settings.GUI.currencySymbol.equals(curencySymbol.getText()))
         			Settings.GUI.currencySymbol = curencySymbol.getText();
@@ -127,7 +160,9 @@ public class MainGui extends JPanel {
         	}
         		
         }));
-        	
+        
+        if (Settings.GUI.lockColumns)
+        	setColumnLock(Settings.GUI.lockColumns);
         
         sendBtn.addActionListener(e -> sendTx());
         		
@@ -157,6 +192,13 @@ public class MainGui extends JPanel {
 		ForkView.TABLE.setAutoCreateRowSorter(true);
 		
 		Args.handle();
+	}
+	
+	private void setColumnLock(boolean locked) {
+		ForkView.TABLE.getTableHeader().setReorderingAllowed(!locked);
+		ForkView.TABLE.getTableHeader().setResizingAllowed(!locked);
+		TransactionView.TABLE.getTableHeader().setReorderingAllowed(!locked);
+		TransactionView.TABLE.getTableHeader().setResizingAllowed(!locked);
 	}
 	
 	private void sendTx() {

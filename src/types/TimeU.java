@@ -2,19 +2,16 @@ package types;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public class TimeU implements Comparable<TimeU> {
-	public static final TimeU NEVER = new TimeU("Never",0);
+	private static final long BIG = 999999;
+	public static final TimeU NEVER = new TimeU("Never",BIG);
+	public static final TimeU BLANK = new TimeU("",BIG);
 	String str = "";
 	long minutes;
 	
 	public TimeU(String str) { // used for etw
-		
-		if (str.equals("Unknown")) {
-			this.str = str;
-			return;
-		}
-		
 		minutes = convertToMinutes(str);
 		
 		str = str.replace(" ", "");
@@ -37,7 +34,9 @@ public class TimeU implements Comparable<TimeU> {
 		this.str = str;
 	}
 	
-	
+	public static Optional<TimeU> parse(String str) {
+		return (str.equals("Unknown")) ? Optional.empty() : Optional.of(new TimeU(str));  
+	}
 	
 	public long inMinutes() {
 		return minutes;
@@ -123,6 +122,12 @@ public class TimeU implements Comparable<TimeU> {
 			return TimeU.NEVER;
 		LocalDateTime now = LocalDateTime.now();
 		return new TimeU(Duration.between(before,now).getSeconds());
+	}
+
+
+
+	public boolean known() {
+		return BIG != minutes;
 	}
 	
 	
