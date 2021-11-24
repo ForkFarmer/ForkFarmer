@@ -45,7 +45,7 @@ public class KVTable extends JPanel {
 		SwingUtilities.invokeLater(() -> MODEL.fireTableDataChanged());
 		TABLE.setPreferredSize(new Dimension(400,90));
 
-		MODEL.colList.forEach(c -> c.setSelectView(TABLE,null));
+		MODEL.colList.forEach(c -> c.finalize(TABLE,null));
 	}
 
 }

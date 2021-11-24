@@ -31,11 +31,11 @@ public class ForkStarter {
 		for (Fork f: fList) {
 			
 			System.out.println("Running activate on " + f.name);
-			System.out.println("Base Dir is: " + f.fd.basePath);
+			System.out.println("Base Dir is: " + f.fd.daemonBase);
 		
 			StringBuilder sb = new StringBuilder();
 			sb.append("'cd ");
-			sb.append(f.fd.basePath);
+			sb.append(f.fd.daemonBase);
 			sb.append(" && . ./activate && ");
 			sb.append(f.name.toLowerCase());
 			sb.append(" start farmer-no-wallet'");
@@ -65,7 +65,7 @@ public class ForkStarter {
 		for (Fork f: fList) {
 			
 			System.out.println("Running activate on " + f.name);
-			System.out.println("Base Dir is: " + f.fd.basePath);
+			System.out.println("Base Dir is: " + f.fd.daemonBase);
 		
 			try {
 				
@@ -146,11 +146,21 @@ public class ForkStarter {
 
 		for (String s : cmds) {
 			String[] args = s.split(" ");
-					
-			String[] varArgs = new String[args.length + 1];
-			varArgs[0] = f.exePath;
-			for (int i = 0; i < args.length; i++)
-				varArgs[i+1] = args[i];
+			
+			String[] varArgs = null;
+			if (null == f.passFile) {
+				varArgs = new String[args.length + 1];
+				varArgs[0] = f.exePath;
+				for (int i = 0; i < args.length; i++)
+					varArgs[i+1] = args[i];
+			} else {
+				varArgs = new String[args.length + 3];
+				varArgs[0] = f.exePath;
+				varArgs[1] = "--passphrase-file";
+				varArgs[2] = f.passFile;
+				for (int i = 0; i < args.length; i++)
+					varArgs[i+3] = args[i];
+			}
 				
 			Util.runProcessWait(varArgs);
 		}

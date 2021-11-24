@@ -38,6 +38,9 @@ public class PlotCalc extends JPanel {
 	
 	
 	public enum KV {
+		K29(11.5),
+		K30(23.8),
+		K31(49.1),
 		K32(101.36),
 		K33(208.81),
 		K34(429.86),
@@ -248,8 +251,8 @@ public class PlotCalc extends JPanel {
 		
 		
 		
-		MODEL_KV.colList.forEach(c -> c.setSelectView(TABLE_KV,null));
-		MODEL_SOL.colList.forEach(c -> c.setSelectView(TABLE_SOL,null));
+		MODEL_KV.colList.forEach(c -> c.finalize(TABLE_KV,null));
+		MODEL_SOL.colList.forEach(c -> c.finalize(TABLE_SOL,null));
 		reCalc();
 	}
 	

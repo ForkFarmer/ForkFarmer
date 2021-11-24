@@ -24,18 +24,20 @@ public final class Ico {
 	public static final ImageIcon HIDE 		= loadIcon("icons/hide.png");
 	public static final ImageIcon REFRESH	= loadIcon("icons/refresh.png");
 	public static final ImageIcon P2P		= loadIcon("icons/conn.png");
+	public static final ImageIcon P2P_GREY	= getDisabled(P2P);
 	public static final ImageIcon PLUS		= loadIcon("icons/plus.png");
 	public static final ImageIcon DOLLAR	= loadIcon("icons/dollar.png");
 	public static final ImageIcon BUG		= loadIcon("icons/bug.png");
 	public static final ImageIcon WALLET	= loadIcon("icons/wallet.png",16);
 	public static final ImageIcon WALLET_COLD= loadIcon("icons/wallet_cold.png",16);
+	public static final ImageIcon WALLET_GRAY= loadIcon("icons/wallet_gray.png",16);
 	public static final ImageIcon GRAPH		= loadIcon("icons/graph.png",16);
 	public static final ImageIcon HANDSHAKE	= loadIcon("icons/handshake.png",16);
 	public static final ImageIcon FCX		= loadIcon("icons/fcx.png",16);
 	public static final ImageIcon XCHF		= loadIcon("icons/xchforks.png",16);
 	public static final ImageIcon ATB		= loadIcon("icons/alltheblocks.png",16);
 	public static final ImageIcon ATB_G		= loadIcon("icons/atb_green.png",16);
-	public static final ImageIcon ATB_GRAY	= loadIcon("icons/atb_gray.png",16);
+	public static final ImageIcon ATB_GRAY	= getDisabled(ATB);
 	public static final ImageIcon ATB_R		= loadIcon("icons/atb_red.png",16);
 	public static final ImageIcon ATB_Y		= loadIcon("icons/atb_yellow.png",16);
 	public static final ImageIcon DOWNLOAD	= loadIcon("icons/download.png");
@@ -49,6 +51,8 @@ public final class Ico {
 	public static final ImageIcon TOOLS 	= loadIcon("icons/tools.png");
 	public static final ImageIcon PEOPLE 	= loadIcon("icons/people.png");
 	public static final ImageIcon SNOW		= loadIcon("icons/snow.png",16);
+	
+	public static final ImageIcon ROULETTE 	= loadIcon("icons/roulette.png");
 	
 	public static final ImageIcon CLI			= loadIcon("icons/cmd.png");
 	public static final ImageIcon POWERSHHELL	= loadIcon("icons/powershell.png");
@@ -65,6 +69,7 @@ public final class Ico {
 	public static final ImageIcon TROPHY_GR	= loadIcon("icons/trophy_g.png",14);
 	
 	public static final ImageIcon EXPAND	= loadIcon("icons/expand.png",16);
+	public static final ImageIcon KEY		= loadIcon("icons/key.png",16);
 	
 	//circle icons
 	public static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");

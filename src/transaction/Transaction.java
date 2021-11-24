@@ -14,7 +14,7 @@ import javax.swing.ImageIcon;
 
 import forks.Fork;
 import forks.ForkView;
-import logging.LogView;
+import main.ForkFarmer;
 import types.Balance;
 import types.Percentage;
 import types.TimeU;
@@ -86,12 +86,13 @@ public class Transaction {
 	
 	public static Transaction load(Fork f) {
 		Transaction newTX = null;
-
+		
+		int txRead = 0;
 		if (-1 == f.wallet.index)
 			return null;
 		
-		LogView.add(f.name + " getting transactions");
-
+		ForkFarmer.LOG.add(f.name + " getting transactions");
+		
 		Process p = null;
 		PrintWriter pw = null;
 		BufferedReader br = null;
@@ -119,6 +120,11 @@ public class Transaction {
 				}
 				
 				if (l.startsWith("Transaction ")) {
+					txRead++;
+					if (f.symbol.toUpperCase().equals("SIX") &&  txRead > 40) {
+						p.destroyForcibly();
+						break;
+					}
 					String tHash   = l.replace("Transaction ", "");
 					if (TSET.contains(tHash)) // stop parsing if we already have this transaction
 						continue;
@@ -201,7 +207,7 @@ public class Transaction {
 			TransactionView.refresh();
 		}
 		
-		LogView.add(f.name + " done getting transactions");
+		ForkFarmer.LOG.add(f.name + " done getting transactions");
 
 		return newTX;
 		

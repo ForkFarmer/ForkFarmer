@@ -45,7 +45,7 @@ public class PortCheckerView extends JPanel {
 		setLayout(new BorderLayout());
 		add(JSP);
 		
-		MODEL.colList.forEach(c -> c.setSelectView(TABLE,null));
+		MODEL.colList.forEach(c -> c.finalize(TABLE,null));
 		int height = 21 * (Fork.LIST.size()+1);
 		if (height > 800)
 			height = 800;

@@ -12,10 +12,12 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
+import logging.LogModel;
 import util.Ico;
 import util.jtattoo.hifi.HiFiLookAndFeel;
 
 public class ForkFarmer {
+	public static LogModel LOG = new LogModel();
 	public static JFrame FRAME;
 	public static String[] args;
 
@@ -36,7 +38,7 @@ public class ForkFarmer {
 	private static void startGUI() {
 		Settings.Load();
 		
-		FRAME = new JFrame("ForkFarmer 2.4");
+		FRAME = new JFrame("ForkFarmer 2.5");
 		FRAME.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		FRAME.setIconImage(Ico.FFLOGO.getImage());
 
@@ -49,20 +51,6 @@ public class ForkFarmer {
 		FRAME.setLocationRelativeTo(null);
 		FRAME.setVisible(true);
 		
-		/*
-		TrayIcon trayIcon = new TrayIcon(Ico.LOGO.getImage());
-		
-		SystemTray st = SystemTray.getSystemTray();
-	    
-		
-			st.add(trayIcon);
-		} catch (AWTException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		*/
-	     
-		
 		FRAME.addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {
 		    	Settings.Save();
@@ -73,13 +61,17 @@ public class ForkFarmer {
 	
 	public static JFrame newFrame(String title, ImageIcon ico, JPanel content) {
 		JFrame frame = new JFrame(title);
+		frame.setContentPane(content);
+		showFrame(title,ico,frame);
+		return frame;
+	}
+	
+	public static void showFrame(String title, ImageIcon ico, JFrame frame) {
 		frame.setIconImage(null == ico ? Ico.LOGO.getImage() : ico.getImage());
 		frame.setTitle(title);
-		frame.setContentPane(content);
 		frame.pack();
 		frame.setLocationRelativeTo(FRAME);
 		frame.setVisible(true);
-		return frame;
 	}
 
 	public static void showMsg(String title,String message) {
@@ -90,8 +82,4 @@ public class ForkFarmer {
 		return (JOptionPane.OK_OPTION == JOptionPane.showConfirmDialog(FRAME,jp,s,JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE));
 	}
 	
-	public static synchronized void log(String s) {
-		
-	}
-
 }

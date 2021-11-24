@@ -4,26 +4,35 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.table.TableColumn;
+
+import main.Settings;
+import util.swing.SwingUtil;
 
 public class Col<T> {
 	public String name;
 	public int width;
 	public boolean show;
 	
-	public transient int colIndex;
-	public transient boolean selectable = true;
-	public transient boolean editable = false;
-	public transient Class<T> type;
+	public transient boolean fixed;
+	public transient boolean flex;
+	public transient int idx;
 	public transient Function<T, Object> getValue;
-	public transient BiConsumer<T,Object> consumer;
-	public transient JCheckBoxMenuItem jmi = null;
-	public transient boolean loaded;
-	public boolean fixed;
-	public boolean flex;
+	
+	transient Class<T> type;
+	transient BiConsumer<T,Object> consumer;
+	transient boolean loaded;
+
+	private transient String viewName;
+	private transient boolean viewRight;
+	private transient boolean selectable = true;
+	private transient boolean editable = false;
+	private transient JCheckBoxMenuItem jmi = null;
+	private transient ImageIcon ico;
 
 	public Col(final String name, final int width,  final Class<?> type, final Function<T, Object> getValue) {
 		this(name,width,type,getValue,null);
@@ -93,7 +102,7 @@ public class Col<T> {
 			consumer.accept((T)a,b);
 	}
 	
-	public void setSelectView(JTable table, JPopupMenu menu) {
+	public void finalize(JTable table, JPopupMenu menu) {
 		if (selectable && null != menu) {
 			jmi = new JCheckBoxMenuItem(name);
 			menu.add(jmi);
@@ -101,6 +110,23 @@ public class Col<T> {
 			
 			jmi.addActionListener(ae -> resize(table));
 		}
+		
+		if (null != ico)
+			SwingUtil.setColumnIcon(table,idx, ico);
+		
+		if (viewRight)
+			SwingUtil.setColRight(table,idx);
+		
+		if (null != viewName)
+			 SwingUtil.setColumnLabel(table, idx, viewName);
+		
+		if (null != Settings.colMap) {
+			String s = (String)Settings.colMap.get(name);
+			if (null != s && null != jmi)
+				jmi.setToolTipText(s);
+		}
+		
+		
 		resize(table);
 	}
 	
@@ -110,15 +136,14 @@ public class Col<T> {
 		return this;
 	}
 	
-	public Col<T> show(boolean s) {
-		if (!loaded) {
-			show = s;
-		}
+	public Col<T> show() {
+		if (!loaded)
+			show = true;
 		return this;
 	}
 	
 	public Col<T> index(Consumer<Integer> i) {
-		i.accept(colIndex);
+		i.accept(idx);
 		return this;
 	}
 	
@@ -139,6 +164,20 @@ public class Col<T> {
 	public Col<T> flex() {
 		flex = true;
 		return this;
+	}
+
+	public Col<T> colIco(ImageIcon ico) {
+		this.ico = ico;
+		return this;
+	}
+
+	public Col<T> viewRight() {
+		viewRight = true;
+		return this;
+	}
+
+	public void colName(String str) {
+		viewName = str;
 	}
 	
 }

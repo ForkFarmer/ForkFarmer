@@ -1,0 +1,12 @@
+{
+  "Equity"      : "Equity = $ x balance"
+  "# Wallets"   : "Number of wallets. Hot + Cold"
+  "# Harvesters": "Number of connected harvesters. Not every chain supports"
+  "Load"        : "% of block filled with transactions"
+  "Time"        : "Plot response time"
+  "ETW"         : "Estimated Time of Winning; The time you SHOULD win a block. Does not guarantee that you will win within this timeframe."
+  "Full Node"   : "Disable if you don't want to run fullnode"
+  "Wallet Node" : "Disable if you don't want to run wallet"
+  "Nothing"     : "Does nothing, for personal use"
+  "ATB Status"  : "Chain status from alltheblocks.net"
+}

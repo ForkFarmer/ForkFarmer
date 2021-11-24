@@ -18,7 +18,8 @@
     "cfcalc": null,
     "discordURL": "https://discord.gg/Mz4SG4KrYN",
     "websiteURL": "https://www.chia.net/",
-    "twitterURL": "https://twitter.com/chia_project"
+    "twitterURL": "https://twitter.com/chia_project",
+    "prefarm": 21000000
   },
   {
     "displayName": "Flax",
@@ -39,7 +40,8 @@
     "cfcalc": "https://chiaforkscalculator.com/flax",
     "discordURL": "https://discord.gg/y3KqSdw8v2",
     "websiteURL": "https://flaxnetwork.org/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 300000
   },
   {
     "displayName": "Chaingreen",
@@ -60,7 +62,8 @@
     "cfcalc": "https://chiaforkscalculator.com/chaingreen",
     "discordURL": "https://discord.gg/KJPfdXwF6G",
     "websiteURL": "https://www.chaingreen.org/",
-    "twitterURL": "https://twitter.com/chaingreen_org"
+    "twitterURL": "https://twitter.com/chaingreen_org",
+    "prefarm": 25000000
   },
   {
     "displayName": "Spare",
@@ -81,7 +84,8 @@
     "cfcalc": "https://chiaforkscalculator.com/spare",
     "discordURL": "https://discord.gg/nRgtd2WCQW",
     "websiteURL": "https://spare.farm/",
-    "twitterURL": "https://twitter.com/Socks_Network"
+    "twitterURL": "https://twitter.com/Socks_Network",
+    "prefarm": 5000000
   },
   {
     "displayName": "Goji",
@@ -102,7 +106,8 @@
     "cfcalc": "https://chiaforkscalculator.com/goji",
     "discordURL": "https://discord.gg/Gu8JcD3rxX",
     "websiteURL": "https://getgoji.net/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 300000
   },
   {
     "displayName": "Flora",
@@ -123,7 +128,8 @@
     "cfcalc": "https://chiaforkscalculator.com/flora",
     "discordURL": "https://discord.gg/GvwQhW4Yk3",
     "websiteURL": "http://floracoin.farm/",
-    "twitterURL": "https://twitter.com/CoinFlora"
+    "twitterURL": "https://twitter.com/CoinFlora",
+    "prefarm": 1000000
   },
   {
     "displayName": "Seno",
@@ -143,7 +149,8 @@
     "xchForksURL": "https://xchforks.com/seno",
     "cfcalc": "https://chiaforkscalculator.com/seno",
     "discordURL": "https://discord.gg/9c3Tq3kzWG",
-    "websiteURL": "https://seno.uno/"
+    "websiteURL": "https://seno.uno/",
+    "prefarm": 2
   },
   {
     "displayName": "Chiarose",
@@ -164,7 +171,8 @@
     "cfcalc": "https://chiaforkscalculator.com/chiarose",
     "discordURL": "https://discord.gg/JnPsu49z5n",
     "websiteURL": "https://www.rosechain.net/",
-    "twitterURL": "https://twitter.com/wang21928445"
+    "twitterURL": "https://twitter.com/wang21928445",
+    "prefarm": 201700000
   },
   {
     "displayName": "HDDcoin",
@@ -185,7 +193,8 @@
     "cfcalc": "https://chiaforkscalculator.com/hddcoin",
     "discordURL": "https://discord.gg/ZTtQ9922zp",
     "websiteURL": "https://hddcoin.org/",
-    "twitterURL": "https://twitter.com/HDDcoin"
+    "twitterURL": "https://twitter.com/HDDcoin",
+    "prefarm": 3000000
   },
   {
     "displayName": "Equality",
@@ -206,7 +215,8 @@
     "cfcalc": "https://chiaforkscalculator.com/equality",
     "discordURL": "https://discord.gg/UazvnrRx6v",
     "websiteURL": "http://www.equalitychain.org/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 600000
   },
   {
     "displayName": "DogeChia",
@@ -228,7 +238,8 @@
     "cfcalc": "https://chiaforkscalculator.com/dogechia",
     "discordURL": "https://discord.gg/ht3v4PYTyc",
     "websiteURL": "https://dogechia.org/",
-    "twitterURL": "https://twitter.com/dogechia/"
+    "twitterURL": "https://twitter.com/dogechia/",
+    "prefarm": 300000
   },
   {
     "displayName": "Avocado",
@@ -249,7 +260,8 @@
     "cfcalc": "https://chiaforkscalculator.com/avocado",
     "discordURL": "https://discord.gg/AedHTAY2xw",
     "websiteURL": "https://avocadonetwork.net/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 250000
   },
   {
     "displayName": "CryptoDoge",
@@ -270,7 +282,8 @@
     "cfcalc": "https://chiaforkscalculator.com/cryptodoge",
     "discordURL": "https://discord.gg/fRBK4chVds",
     "websiteURL": "http://cryptodoge.cc/",
-    "twitterURL": "https://twitter.com/cryptodoge_coin"
+    "twitterURL": "https://twitter.com/cryptodoge_coin",
+    "prefarm": 21000000000
   },
   {
     "displayName": "Kale",
@@ -291,7 +304,8 @@
     "cfcalc": "https://chiaforkscalculator.com/kale",
     "discordURL": "https://discord.gg/BBTznpYv4N",
     "websiteURL": "https://kalenetwork.org/",
-    "twitterURL": "https://twitter.com/KaleCrypto1"
+    "twitterURL": "https://twitter.com/KaleCrypto1",
+    "prefarm": 300000
   },
   {
     "displayName": "GreenDoge",
@@ -312,7 +326,8 @@
     "cfcalc": "https://chiaforkscalculator.com/greendoge",
     "discordURL": "https://discord.gg/XmkZAMn8kj",
     "websiteURL": "https://greendoge.dog/",
-    "twitterURL": "https://twitter.com/Green_Dogecoin"
+    "twitterURL": "https://twitter.com/Green_Dogecoin",
+    "prefarm": 21000000
   },
   {
     "displayName": "Chives",
@@ -333,7 +348,8 @@
     "cfcalc": "https://chiaforkscalculator.com/chives",
     "discordURL": "https://discord.gg/9aAbYNqjtA",
     "websiteURL": "https://www.chivescoin.org/",
-    "twitterURL": "https://twitter.com/chives_project"
+    "twitterURL": "https://twitter.com/chives_project",
+    "prefarm": 0
   },
   {
     "displayName": "Melati",
@@ -354,7 +370,8 @@
     "cfcalc": "https://chiaforkscalculator.com/melati",
     "discordURL": "https://discord.gg/JrtUrZt7Hj",
     "websiteURL": "https://melatinetwork.org/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 300000
   },
   {
     "displayName": "Taco",
@@ -375,7 +392,8 @@
     "cfcalc": "https://chiaforkscalculator.com/taco",
     "discordURL": "https://discord.gg/XRdzSyv5U9",
     "websiteURL": "https://taconetwork.net/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 0
   },
   {
     "displayName": "Wheat",
@@ -396,7 +414,8 @@
     "cfcalc": "https://chiaforkscalculator.com/wheat",
     "discordURL": "https://discord.gg/rfYzrmqQTP",
     "websiteURL": "http://wheat.network/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 300000
   },
   {
     "displayName": "Socks",
@@ -417,7 +436,8 @@
     "cfcalc": "https://chiaforkscalculator.com/socks",
     "discordURL": "https://discord.gg/yteqP7PDTd",
     "websiteURL": "http://socks.works/",
-    "twitterURL": "https://twitter.com/Socks_Network"
+    "twitterURL": "https://twitter.com/Socks_Network",
+    "prefarm": 500000
   },
   {
     "displayName": "Cactus",
@@ -438,7 +458,8 @@
     "cfcalc": "https://chiaforkscalculator.com/cactus",
     "discordURL": "https://discord.gg/VAu4VfVkwg",
     "websiteURL": "https://www.cactus-network.net/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 210000
   },
   {
     "displayName": "Silicoin",
@@ -446,6 +467,8 @@
     "coinPrefix": "sit",
     "userFolder": ".sit",
     "daemonFolder": "sit-blockchain",
+    "daemonFolder2": "sit",
+    "daemonFolder3": "silicoin-blockchain",
     "exeName": "sit",
     "price": 0.2,
     "baseRatio": 0.125,
@@ -460,7 +483,8 @@
     "cfcalc": "https://chiaforkscalculator.com/silicoin",
     "discordURL": "https://discord.gg/p7GYjnUJdz",
     "websiteURL": "https://www.silicoin.cc/",
-    "twitterURL": "https://twitter.com/SilicoinProject"
+    "twitterURL": "https://twitter.com/SilicoinProject",
+    "prefarm": 1000000
   },
   {
     "displayName": "Sector",
@@ -481,7 +505,8 @@
     "cfcalc": "https://chiaforkscalculator.com/sector",
     "discordURL": "https://discord.gg/aVuMZAHmMX",
     "websiteURL": null,
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 100000
   },
   {
     "displayName": "Tad",
@@ -502,7 +527,8 @@
     "cfcalc": "https://chiaforkscalculator.com/tad",
     "discordURL": "https://discord.gg/vnxnXDZwTN",
     "websiteURL": "https://tadcoin.xyz/",
-    "twitterURL": "https://twitter.com/TadCoin"
+    "twitterURL": "https://twitter.com/TadCoin",
+    "prefarm": 300000
   },
   {
     "displayName": "Apple",
@@ -523,7 +549,8 @@
     "cfcalc": "https://chiaforkscalculator.com/apple",
     "discordURL": null,
     "websiteURL": "https://applecoin.in/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 300000
   },
   {
     "displayName": "Cannabis",
@@ -544,7 +571,8 @@
     "cfcalc": "https://chiaforkscalculator.com/cannabis",
     "discordURL": "https://discord.gg/MATbWQHKG5",
     "websiteURL": "https://cannabischain.net/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 2400000
   },
   {
     "displayName": "Maize",
@@ -565,7 +593,8 @@
     "cfcalc": "https://chiaforkscalculator.com/maize",
     "discordURL": "https://discord.gg/9GWRKHjTec",
     "websiteURL": "https://maize.farm/",
-    "twitterURL": "https://twitter.com/coinmaize"
+    "twitterURL": "https://twitter.com/coinmaize",
+    "prefarm": 3000000
   },
   {
     "displayName": "Fork",
@@ -586,7 +615,8 @@
     "cfcalc": "https://chiaforkscalculator.com/fork",
     "discordURL": null,
     "websiteURL": null,
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 200000
   },
   {
     "displayName": "Shamrock",
@@ -607,7 +637,8 @@
     "cfcalc": null,
     "discordURL": "https://discord.gg/m6dQ8HV2w9",
     "websiteURL": null,
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 0
   },
   {
     "displayName": "Covid",
@@ -628,7 +659,8 @@
     "cfcalc": "https://chiaforkscalculator.com/covid",
     "discordURL": "https://discord.gg/5mFKC6DbXa",
     "websiteURL": "https://www.pinksheetscrypto.com/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 100000
   },
   {
     "displayName": "BTCgreen",
@@ -649,7 +681,8 @@
     "cfcalc": "https://chiaforkscalculator.com/btcgreen",
     "discordURL": "https://discord.gg/PKr7BcaWvx",
     "websiteURL": "https://www.btcgreen.us/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 30000
   },
   {
     "displayName": "N-Chain",
@@ -670,7 +703,8 @@
     "cfcalc": "https://chiaforkscalculator.com/nchain",
     "discordURL": "https://discord.gg/AdwYxxVnas",
     "websiteURL": "http://n-chain.org/",
-    "twitterURL": "https://twitter.com/rootnchain"
+    "twitterURL": "https://twitter.com/rootnchain",
+    "prefarm": 2
   },
   {
     "displayName": "Scam",
@@ -691,7 +725,8 @@
     "cfcalc": "https://chiaforkscalculator.com/scam",
     "discordURL": "https://discord.gg/g64gMpMphZ",
     "websiteURL": "http://scamnetwork.net/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 3000000
   },
   {
     "displayName": "Cunt",
@@ -712,7 +747,8 @@
     "cfcalc": "https://chiaforkscalculator.com/c_nt",
     "discordURL": "https://discord.gg/c2ezT4XcxE",
     "websiteURL": null,
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 3000000
   },
   {
     "displayName": "Fishery",
@@ -733,7 +769,8 @@
     "cfcalc": "https://chiaforkscalculator.com/fishery",
     "discordURL": "https://discord.gg/fNNmYtvWVr",
     "websiteURL": "http://fisherychian.net/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 600000
   },
   {
     "displayName": "LittleLamboCoin",
@@ -755,7 +792,8 @@
     "cfcalc": "https://chiaforkscalculator.com/littlelambocoin",
     "discordURL": "https://discord.gg/Ctzk4WH5yt",
     "websiteURL": null,
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 3500000
   },
   {
     "displayName": "Olive",
@@ -776,7 +814,8 @@
     "cfcalc": "https://chiaforkscalculator.com/olive",
     "discordURL": "https://discord.gg/CjV3e7t2qn",
     "websiteURL": "https://oliveblockchain.co/",
-    "twitterURL": "https://twitter.com/Oliveblockchain"
+    "twitterURL": "https://twitter.com/Oliveblockchain",
+    "prefarm": 300000
   },
   {
     "displayName": "Lucky",
@@ -797,7 +836,8 @@
     "cfcalc": "https://chiaforkscalculator.com/lucky",
     "discordURL": "https://discord.gg/pgdj4snppb",
     "websiteURL": "https://www.luckysix.top/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 666000
   },
   {
     "displayName": "Achi",
@@ -818,7 +858,8 @@
     "cfcalc": "https://chiaforkscalculator.com/achi",
     "discordURL": "https://discord.gg/DZhBc5pCng",
     "websiteURL": "https://achicoin.org/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 0
   },
   {
     "displayName": "Pipscoin",
@@ -839,7 +880,8 @@
     "cfcalc": "https://chiaforkscalculator.com/pipscoin",
     "discordURL": "https://discord.gg/T8taazt7Pf",
     "websiteURL": "https://www.pipscoin.net/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 5000000
   },
   {
     "displayName": "Beer",
@@ -860,7 +902,8 @@
     "cfcalc": "https://chiaforkscalculator.com/beer",
     "discordURL": "https://discord.gg/6HNkPPC3Dv",
     "websiteURL": null,
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 3000000
   },
   {
     "displayName": "Thyme",
@@ -881,7 +924,8 @@
     "cfcalc": "https://chiaforkscalculator.com/thyme",
     "discordURL": "https://discord.gg/gMnVzAsRXJ",
     "websiteURL": null,
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 2100000
   },
   {
     "displayName": "Xcha",
@@ -902,7 +946,8 @@
     "cfcalc": "https://chiaforkscalculator.com/xcha",
     "discordURL": null,
     "websiteURL": "http://xcha.io/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 8000000
   },
   {
     "displayName": "Stor",
@@ -923,7 +968,8 @@
     "cfcalc": "https://chiaforkscalculator.com/stor",
     "discordURL": "https://discord.gg/eXMCYDA3Xe",
     "websiteURL": "https://stor.network/",
-    "twitterURL": "https://twitter.com/stor_network"
+    "twitterURL": "https://twitter.com/stor_network",
+    "prefarm": 240000
   },
   {
     "displayName": "Goldcoin",
@@ -944,7 +990,8 @@
     "cfcalc": "https://chiaforkscalculator.com/goldcoin",
     "discordURL": "https://discord.gg/Kr4ZE8ym95",
     "websiteURL": "https://goldcoin-network.net/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 2000000
   },
   {
     "displayName": "Beet",
@@ -964,7 +1011,8 @@
     "xchForksURL": null,
     "cfcalc": "https://chiaforkscalculator.com/beet",
     "discordURL": "https://discord.gg/DFpak3DcW6",
-    "websiteURL": null
+    "websiteURL": null,
+    "prefarm": 300000
   },
   {
     "displayName": "Kiwi",
@@ -985,7 +1033,8 @@
     "cfcalc": "https://chiaforkscalculator.com/kiwi",
     "discordURL": "https://discord.gg/wHfXXszq2k",
     "websiteURL": null,
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 3000000
   },
   {
     "displayName": "Lotus",
@@ -1006,7 +1055,8 @@
     "cfcalc": "https://chiaforkscalculator.com/lotus",
     "discordURL": null,
     "websiteURL": "https://agem.ae/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 21000000
   },
   {
     "displayName": "Mint",
@@ -1027,7 +1077,8 @@
     "cfcalc": "https://chiaforkscalculator.com/mint",
     "discordURL": "https://discord.gg/mR5DZ4yCRZ",
     "websiteURL": "https://mintnet.work/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 21000000
   },
   {
     "displayName": "Mogua",
@@ -1048,7 +1099,8 @@
     "cfcalc": "https://chiaforkscalculator.com/mogua",
     "discordURL": "https://discord.gg/G3eEamXY6T",
     "websiteURL": "https://moguaworld.godaddysites.com/",
-    "twitterURL": "https://twitter.com/Mogua_office"
+    "twitterURL": "https://twitter.com/Mogua_office",
+    "prefarm": 21000000
   },
   {
     "displayName": "Tranzact",
@@ -1070,7 +1122,8 @@
     "discordURL": "https://discord.gg/XvvaamXuuF",
     "websiteURL": "https://tranzact.network/",
     "twitterURL": "https://twitter.com/TranzactB",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 500000
   },
   {
     "displayName": "Staicoin",
@@ -1091,7 +1144,8 @@
     "cfcalc": "https://chiaforkscalculator.com/stai",
     "discordURL": "https://discord.gg/7MhBBGaB3d",
     "websiteURL": "https://www.station-i.de/stai",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 55900000
   },
   {
     "displayName": "Salvia",
@@ -1112,7 +1166,8 @@
     "cfcalc": "https://chiaforkscalculator.com/salvia",
     "discordURL": null,
     "websiteURL": "https://salvianetwork.net/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 21000000
   },
   {
     "displayName": "Peas",
@@ -1122,7 +1177,7 @@
     "daemonFolder": "peas-blockchain",
     "price": 0.0,
     "baseRatio": 0.125,
-    "reward": 3.0,
+    "reward": 2.0,
     "mojoPerCoin": 1000000000000,
     "zeroBitsFilter": 9,
     "difficultyConstantFactorExponent": 66,
@@ -1133,7 +1188,8 @@
     "cfcalc": "https://chiaforkscalculator.com/peas",
     "discordURL": null,
     "websiteURL": null,
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 666000
   },
   {
     "displayName": "mELON",
@@ -1154,7 +1210,8 @@
     "cfcalc": "https://chiaforkscalculator.com/melon",
     "discordURL": "https://discord.gg/Q8eVStYegg",
     "websiteURL": null,
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 13400000
   },
   {
     "displayName": "Kujenga",
@@ -1175,7 +1232,8 @@
     "cfcalc": "https://chiaforkscalculator.com/kujenga",
     "discordURL": "https://discord.gg/WvAQctNQfG",
     "websiteURL": "https://kujenga.xyz/",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 2000000
   }, 
   {
     "displayName": "Caldera",
@@ -1187,7 +1245,8 @@
     "reward": 2.0,
     "gitPath": "Caldera-Network/caldera-blockchain",    
     "discordURL": "https://discord.gg/2d9VVMgDdx",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 10
   }, 
   {
     "displayName": "SSDCoin",
@@ -1199,7 +1258,8 @@
     "reward": 2.0,
     "gitPath": "ZeDon-SP/ssdcoin-blockchain",    
     "discordURL": "https://discord.com/invite/4hg2kjZFCS",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 3500000
   }, 
   {
     "displayName": "Skynet",
@@ -1215,7 +1275,8 @@
     "websiteURL": "https://skynet-network.org/"
     "gitPath": "SkynetNetwork/skynet-blockchain",    
     "discordURL": "https://discord.gg/8atUub5E5h",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 5000000
   }, 
   {
     "displayName": "Venidium",
@@ -1230,7 +1291,8 @@
     "websiteURL": "https://venidium.io/"
     "gitPath": "Venidium-Network/venidium-blockchain",    
     "discordURL": "https://discord.com/invite/wYdtEbBt2j",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 502000000
   }, 
   {
     "displayName": "Aedge",
@@ -1246,6 +1308,56 @@
     "websiteURL": "https://aedgecoin.com/"
     "gitPath": "AedgeCoin/aedge-blockchain",    
     "discordURL": "https://discord.gg/m569ExDwXY",
-    "twitterURL": null
+    "twitterURL": null,
+    "prefarm": 15100000
+  },
+ {
+    "displayName": "SHIBgreen",
+    "coinPrefix": "XSHIB",
+    "mojoPerCoin": 1000,
+    "pathName": "shibgreen",
+    "userFolder": ".shibgreen",
+    "daemonFolder": "shibgreen-blockchain",
+    "price": 0.0,
+    "baseRatio": 0.125,
+    "reward": 100000.0,
+    "websiteURL": null
+    "gitPath": "BTCgreen-Network/shibgreen-blockchain",    
+    "discordURL": "https://discord.gg/yZSKtPf8",
+    "twitterURL": null,
+    "prefarm": 100000000
+  },
+   {
+    "displayName": "ETHgreen",
+    "coinPrefix": "XETH",
+    "mojoPerCoin": 1000000000,
+    "pathName": "ethgreen",
+    "userFolder": ".ethgreen",
+    "daemonFolder": "ethgreen-blockchain",
+    "price": 0.0,
+    "baseRatio": 0.1,
+    "reward": 18.0,
+    "websiteURL": "https://eth-green.com/",
+    "gitPath": "ethgreen/ethgreen-blockchain",    
+    "discordURL": "https://discord.gg/KJc2hp7r",
+    "twitterURL": "https://twitter.com/ethgreenproject",
+    "prefarm": 21000000
+  },
+   {
+    "displayName": "PecanRolls",
+    "coinPrefix": "ROLLS",
+    "exeName": "rolls",
+    "mojoPerCoin": 1000000000000,
+    "pathName": null,
+    "userFolder": ".rolls",
+    "daemonFolder": "rolls-blockchain",
+    "price": 0.0,
+    "baseRatio": 1.0,
+    "reward": 6.0,
+    "websiteURL": "https://pecanrolls.net/",
+    "gitPath": "strandedathome/rolls-blockchain",
+    "discordURL": "https://discord.gg/xA9FHJpfEB",
+    "twitterURL": "https://twitter.com/pecanrolls",
+    "prefarm": 1000000
   }
 ]

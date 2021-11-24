@@ -13,7 +13,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
-import javax.swing.table.JTableHeader;
 
 import main.ForkFarmer;
 import main.Settings;
@@ -32,27 +31,26 @@ public class TransactionView extends JPanel {
 	public final static JTable TABLE = new JTable(MODEL);
 	public static final JScrollPane JSP = new JScrollPane(TABLE);
 	private static final JPopupMenu POPUP_MENU = new JPopupMenu();
-	private static final JPopupMenu HEADER_MENU = new JPopupMenu();
 	
 	public static class TxTableModel extends JFunTableModel<Transaction> {
 		public TxTableModel() {
 			super();
-			
 			@SuppressWarnings("unchecked")
 			List<Col<Transaction>> z = (List<Col<Transaction>>) Settings.settings.get("TxView Columns");
 			loadColumns(z);
+			show = true;
 			
 			addColumn("",   		22,		Icon.class,		t->t.getIcon()).showMandatory().fixed();
 			addColumn("Date",   	140,	String.class, 	t->t.date).showMandatory();
-			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).show(true).fixed();
-			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol).show(true);
-			addColumn("Name", 		80,		String.class, 	t->t.f.name).show(true);
-			addColumn("Effort",		80,		Percentage.class, 	t->t.effort).show(true);
-			addColumn("Prev Win",	90, 	TimeU.class, 	t->t.lastWinTime).show(true);
-			addColumn("To",   		450,	String.class, 	t->t.target).show(true).flex();
-			addColumn("Amount", 	80,		Balance.class, 	t->t.amount).show(true);
-			addColumn("$", 			60,		Balance.class, 	t->t.value).show(true);
-			addColumn("RW", 		22,		Icon.class, 	Transaction::getIco).show(true).fixed();
+			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).fixed();
+			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol);
+			addColumn("Name", 		80,		String.class, 	t->t.f.name);
+			addColumn("Effort",		80,		Percentage.class, 	t->t.effort);
+			addColumn("Prev Win",	90, 	TimeU.class, 	t->t.lastWinTime);
+			addColumn("To",   		450,	String.class, 	t->t.target).flex();
+			addColumn("Amount", 	80,		Balance.class, 	t->t.amount);
+			addColumn("$", 			60,		Balance.class, 	t->t.value);
+			addColumn("RW", 		22,		Icon.class, 	Transaction::getIco).fixed();
 		
 			onGetRowCount(() -> Transaction.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Transaction.LIST.get(r)));
@@ -88,11 +86,8 @@ public class TransactionView extends JPanel {
 			
 		});
 		
-		JTableHeader header = TABLE.getTableHeader();
-		header.setComponentPopupMenu(HEADER_MENU);
+		TABLE.getTableHeader().setComponentPopupMenu(MODEL.finalizeColumns(TABLE));
 		
-		MODEL.colList.forEach(c -> c.setSelectView(TABLE,HEADER_MENU));
-
 		SwingUtil.setColRight(TABLE, MODEL.getIndex("Amount"));
 		SwingUtil.setColRight(TABLE, MODEL.getIndex("$"));
 	}

@@ -36,11 +36,11 @@ public class TxReportView extends JPanel {
 		public TxTableModel() {
 			super();
 			
-			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).show(true);
-			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol).show(true);
-			addColumn("Name", 		-1,		String.class, 	t->t.f.name).show(true);
+			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).show();
+			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol).show();
+			addColumn("Name", 		-1,		String.class, 	t->t.f.name).show();
 			addColumn("Amount", 	100,	Balance.class, 	t->t.amount).showMandatory();
-			addColumn("$", 			60,		Balance.class, 	t->t.value).show(true);
+			addColumn("$", 			60,		Balance.class, 	t->t.value).show();
 			
 			onGetRowCount(() -> LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(LIST.get(r)));
@@ -84,7 +84,7 @@ public class TxReportView extends JPanel {
 		double avg = LIST.stream().map(t -> t.effort.effort).filter(e -> e >= 0).collect(Collectors.averagingDouble(num -> num));
 		effortLbl.setText("Average Effort: " + avg + "%");
 		
-		MODEL.colList.forEach(c -> c.setSelectView(TABLE,HEADER_MENU));
+		MODEL.colList.forEach(c -> c.finalize(TABLE,HEADER_MENU));
 		MODEL.fireTableDataChanged();
 		
 	}	

@@ -1,6 +1,7 @@
 package forks;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,11 +31,13 @@ public class ForkData {
 	public String userFolder;
 	public String daemonFolder;
 	public String daemonFolder2;
+	public String daemonFolder3;
 	public double price;
 	public double nftReward;
 	public double baseRatio;
 	public double fullReward;
 	public long mojoPerCoin;
+	public long preFarm;
 	
 	// computed values
 	public String rootPath;
@@ -50,11 +53,12 @@ public class ForkData {
 	public String websiteURL;
 	public String twitterURL;
 	public String exeName;
-	String basePath;
+	String daemonBase;
 	
 	public long peakHeight;
 	public long peakAge;
 	public ImageIcon atbIcon;
+	public boolean hidden;
 	
 	public NetSpace netspace;
 	public TimeU etw = TimeU.BLANK;
@@ -69,9 +73,11 @@ public class ForkData {
 			userFolder = (String) jo.get("userFolder");
 			daemonFolder = (String) jo.get("daemonFolder");
 			daemonFolder2 = (String) jo.get("daemonFolder2");
+			daemonFolder3 = (String) jo.get("daemonFolder3");
 			price =  ((BigDecimal)jo.get("price")).doubleValue();
 			fullReward = ((BigDecimal)jo.get("reward")).doubleValue();
 			baseRatio = ((BigDecimal)jo.get("baseRatio")).doubleValue();
+			preFarm = ((BigDecimal)jo.get("prefarm")).longValue();
 			nftReward = fullReward * baseRatio;
 			ico = Ico.getForkIcon(coinPrefix.toLowerCase());
 		
@@ -82,6 +88,7 @@ public class ForkData {
 			websiteURL = (String) jo.get("websiteURL");
 			twitterURL = (String) jo.get("twitterURL");
 			exeName = (String) jo.get("exeName");
+			
 			
 			calculatorURL = (String) jo.get("cfcalc");
 			mojoPerCoin = jo.containsKey("mojoPerCoin") ? ((BigDecimal)jo.get("mojoPerCoin")).longValue() : 0;
@@ -99,32 +106,44 @@ public class ForkData {
 	}
 
 	private void setDirectriesLinux() {
-		basePath = USER_HOME + "/" + daemonFolder + "/";
+		daemonBase = USER_HOME + "/" + daemonFolder + "/";
 		logPath = USER_HOME + "/" + userFolder.toLowerCase() + "/mainnet/log/debug.log";
 		configPath = USER_HOME + "/" + userFolder.toLowerCase() + "/mainnet/config/config.yaml";
 		
 		if (coinPrefix.equals("NCH")) {
 			logPath = USER_HOME + "/.chia/ext9/log/debug.log";
 			configPath = USER_HOME + "/.chia/ext9/config/config.yaml";
-			basePath = USER_HOME + "/ext9-blockchain/";
+			daemonBase = USER_HOME + "/ext9-blockchain/";
 		}
 
-		exePath = basePath + "/venv/bin/" + displayName.toLowerCase();
-		if (!new File(exePath).exists())
-			exePath = basePath + "/venv/bin/chia";
 		
-		if (!new File(exePath).exists() && null != daemonFolder2) {
-			exePath = USER_HOME + "/" + daemonFolder2 + "/venv/bin/" + displayName.toLowerCase();
-		}
+		checkDaemonLinux(USER_HOME + "/" + daemonFolder + "/");
+		if (new File(exePath).exists() || null == daemonFolder2)
+			return;
+		checkDaemonLinux(USER_HOME + "/" + daemonFolder2 + "/");
+		if (new File(exePath).exists() || null == daemonFolder3)
+			return;
+		checkDaemonLinux(USER_HOME + "/" + daemonFolder3 + "/");
+	}
+	
+	private void checkDaemonLinux(String daemonPath) {
+		exePath = daemonPath + "/venv/bin/" + displayName.toLowerCase();
+		if (new File(exePath).exists())
+			return;
 		
+		exePath = daemonPath + "/venv/bin/chia";
+		
+		if (new File(exePath).exists() || null == exeName)
+			return;
+		
+		exePath = daemonPath + "/venv/bin/" + exeName.toLowerCase();
 	}
 	
 	private void setDirectoriesWin() {
-		basePath = USER_HOME + "\\AppData\\Local\\" + daemonFolder + "\\";
 		rootPath = USER_HOME + "\\" + userFolder.toLowerCase() + "\\mainnet\\";
 		
-		logPath = USER_HOME + "\\" + userFolder.toLowerCase() + "\\mainnet\\log\\debug.log";
-		configPath = USER_HOME + "\\" + userFolder.toLowerCase() + "\\mainnet\\config\\config.yaml";
+		logPath = rootPath + "log\\debug.log";
+		configPath = rootPath + "config\\config.yaml";
 		
 		if (coinPrefix.equals("NCH")) {
 			logPath = USER_HOME + "\\.chia\\ext9\\log\\debug.log";
@@ -133,36 +152,45 @@ public class ForkData {
 		
 		if (!new File(configPath).exists()) { // try environment keys
 			String envKey = displayName.toUpperCase() + "_ROOT";
-			String val = System.getenv().get(envKey);
-			if (null != val) {
-				logPath =  val + "\\log\\debug.log";
-				configPath = val + "\\config\\config.yaml"; 
+			rootPath = System.getenv().get(envKey);
+			if (null != rootPath) {
+				logPath =  rootPath + "\\log\\debug.log";
+				configPath = rootPath + "\\config\\config.yaml"; 
 			}
 		}
 		
-		exePath = basePath + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
-		if (!new File(exePath).exists()) {
-			List<String> dirs = Util.getDir(basePath, "app"); // check all the "app" folders
-			for (String appDir : dirs) {
-				
-				if (null != exeName)
-					exePath = basePath + appDir + "\\resources\\app.asar.unpacked\\daemon\\" + exeName + ".exe";
-				if (new File(exePath).exists())
-					break;
-				exePath = basePath + appDir + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
-				if (new File(exePath).exists())
-					break;
-				exePath = basePath + appDir + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
-				if (new File(exePath).exists())
-					break;
-			}
-			
+		checkDaemonWin(USER_HOME + "\\AppData\\Local\\" + daemonFolder + "\\");
+		if (new File(exePath).exists() || null == daemonFolder2)
+			return;
+		checkDaemonWin(USER_HOME + "\\AppData\\Local\\" + daemonFolder2 + "\\");
+		
+	}
+	
+	public void checkDaemonWin(String daemonBase) {
+		exePath = daemonBase + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
+		if (new File(exePath).exists())
+			return;
+		
+		List<String> dirs = Util.getDir(daemonBase, "app"); // check all the "app" folders
+		for (String appDir : dirs) {
+			if (null != exeName)
+				exePath = daemonBase + appDir + "\\resources\\app.asar.unpacked\\daemon\\" + exeName + ".exe";
+			if (new File(exePath).exists())
+				return;
+			exePath = daemonBase + appDir + "\\resources\\app.asar.unpacked\\daemon\\chia.exe";
+			if (new File(exePath).exists())
+				return;
+			exePath = daemonBase + appDir + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
+			if (new File(exePath).exists())
+				return;
 		}
 	}
 	
-	private void loadFork() {
+	
+	
+	public Fork loadFork() throws FileNotFoundException {
 		if (!new File(exePath).exists())
-			return;
+			throw new FileNotFoundException(exePath);
 		
 		Fork f = new Fork();
 		f.name = displayName;
@@ -175,11 +203,10 @@ public class ForkData {
 		f.ico = ico;
 		f.fd = this;
 		
-		Fork.LIST.add(f);
+		return f;
 	}
 
 	public static void loadFix() {
-		
 		// first see if we need to patch exePath for any forks
 		for (Fork f: Fork.LIST) {
 			if (f.cold) {
@@ -214,12 +241,15 @@ public class ForkData {
 		// next, see if there is any new forks to load
 		for (ForkData ft : LIST) {
 			if (!Fork.LIST.stream().anyMatch(f -> ft.coinPrefix.equals(f.symbol))) {
-				ft.loadFork();
+				try {
+					Fork f = ft.loadFork();
+					Fork.LIST.add(f);
+				} catch (FileNotFoundException e) {
+					// fork doesn't exist... skip.
+				}
+					
 			}
-		
 		}
-	
-		
 	}
 	
 	public static Optional<ForkData> getbyAddress(String address) {

@@ -15,6 +15,7 @@ import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 
 import forks.Fork;
+import forks.ForkController;
 import forks.ForkView;
 import transaction.TransactionView;
 import util.HttpServer;
@@ -187,8 +188,8 @@ public class MainGui extends JPanel {
         updatePlotSize(plotSize);
         			
 		// compute fork refresh delay
-		new Thread(ForkView::daemonReader).start();
-		new Thread(ForkView::logReader).start();
+		new Thread(ForkController::daemonReader).start();
+		new Thread(ForkController::logReader).start();
 		ForkView.TABLE.setAutoCreateRowSorter(true);
 		
 		Args.handle();

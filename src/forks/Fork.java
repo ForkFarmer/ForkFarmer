@@ -25,7 +25,6 @@ import org.yaml.snakeyaml.Yaml;
 
 import debug.DebugView;
 import ffutilities.ForkPorts;
-import logging.LogView;
 import main.ForkFarmer;
 import main.MainGui;
 import transaction.Transaction;
@@ -43,7 +42,7 @@ import util.apache.ReversedLinesFileReader;
 public class Fork {
 	private static final ExecutorService SVC = Executors.newFixedThreadPool(2);
 	public static List<Fork> LIST = new ArrayList<>();
-	public static List<Fork> I_LIST;
+	public static List<Fork> FULL_LIST;
 
 	public transient Balance balance = new Balance();
 	public transient Balance equity = new Balance();
@@ -73,22 +72,24 @@ public class Fork {
 	transient public Exception lastException;
 	transient public List<Wallet> walletList = new ArrayList<>();
 	transient public boolean nothing;
-	transient boolean hidden;
 	transient String lastTimeStamp;
 	transient LocalDateTime lastTimeUpdate;
 	transient public Wallet wallet = Wallet.EMPTY;
 	transient public boolean xchfSupport;
 	transient public Percentage load = Percentage.EMPTY;
+	transient public int numH;
 	
 	public String walletAddr;
 	public boolean fullNode = true;
 	public boolean walletNode = true;
 	public double price;
 	public double fullReward;
+	public String passFile;
 	
 	public String logPath;
 	public String configPath;
 	public boolean cold;
+	public boolean hidden;
 	
 	public Fork() { // needed for YAML
 		
@@ -98,20 +99,24 @@ public class Fork {
 		if (cold)
 			return;
 		
-		LogView.add(name + " getting receive address");
+		ForkFarmer.LOG.add(name + " getting receive address");
 		
 		Process p = null;
 		BufferedReader br = null;
 		try {
-			p = Util.startProcess(exePath, "keys", "show");
+			if (null != passFile)
+				p = Util.startProcess(exePath, "--passphrase-file", passFile, "keys", "show");
+			else
+				p = Util.startProcess(exePath, "keys", "show");
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
 			//check for passPhrase
 			char f = (char)br.read();
 			if (f == '(') {
 				p.destroyForcibly();
-				wallet = new Wallet("Error! remove passphrase");
+				wallet = new Wallet("Set Passphrase: Action -> Set Pass File");
 				hidden = true;
+				ForkView.update(this);
 			}
 			
 			int walletIndex = 1;
@@ -147,14 +152,14 @@ public class Fork {
 				walletList.stream().filter(w -> w.addr.equals(walletAddr)).findAny().ifPresent(w -> {wallet = w; walletAddr = w.addr;});
 		}
 		
-		LogView.add(name + " done getting receive address");
+		ForkFarmer.LOG.add(name + " done getting receive address");
 	}
 	
 	public void loadVersion() {
 		if (cold)
 			return;
 		
-		LogView.add(name + " getting software verion");
+		ForkFarmer.LOG.add(name + " getting software verion");
 		
 		Process p = null;
 		BufferedReader br = null;
@@ -168,7 +173,7 @@ public class Fork {
 		Util.closeQuietly(br);
 		Util.waitForProcess(p);
 		
-		LogView.add(name + " done getting software verion");
+		ForkFarmer.LOG.add(name + " done getting software verion");
 	}
 		
 	@SuppressWarnings("unused")
@@ -181,7 +186,7 @@ public class Fork {
 			return;
 		}
 		
-		LogView.add(name + " loading wallet");
+		ForkFarmer.LOG.add(name + " loading wallet");
 		
 		Process p = null;
 		BufferedReader br = null;
@@ -249,14 +254,14 @@ public class Fork {
 		Util.waitForProcess(p);
 		
 		updateIcon();
-		LogView.add(name + " done loading wallet");
+		ForkFarmer.LOG.add(name + " done loading wallet");
 	}
 	
 	public void loadFarmSummary() {
 		if (cold)
 			return;
-		
-		LogView.add(name + " loading farm summary");
+		int numH = 0;
+		ForkFarmer.LOG.add(name + " loading farm summary");
 		
 		Process p = null;
 		BufferedReader br = null;
@@ -268,9 +273,7 @@ public class Fork {
 			while ( null != (l = br.readLine())) {
 				if (l.contains("Estimated network space: ")) {
 					NetSpace.parse(l.substring("Estimated network space: ".length())).ifPresent(n -> fd.netspace = n);
-				}
-				
-				else if (l.contains("Total size of plots: ")) {
+				} else if (l.contains("Total size of plots: ")) {
 					try {
 						NetSpace.parse(l.substring("Total size of plots: ".length()))
 							.ifPresent(ps -> {plotSpace = ps; MainGui.updatePlotSize(ps);});
@@ -285,7 +288,9 @@ public class Fork {
 						//estEarn = 43800 / etw.inMinutes() * price;
 				} else if (l.contains("Farming status: ")) {
 					farmStatus = l.substring("Farming status: ".length());
-				} 
+				} else if (l.startsWith("Local Harvester") || l.startsWith("Remote Harvester")) {
+					numH++;
+				}
 			}
 		} catch (IOException e) {
 			lastException = e;
@@ -293,11 +298,12 @@ public class Fork {
 		Util.waitForProcess(p);
 		Util.closeQuietly(br);
 		
-		if (!fd.etw.known() && fd.netspace.known() && plotSpace.known()) {
+		if (!fd.etw.known() && fd.netspace.known() && null != plotSpace && plotSpace.known()) {
 			fd.etw = new TimeU((int) (fd.netspace.szTB / plotSpace.szTB * 18.75));
 		}
+		this.numH = numH; 
 		
-		LogView.add(name + " done loading farm summary");
+		ForkFarmer.LOG.add(name + " done loading farm summary");
 	}
 	
 	public void readLog() {
@@ -445,8 +451,9 @@ public class Fork {
 		ForkFarmer.newFrame(name + ": Debug View", ico, new DebugView(this));
 	}
 	
-	public int getIndex() {
-		return LIST.indexOf(this);
+	public Optional<Integer> getIndex() {
+		int idx = LIST.indexOf(this);
+		return (-1 != idx) ? Optional.of(idx) : Optional.empty();
 	}
 
 	public void sendTX(String address, String amt, String fee) {
@@ -562,12 +569,12 @@ public class Fork {
 		return LIST.stream().filter(f -> !f.cold && address.startsWith(f.symbol.toLowerCase())).findAny();	
 	}
 
-	public ImageIcon getATBIcon() {
-		if (statusIcon == Ico.GREEN)
-			return Ico.ATB_G;
-		if (statusIcon == Ico.YELLOW)
-			return Ico.ATB_Y;
-		return Ico.ATB_R;
+	public void startup() {
+		loadVersion();
+		loadWallets();
+		loadWallet();
+		loadFarmSummary();
+		ForkView.update(this);
 	}
 	
 }

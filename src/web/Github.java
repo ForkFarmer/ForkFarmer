@@ -6,7 +6,7 @@ import java.util.List;
 
 import forks.Fork;
 import forks.ForkView;
-import logging.LogView;
+import main.ForkFarmer;
 
 public class Github {
 	private static LocalDateTime lastUpdate;
@@ -22,7 +22,7 @@ public class Github {
 	
 	public static void getVersionForced(List<Fork> list) {
 
-		LogView.add("Github.com pulling version information");
+		ForkFarmer.LOG.add("Github.com pulling version information");
 		for (Fork f : list) {
 			if (f.xchfSupport)
 				continue;
@@ -31,7 +31,10 @@ public class Github {
 				continue;
 	        
 	        try {
-	        	JSObj jo = HttpUtil.requestJSO("https://api.github.com/repos/" + f.fd.gitPath + "/releases/latest");
+	        	String requestPath = "https://api.github.com/repos/" + f.fd.gitPath + "/releases/latest";
+	        	ForkFarmer.LOG.add("Github: " + requestPath);
+	        	
+	        	JSObj jo = HttpUtil.requestJSO(requestPath);
 	        	
 	        	String tagName = jo.getStr("tag_name"); 
 	        	String releasedOn = jo.getStr("published_at");
@@ -47,6 +50,7 @@ public class Github {
 			} 
 		}
 			
-			
-		}
+		ForkFarmer.LOG.add("Done Github.com pulling version information");	
+	}
+		
 }

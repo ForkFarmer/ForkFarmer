@@ -7,7 +7,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -23,14 +22,16 @@ import forks.ForkData;
 import forks.ForkStarter;
 import forks.ForkView;
 import transaction.TransactionView;
+import util.FFUtil;
 import util.Util;
 import util.json.JsonArray;
 import util.json.JsonObject;
-import util.json.Jsoner;
 import util.swing.SwingUtil;
 
 public class Settings {
 	private static final String SETTINGS_PATH = "FF_Settings.yaml";
+	
+	
 	
 	public class Currency {
 		String name;
@@ -45,8 +46,8 @@ public class Settings {
 	}
 	
 	public static Gui GUI = new Gui();
-	
 	public static Map<String, Object> settings = new HashMap<>();
+	public static JsonObject colMap;
 	
 	public static class Gui {
 		public int logReaderIntraDelay;
@@ -68,18 +69,10 @@ public class Settings {
 	
 	@SuppressWarnings("unchecked")
 	public static void Load() {
-		InputStream is = Util.getResourceAsStream("forks.json");
+		JsonArray forkArray = (JsonArray)FFUtil.loadIntJSON("forks.json");
+		forkArray.forEach(o-> new ForkData((JsonObject)o));
 		
-    	try {
-    		JsonArray forkArray = (JsonArray)Jsoner.deserialize(new InputStreamReader(is, "UTF-8"));
-    		
-    		for (Object o : forkArray)
-    			new ForkData((JsonObject)o);
-    		
-		} catch (Exception e) {
-			System.out.println("Error parsing internal forks.json");
-			e.printStackTrace();
-		}
+		colMap = (JsonObject)FFUtil.loadIntJSON("columns.json");
 		
 		InputStream inputStream;
 		
@@ -104,7 +97,8 @@ public class Settings {
 		} 
 		
 		ForkData.loadFix();
-		Fork.I_LIST = new ArrayList<>(Fork.LIST);
+		Fork.FULL_LIST = new ArrayList<>(Fork.LIST);
+		Fork.LIST.removeIf(f -> f.hidden);
 		ForkView.update();
 		
 	}
@@ -113,6 +107,9 @@ public class Settings {
 		synchronized (Fork.LIST) {
 			SwingUtil.mapViewToModel(ForkView.TABLE,Fork.LIST);
 		}
+		
+		Fork.FULL_LIST.stream().filter(f -> f.hidden).forEach(f -> Fork.LIST.add(f));
+		
 		settings.clear();
 		settings.put("Fork List", Fork.LIST);
 		settings.put("Gui Settings", GUI);

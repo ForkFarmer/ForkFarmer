@@ -14,7 +14,7 @@ import java.util.List;
 import forks.Fork;
 import forks.ForkData;
 import forks.ForkView;
-import logging.LogView;
+import main.ForkFarmer;
 import main.MainGui;
 import types.Balance;
 import util.Ico;
@@ -46,7 +46,7 @@ public class AllTheBlocks {
 	public static void updateColdForced() {
 		lastUpdate = LocalDateTime.now();
 		
-		LogView.add("alltheblocks.net cold wallet update");
+		ForkFarmer.LOG.add("alltheblocks.net cold wallet update");
 		
 		try {
 			List<String> addrList = new ArrayList<>();
@@ -132,10 +132,12 @@ public class AllTheBlocks {
 	}
 	
 	public static void updateStatsForced() {
+		ForkFarmer.LOG.add("alltheblocks.net chain stats");
         try {
         	String jsonResponse = HttpUtil.request("https://api.alltheblocks.net/atb/blockchain/settings-and-stats").body();
         	JsonArray ja = (JsonArray) Jsoner.deserialize(jsonResponse);
         	
+        	ForkFarmer.LOG.add("ATB received info for " + ja.size() + "chains");
         	ja.forEach(item -> {
         	    JsonObject jo = (JsonObject) item;
         	    String symbol = (String)jo.get("coinPrefix");
@@ -155,16 +157,35 @@ public class AllTheBlocks {
         	    		fd.atbIcon = null;
         	    	else
         	    		fd.atbIcon = peakAge < 600 ? Ico.ATB_G : Ico.ATB_R;  
-        	    	
+        	    });
+        	});
+        	
+        } catch (Exception e) {
+        	e.printStackTrace();
+		} 
+        ForkView.update();
+	}
+	
+	public static List<String> getPeers(String pathName) {
+		List<String> peerList = new ArrayList<>();
+		try {
+        	String jsonResponse = HttpUtil.request("https://api.alltheblocks.net/atb/peer/recent?amount=6&excludeV4=false&excludeV6=true").body();
+        	JsonArray ja = (JsonArray) Jsoner.deserialize(jsonResponse);
+        	
+        	ja.stream().map(o -> (JsonObject)o).filter(jo -> ((String)jo.get("pathName")).equals(pathName)).forEach(item -> {
+        	    JsonObject jo = (JsonObject) item;
+        	    JsonArray peerArray = (JsonArray) jo.get("peers");
+        	    
+        	    peerArray.stream().map(o -> (JsonObject)o).forEach(pa -> {
+        	    	peerList.add((String)pa.get("host") + ":" + (BigDecimal)pa.get("port"));
         	    });
         	    
-        	    ForkView.update();
         	});
         } catch (Exception e) {
         	e.printStackTrace();
 		} 	
-		
-		
+
+		return peerList;
 	}
 	
 }

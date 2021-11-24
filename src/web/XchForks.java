@@ -11,7 +11,7 @@ import java.util.Base64;
 import java.util.List;
 
 import forks.Fork;
-import logging.LogView;
+import main.ForkFarmer;
 import main.MainGui;
 import main.Settings;
 import types.XchForksData;
@@ -36,7 +36,7 @@ public class XchForks {
 	public static void updatePricesForced() {
 		lastUpdate = LocalDateTime.now();
 		
-		LogView.add("XchForks.com price update");
+		ForkFarmer.LOG.add("XchForks.com price update");
 		
 		List<XchForksData> list = new ArrayList<>();
 		

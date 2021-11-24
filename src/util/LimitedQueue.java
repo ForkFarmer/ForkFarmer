@@ -9,16 +9,26 @@ import java.util.LinkedList;
 @SuppressWarnings("serial")
 public class LimitedQueue<E> extends LinkedList<E> {
     private int limit;
+    private boolean reverse;
 
     public LimitedQueue(int limit) {
         this.limit = limit;
     }
+    
+    public void setReverse() {
+    	reverse = true;
+    }
 
     @Override
     public boolean add(E o) {
-        super.add(o);
-        
-        while (size() > limit) { super.remove(); }
+        if (!reverse) {
+        	super.add(o);
+        	while (size() > limit) { super.remove(); }
+    	} else {
+    		super.addFirst(o);
+    		while (size() > limit) { super.removeLast(); }
+    	}
+    		
         return true;
     }
 }
