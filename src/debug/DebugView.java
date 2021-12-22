@@ -10,6 +10,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import forks.Fork;
+import util.I18n;
 import util.Util;
 
 @SuppressWarnings("serial")
@@ -28,7 +29,7 @@ public class DebugView extends JPanel {
 		new Thread(() -> {
 			String ret;
 			StringBuilder sb = new StringBuilder();
-			sb.append("Running debug for " + f.name + "\n");
+			sb.append(I18n.DebugView.startText + f.name + "\n");
 		
 			if (null != f.lastException) {
 				StringWriter sw = new StringWriter();
@@ -37,32 +38,32 @@ public class DebugView extends JPanel {
 				String sStackTrace = sw.toString(); // stack trace as a string
 				sb.append(sStackTrace + "\n");
 			} else
-				sb.append("FF Exceptions: None\n");
+				sb.append(I18n.DebugView.noneExceptionText+"\n");
 			sb.append("--------------------------------\n\n");
 			
 			if (!f.cold) {
 			
 				if (f.walletNode) {
-					sb.append("Running wallet show\n");
-					sb.append("ExePath: " + f.exePath + "\n");
+					sb.append(I18n.DebugView.walletShowStartText+"\n");
+					sb.append(I18n.DebugView.exePath + f.exePath + "\n");
 					textArea.setText(sb.toString());
 					
 					ret = Util.runProcessDebug(f.exePath,"wallet","show");
 					sb.append("\n" +  ret);
 					sb.append("--------------------------------\n\n");
 				} else {
-					sb.append("walletNode=false for " + f.name + " skipping wallet test\n");
+					sb.append(I18n.DebugView.noneWalletNodeTip(f.name)+"\n");
 				}
 				
-				sb.append("Running: farm summary\n");
-				sb.append("ExePath: " + f.exePath + "\n");
+				sb.append(I18n.DebugView.runningFarmSummary+"\n");
+				sb.append(I18n.DebugView.exePath + f.exePath + "\n");
 				textArea.setText(sb.toString());
 				
 				ret = Util.runProcessDebug(f.exePath,"farm","summary");
 				sb.append("\n" +  ret);
 				sb.append("--------------------------------\n\n");
 			}
-			sb.append(" == Debug Complete ==\n");
+			sb.append(I18n.DebugView.debugFinish+"\n");
 			textArea.setText(sb.toString());
 		}).start();
 		

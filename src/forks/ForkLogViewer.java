@@ -18,6 +18,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 
 import main.ForkFarmer;
+import util.I18n;
 import util.Ico;
 import util.Util;
 import util.apache.ReversedLinesFileReader;
@@ -26,8 +27,8 @@ import util.swing.SwingEX;
 @SuppressWarnings("serial")
 public class ForkLogViewer extends JFrame {
 	JPanel logPanel = new JPanel(new BorderLayout());
-	JCheckBox autoUpdate = new JCheckBox("Auto update");
-	SwingEX.LTPanel linesField = new SwingEX.LTPanel("Lines to read:   ", "100");
+	JCheckBox autoUpdate = new JCheckBox(I18n.ForkLogViewer.autoUpdate);
+	SwingEX.LTPanel linesField = new SwingEX.LTPanel(I18n.ForkLogViewer.lines2Read, "100");
 	JPanel bottomPanel = new JPanel(new BorderLayout());
 	
 	JTabbedPane JTP = new JTabbedPane();
@@ -53,16 +54,16 @@ public class ForkLogViewer extends JFrame {
 			LogViewer flv = new LogViewer(f);
 			list.add(flv);
 			setIconImage(f.ico.getImage());
-			setTitle(f.name + " log view");
+			setTitle(f.name + I18n.ForkLogViewer.singleForkTitleSuffix);
 			logPanel.add(flv,BorderLayout.CENTER);
 		} else {
 			setIconImage(Ico.LOGO.getImage());
-			setTitle("Log Viewer");
+			setTitle(I18n.ForkLogViewer.title);
 			logPanel.add(JTP,BorderLayout.CENTER);
 			for (Fork f : selected) {
 				LogViewer flv = new LogViewer(f);
 				list.add(flv);
-				JTP.addTab(f.name + " log",f.ico, flv);
+				JTP.addTab(f.name + I18n.ForkLogViewer.multiForkTabNameSuffix,f.ico, flv);
 			}
 		}
 		

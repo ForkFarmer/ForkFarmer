@@ -17,6 +17,7 @@ import javax.swing.JTable;
 
 import main.Settings;
 import types.Balance;
+import util.I18n;
 import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
@@ -37,9 +38,9 @@ public class TxReportView extends JPanel {
 			super();
 			
 			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).show();
-			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol).show();
-			addColumn("Name", 		-1,		String.class, 	t->t.f.name).show();
-			addColumn("Amount", 	100,	Balance.class, 	t->t.amount).showMandatory();
+			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol).show().colName(I18n.TxReportView.txSymbolColName);
+			addColumn("Name", 		-1,		String.class, 	t->t.f.name).show().colName(I18n.TxReportView.txNameColName);
+			addColumn("Amount", 	100,	Balance.class, 	t->t.amount).showMandatory().colName(I18n.TxReportView.txAmountColName);
 			addColumn("$", 			60,		Balance.class, 	t->t.value).show();
 			
 			onGetRowCount(() -> LIST.size());
@@ -79,10 +80,10 @@ public class TxReportView extends JPanel {
 		Balance total = new Balance();
 		for (Transaction t : LIST)
 			total.add(t.value);
-		valueLbl.setText("Value: " + Settings.GUI.currencySymbol + total.toString());
+		valueLbl.setText(I18n.TxReportView.value + Settings.GUI.currencySymbol + total.toString());
 		
 		double avg = LIST.stream().map(t -> t.effort.effort).filter(e -> e >= 0).collect(Collectors.averagingDouble(num -> num));
-		effortLbl.setText("Average Effort: " + avg + "%");
+		effortLbl.setText(I18n.TxReportView.averageEffort + avg + "%");
 		
 		MODEL.colList.forEach(c -> c.finalize(TABLE,HEADER_MENU));
 		MODEL.fireTableDataChanged();

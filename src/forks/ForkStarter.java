@@ -12,6 +12,7 @@ import javax.swing.JPanel;
 
 import main.ForkFarmer;
 import main.Settings;
+import util.I18n;
 import util.Util;
 import util.swing.SwingEX;
 import util.swing.SwingEX.LTPanel;
@@ -90,10 +91,10 @@ public class ForkStarter {
 		getSettings();
 		JPanel ESPanel = new JPanel(new BorderLayout());
 		
-		ESPanel.add(new JLabel("ForkFarmer start is dependent on Wallet (WN) & Fullnode (FN) settings:"), BorderLayout.PAGE_START);
+		ESPanel.add(new JLabel(I18n.ForkStarter.editStartTableTitle), BorderLayout.PAGE_START);
 		ESPanel.add(new KVTable(LIST), BorderLayout.CENTER);
 		
-		JOptionPane.showConfirmDialog(ForkFarmer.FRAME,ESPanel,"Configure Start Settings:", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE);
+		JOptionPane.showConfirmDialog(ForkFarmer.FRAME,ESPanel,I18n.ForkStarter.editStartPanelTitle, JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE);
 	}
 	
 	
@@ -112,17 +113,17 @@ public class ForkStarter {
 	
 	static public void newCustCMD(List<Fork> selList) {
 		JPanel customPanel = new JPanel(new GridLayout(selList.size() > 1 ? 3 : 2 ,1));
-		JCheckBox updateChk = new JCheckBox("Immeditate update after command");
+		JCheckBox updateChk = new JCheckBox(I18n.ForkStarter.customImmeditateRunLabel);
 		
-		LTPanel cmdP = new SwingEX.LTPanel("CMD: " , Settings.GUI.custLastCustom);
-		LTPanel staggerP = new SwingEX.LTPanel("Stagger (ms): " , Settings.GUI.custLastDelay);
+		LTPanel cmdP = new LTPanel(I18n.ForkStarter.customCmdLabel , Settings.GUI.custLastCustom);
+		LTPanel staggerP = new LTPanel(I18n.ForkStarter.customStaggerIntevalLabel, Settings.GUI.custLastDelay);
 		updateChk.setSelected(Settings.GUI.custForceUpdate);
 		customPanel.add(cmdP);
 		if (selList.size() > 1)
 			customPanel.add(staggerP);
 		customPanel.add(updateChk);
 		
-		if (false == ForkFarmer.showPopup("Custom Command:", customPanel))
+		if (false == ForkFarmer.showPopup(I18n.ForkStarter.customCmdPanelTitle, customPanel))
 			return;
 		
 		Settings.GUI.custLastCustom = cmdP.field.getText();

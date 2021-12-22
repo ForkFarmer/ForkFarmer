@@ -38,6 +38,7 @@ import main.Settings;
 import peer.PeerView;
 import types.Balance;
 import types.Wallet;
+import util.I18n;
 import util.Ico;
 import util.Util;
 import util.swing.SwingEX;
@@ -53,13 +54,13 @@ public class ForkController {
 	public static JPopupMenu getPopupMenu() {
 		JPopupMenu POPUP_MENU = new JPopupMenu();
 		
-		final JMenuItem STAGGER_JMI = new SwingEX.JMI("Stagger", 	Ico.START,	ForkController::staggerStartDialog);
-		final JMenu ACTION_SUBMENU = new SwingEX.JMIco("Action", Ico.ACTION);
-		final JMenu WALLET_SUBMENU = new SwingEX.JMIco("Wallet", Ico.WALLET);
-		final JMenu EXPLORE_SUBMENU = new SwingEX.JMIco("Explore", Ico.EXPLORE);
-		final JMenu COPY_SUBMENU = new SwingEX.JMIco("Copy", Ico.CLIPBOARD);
-		final JMenu TOOLS_SUBMENU = new SwingEX.JMIco("Tools", Ico.TOOLS);
-		final JMenu COMMUNITY_SUBMENU = new SwingEX.JMIco("Community", Ico.PEOPLE);
+		final JMenuItem STAGGER_JMI = new SwingEX.JMI(I18n.ForkController.stagger, 	Ico.START,	ForkController::staggerStartDialog);
+		final JMenu ACTION_SUBMENU = new SwingEX.JMIco(I18n.ForkController.action, Ico.ACTION);
+		final JMenu WALLET_SUBMENU = new SwingEX.JMIco(I18n.ForkController.wallet, Ico.WALLET);
+		final JMenu EXPLORE_SUBMENU = new SwingEX.JMIco(I18n.ForkController.explore, Ico.EXPLORE);
+		final JMenu COPY_SUBMENU = new SwingEX.JMIco(I18n.ForkController.copy, Ico.CLIPBOARD);
+		final JMenu TOOLS_SUBMENU = new SwingEX.JMIco(I18n.ForkController.tools, Ico.TOOLS);
+		final JMenu COMMUNITY_SUBMENU = new SwingEX.JMIco(I18n.ForkController.community, Ico.PEOPLE);
 		
 		POPUP_MENU.addPopupMenuListener(new PopupMenuListener() {
 			@Override public void popupMenuCanceled(PopupMenuEvent pme) {
@@ -91,7 +92,7 @@ public class ForkController {
 					
 					for (int i = 0; i < maxIdx; i ++) {
 						final int z = i;
-						WALLET_SUBMENU.add(new SwingEX.JMI("Multi Wallet Index: " + i, Ico.WALLET, () -> new Thread(() -> ForkController.multiWallet(sel,z)).start()));
+						WALLET_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.multiWalletIndex + i, Ico.WALLET, () -> new Thread(() -> ForkController.multiWallet(sel,z)).start()));
 					}
 				}
 			}
@@ -101,15 +102,15 @@ public class ForkController {
             	ForkData fd = ForkData.MAP.get(f.symbol);
             	if (null != fd) {
 	            	if (null != fd.websiteURL)
-	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Homepage", Ico.HOME, () -> Util.openLink(fd.websiteURL)));
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + I18n.ForkController.homepage, Ico.HOME, () -> Util.openLink(fd.websiteURL)));
             		if (null != fd.discordURL)
-	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Discord", 	Ico.DISCORD, () -> Util.openLink(fd.discordURL)));
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + I18n.ForkController.discord, 	Ico.DISCORD, () -> Util.openLink(fd.discordURL)));
 	            	if (null != fd.gitPath)
-	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " GitHub", 	Ico.GITHUB, () -> Util.openLink(ForkData.GITHUB_URL + fd.gitPath)));
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + I18n.ForkController.github, 	Ico.GITHUB, () -> Util.openLink(ForkData.GITHUB_URL + fd.gitPath)));
 	            	if (null != fd.twitterURL)
-	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Twitter",	Ico.TWITTER, () -> Util.openLink(fd.twitterURL)));
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + I18n.ForkController.twitter,	Ico.TWITTER, () -> Util.openLink(fd.twitterURL)));
 	            	if (null != fd.calculatorURL)
-	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + " Calculator",	Ico.XCHCALC, () -> Util.openLink(fd.calculatorURL)));
+	            		COMMUNITY_SUBMENU.add(new SwingEX.JMI(f.name + I18n.ForkController.calculator,	Ico.XCHCALC, () -> Util.openLink(fd.calculatorURL)));
             	}
             	
             	for (int i = 0; i < f.walletList.size(); i++) {
@@ -140,69 +141,69 @@ public class ForkController {
             	
             	if (WALLET_SUBMENU.getItemCount() > 0)
             		WALLET_SUBMENU.addSeparator();
-            	WALLET_SUBMENU.add(new SwingEX.JMI("Add Cold Wallet",	Ico.WALLET_COLD,	() -> addColdWallet(f)));
+            	WALLET_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.walletAddColdWallet,	Ico.WALLET_COLD,	() -> addColdWallet(f)));
             	
 	
 			}
 		});
 		
 		POPUP_MENU.add(ACTION_SUBMENU);
-		ACTION_SUBMENU.add(new SwingEX.JMI("Start", 		Ico.START, 	() -> new Thread(() -> ForkView.getSelected().forEach(Fork::start)).start()));
+		ACTION_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionStart, 		Ico.START, 	() -> new Thread(() -> ForkView.getSelected().forEach(Fork::start)).start()));
 		ACTION_SUBMENU.add(STAGGER_JMI);
-		ACTION_SUBMENU.add(new SwingEX.JMI("Stop",			Ico.STOP,  	() -> new Thread(() -> ForkView.getSelected().forEach(Fork::stop)).start()));
-		ACTION_SUBMENU.add(new SwingEX.JMI("Custom",		Ico.CLI, 	() -> ForkStarter.newCustCMD(ForkView.getSelected())));
+		ACTION_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionStop,			Ico.STOP,  	() -> new Thread(() -> ForkView.getSelected().forEach(Fork::stop)).start()));
+		ACTION_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionCustom,		Ico.CLI, 	() -> ForkStarter.newCustCMD(ForkView.getSelected())));
 		ACTION_SUBMENU.addSeparator();
 		if (!Util.isHostWin()) {
-			ACTION_SUBMENU.add(new SwingEX.JMI("Activate",			Ico.POWER, 	() -> ForkStarter.activate(ForkView.getSelected())));
-			ACTION_SUBMENU.add(new SwingEX.JMI("Activate (custom)",	Ico.POWER, 	ForkController::custom));
+			ACTION_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionActivate,			Ico.POWER, 	() -> ForkStarter.activate(ForkView.getSelected())));
+			ACTION_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionActivateCustom,	Ico.POWER, 	ForkController::custom));
 		}
 		
-		ACTION_SUBMENU.add(new SwingEX.JMI("Edit Start",	Ico.EDIT_START, 	ForkStarter::edit));
-		ACTION_SUBMENU.add(new SwingEX.JMI("Set Pass File",	Ico.KEY, 			() -> new Thread(ForkController::setPassKey).start()));
-		ACTION_SUBMENU.add(new SwingEX.JMI("Hide", 			Ico.HIDE,  			ForkController::removeSelected));
+		ACTION_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionEditStart,	Ico.EDIT_START, 	ForkStarter::edit));
+		ACTION_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionSetPassFile,	Ico.KEY, 			() -> new Thread(ForkController::setPassKey).start()));
+		ACTION_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionHide, 			Ico.HIDE,  			ForkController::removeSelected));
 	
 		POPUP_MENU.add(WALLET_SUBMENU);
 	
 		POPUP_MENU.add(EXPLORE_SUBMENU);
-			EXPLORE_SUBMENU.add(new SwingEX.JMI("View Log", 	Ico.CLIPBOARD,  		() -> new ForkLogViewer(ForkView.getSelected())));
-			EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Config", 	Ico.CLIPBOARD,  		() -> ForkView.getSelected().forEach(f -> Util.openFile(f.configPath))));
+			EXPLORE_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.viewLog, 	Ico.CLIPBOARD,  		() -> new ForkLogViewer(ForkView.getSelected())));
+			EXPLORE_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.openConfig, 	Ico.CLIPBOARD,  		() -> ForkView.getSelected().forEach(f -> Util.openFile(f.configPath))));
 			if (Util.isHostWin()) {
-				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open CMD", 		Ico.CLI,  			() -> ForkController.openShell(SHELL.CMD)));
-				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Powershell",	Ico.POWERSHHELL,  	() -> ForkController.openShell(SHELL.POWERSHELL)));
+				EXPLORE_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.openCmd, 		Ico.CLI,  			() -> ForkController.openShell(SHELL.CMD)));
+				EXPLORE_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.openPowershell,	Ico.POWERSHHELL,  	() -> ForkController.openShell(SHELL.POWERSHELL)));
 			} else {
-				EXPLORE_SUBMENU.add(new SwingEX.JMI("Open Terminal", 		Ico.TERMINAL,  		() -> ForkController.openShell(SHELL.TERMINAL)));
+				EXPLORE_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.openTerminal, 		Ico.TERMINAL,  		() -> ForkController.openShell(SHELL.TERMINAL)));
 			}
 		
 		POPUP_MENU.add(COPY_SUBMENU);
-			COPY_SUBMENU.add(new SwingEX.JMI("Copy Address", 	Ico.CLIPBOARD,  ForkController::copyAddress));
-			COPY_SUBMENU.add(new SwingEX.JMI("Copy CSV", 		Ico.CLIPBOARD,  ForkController::copyCSV));
+			COPY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.copyAddress, 	Ico.CLIPBOARD,  ForkController::copyAddress));
+			COPY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.copyCSV, 		Ico.CLIPBOARD,  ForkController::copyCSV));
 		
 		POPUP_MENU.add(TOOLS_SUBMENU);
-			TOOLS_SUBMENU.add(new SwingEX.JMI("Ports", 	Ico.PORTS, ForkController::runPortChecker));
-			TOOLS_SUBMENU.add(new SwingEX.JMI("Missing",Ico.QUESTION, () -> ForkFarmer.newFrame("Missing Forks", Ico.QUESTION, new MissingForks())));
-			JMenuItem update = new SwingEX.JMI("Force Update", 	Ico.DOLLAR,  	() -> new Thread(ForkController::webUpdateForced).start());
-			update.setToolTipText("from xchforks.com / alltheblocks.net");
+			TOOLS_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.ports, 	Ico.PORTS, ForkController::runPortChecker));
+			TOOLS_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.missing,Ico.QUESTION, () -> ForkFarmer.newFrame(I18n.ForkController.missingFrameTitle, Ico.QUESTION, new MissingForks())));
+			JMenuItem update = new SwingEX.JMI(I18n.ForkController.forceUpdate, 	Ico.DOLLAR,  	() -> new Thread(ForkController::webUpdateForced).start());
+			update.setToolTipText(I18n.ForkController.forceUpdateTipText);
 			TOOLS_SUBMENU.add(update);
-			TOOLS_SUBMENU.add(new SwingEX.JMI("Plot Calc",Ico.EXPAND, () -> ForkFarmer.newFrame("Plot Calculator", Ico.EXPAND, new PlotCalc()).setResizable(false)));
+			TOOLS_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.plotCalc,Ico.EXPAND, () -> ForkFarmer.newFrame(I18n.ForkController.plotCalcFrameTitle, Ico.EXPAND, new PlotCalc()).setResizable(false)));
 			
 		POPUP_MENU.add(COMMUNITY_SUBMENU);
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI("xchforks.com", 			Ico.XCHF,() -> Util.openLink("https://xchforks.com/")));
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI("alltheblocks.net", 		Ico.ATB, () -> Util.openLink("https://alltheblocks.net/")));
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI("forkschiaexchange.com", 	Ico.FCX, () -> Util.openLink("https://forkschiaexchange.com/?ref=orfinkat")));
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI("chiaforksblockchain.com", Ico.DOWNLOAD, () -> Util.openLink("https://chiaforksblockchain.com/")));
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI("casino.maize.farm", 			Ico.ROULETTE, () -> Util.openLink("https://casino.maize.farm/?ref=241")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.xchforks, 			Ico.XCHF,() -> Util.openLink("https://xchforks.com/")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.alltheblocks, 		Ico.ATB, () -> Util.openLink("https://alltheblocks.net/")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.forkschiaexchange, 	Ico.FCX, () -> Util.openLink("https://forkschiaexchange.com/?ref=orfinkat")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.chiaforksblockchain, Ico.DOWNLOAD, () -> Util.openLink("https://chiaforksblockchain.com/")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.casinoMaizeFarm, 			Ico.ROULETTE, () -> Util.openLink("https://casino.maize.farm/?ref=241")));
 			COMMUNITY_SUBMENU.addSeparator();
 			
 		POPUP_MENU.addSeparator();
 		
-		POPUP_MENU.add(new SwingEX.JMI("Add Cold Wallet",	Ico.SNOW,  	() -> ForkController.addColdWallet(null)));
-		POPUP_MENU.add(new SwingEX.JMI("Add Fork",			Ico.PLUS,  	ForkController::addFork));
-		POPUP_MENU.add(new SwingEX.JMI("Refresh",	Ico.REFRESH,  	ForkController::refresh));
-		POPUP_MENU.add(new SwingEX.JMI("Show Peers",Ico.P2P,		() -> ForkView.getSelected().forEach(f -> 
-			ForkFarmer.newFrame(f.name + ": Peer Connections", f.ico, new PeerView(f)))));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.addColdWallet,	Ico.SNOW,  	() -> ForkController.addColdWallet(null)));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.addFork,			Ico.PLUS,  	ForkController::addFork));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.refresh,	Ico.REFRESH,  	ForkController::refresh));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.showPeers,Ico.P2P,		() -> ForkView.getSelected().forEach(f ->
+			ForkFarmer.newFrame(f.name + I18n.ForkController.showPeersTitleSuffix, f.ico, new PeerView(f)))));
 		POPUP_MENU.addSeparator();
-		POPUP_MENU.add(new SwingEX.JMI("Debug",			Ico.BUG,		() -> ForkView.getSelected().forEach(Fork::showLastException)));
-		POPUP_MENU.add(new SwingEX.JMI("FF Logs",		Ico.CLIPBOARD,	() -> ForkFarmer.showFrame("ForkFarmer Log:", null, ForkFarmer.LOG.newFrameView())));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.debug,			Ico.BUG,		() -> ForkView.getSelected().forEach(Fork::showLastException)));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.ffLogs,		Ico.CLIPBOARD,	() -> ForkFarmer.showFrame(I18n.ForkController.ffLogsTitle, null, ForkFarmer.LOG.newFrameView())));
 		
 		
 		return POPUP_MENU;
@@ -223,7 +224,7 @@ public class ForkController {
 	
 	static private void addFork() {
 		ManualAddView p = new ManualAddView();
-		if (ForkFarmer.showPopup("Add Fork", p)) {
+		if (ForkFarmer.showPopup(I18n.ForkController.addForktitle, p)) {
 			
 			Fork f;
 			try {
@@ -231,7 +232,7 @@ public class ForkController {
 				Fork.LIST.add(f);
 				ForkView.update();
 			} catch (FileNotFoundException e) {
-				ForkFarmer.showMsg("Error", "Fork exe doesn't exist");
+				ForkFarmer.showMsg(I18n.ForkController.addForkErrortitle, I18n.ForkController.addForkErrorcontent);
 			}
 			
 		}
@@ -240,8 +241,8 @@ public class ForkController {
 	static private void custom() {
 		List<Fork> fList = ForkView.getSelected();
 		
-		SwingEX.LIPanel scriptPanel = new SwingEX.LIPanel("Enter Script: ");
-		if (true == ForkFarmer.showPopup("activate script: ", scriptPanel)) { 
+		SwingEX.LIPanel scriptPanel = new SwingEX.LIPanel(I18n.ForkController.activateTitle);
+		if (true == ForkFarmer.showPopup(I18n.ForkController.activatePopupTitle, scriptPanel)) {
 			String script = scriptPanel.getText();
 			ForkStarter.custom(fList, script);
 		}
@@ -253,10 +254,10 @@ public class ForkController {
 		JTextPane jtp = new JTextPane();
 		JScrollPane JSP = new JScrollPane(jtp);
 		jtp.setPreferredSize(new Dimension(500,200));
-		cwPanel.add(new JLabel("Enter one address per line"), BorderLayout.PAGE_START);
+		cwPanel.add(new JLabel(I18n.ForkController.addCodeWalletLabel), BorderLayout.PAGE_START);
 		cwPanel.add(JSP,BorderLayout.CENTER);
 		
-		if (ForkFarmer.showPopup("Cold wallet data comes from www.alltheblocks.net", cwPanel)) {
+		if (ForkFarmer.showPopup(I18n.ForkController.addColdWalletTitle, cwPanel)) {
 			String[] addrArray = jtp.getText().split(System.lineSeparator());
 			
 			new Thread(() -> {
@@ -308,7 +309,7 @@ public class ForkController {
 				if (SHELL.POWERSHELL == s)
 					Runtime.getRuntime().exec("cmd /c start powershell.exe -noexit -command " + "cd " + nativeDir);
 				else if (SHELL.CMD == s)
-					Runtime.getRuntime().exec("cmd /c start cmd.exe /K " + "cd " + nativeDir);
+					Runtime.getRuntime().exec("cmd /c start cmd.exe /K c: " + "cd " + nativeDir);
 				else if (SHELL.TERMINAL == s)
 					Runtime.getRuntime().exec("gnome-terminal --working-directory=" + nativeDir);
 			} catch (IOException e) {
@@ -335,7 +336,7 @@ public class ForkController {
 	
 	private static void runPortChecker() {
 		Fork.LIST.forEach(Fork::loadConfig);
-		ForkFarmer.newFrame("Port Checker", Ico.PORTS, new PortCheckerView());
+		ForkFarmer.newFrame(I18n.ForkController.portCheckerTitle, Ico.PORTS, new PortCheckerView());
 	}
 	
 	static private void refresh() {
@@ -362,7 +363,7 @@ public class ForkController {
 	}
 	
 	static private void staggerStartDialog() {
-		String delay = JOptionPane.showInputDialog(ForkFarmer.FRAME,"Enter Start Interval: (Seconds)", "60");
+		String delay = JOptionPane.showInputDialog(ForkFarmer.FRAME,I18n.ForkController.staggerDiagleLabel, "60");
 		
 		if (null == delay)
 			return;
@@ -398,9 +399,7 @@ public class ForkController {
 	public static boolean javaOld() {
 		int jversion = Util.getJavaVersion();
 		if (!warnJava && jversion < 11) {
-			ForkFarmer.showMsg("Please update Java Runtime", 
-					"Current java version is " + jversion + ". Java 11+ required for many features in FF\n" +
-					"Please download new java release from https://www.oracle.com/java/technologies/downloads/"
+			ForkFarmer.showMsg(I18n.ForkController.javaOldTipTitle,I18n.ForkController.javaOldTipContent(jversion)
 			);
 			warnJava = true;
 			return true;

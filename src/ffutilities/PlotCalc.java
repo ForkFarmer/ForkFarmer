@@ -15,8 +15,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 
+import util.I18n;
 import util.Util;
-import util.swing.SwingEX;
 import util.swing.SwingEX.LTPanel;
 import util.swing.jfuntable.JFunTableModel;
 
@@ -30,7 +30,7 @@ public class PlotCalc extends JPanel {
 	private final JTable TABLE_SOL = new JTable(MODEL_SOL);
 	private final JScrollPane JSP = new JScrollPane(TABLE_SOL);
 	
-	LTPanel hddSize = new SwingEX.LTPanel("Free Space (GiB): ","10000");
+	LTPanel hddSize = new LTPanel(I18n.PlotCalc.hddSize,"10000");
 	
 	HDD HDD = new HDD(hddSize.getAsDouble());
 	List<HDD> SolutionList = new ArrayList<>();
@@ -97,8 +97,8 @@ public class PlotCalc extends JPanel {
 		public KValModel() {
 			super();
 			addColumn("",   			22,		Boolean.class,	k->k.enabled).showMandatory().fixed();
-			addColumn("K",   			40,		Enum.class,		k->k).showMandatory().fixed();
-			addColumn("Plot Size (GB)",	150,	Double.class,	k->k.plotSize);
+			addColumn("K",   			40,		Enum.class,		k->k).showMandatory().fixed().colName(I18n.PlotCalc.tableHeaderKColName);
+			addColumn("Plot Size (GB)",	150,	Double.class,	k->k.plotSize).colName(I18n.PlotCalc.tableHeaderPlotSizeColName);
 			
 			onGetRowCount(() -> LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(LIST.get(r)));
@@ -121,8 +121,8 @@ public class PlotCalc extends JPanel {
 	class SolutionModel extends JFunTableModel<HDD> {
 		public SolutionModel() {
 			super();
-			addColumn("Soltuion",   200,	Enum.class,		h->h).showMandatory().fixed();
-			addColumn("Free Space",	80,	String.class,	h->h.fsStr());
+			addColumn("Soltuion",   200,	Enum.class,		h->h).showMandatory().fixed().colName(I18n.PlotCalc.solutionColName);
+			addColumn("Free Space",	80,	String.class,	h->h.fsStr()).colName(I18n.PlotCalc.freeSpaceColName);
 			
 			onGetRowCount(() -> SolutionList.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(SolutionList.get(r)));
@@ -239,7 +239,7 @@ public class PlotCalc extends JPanel {
 		kvPanel.add(TABLE_KV, BorderLayout.CENTER);
 		add(kvPanel,BorderLayout.CENTER);
 		add(hddSize,BorderLayout.PAGE_START);
-		kvPanel.setBorder(new TitledBorder("Plot Sizes"));
+		kvPanel.setBorder(new TitledBorder(I18n.PlotCalc.borderPlotSize));
 		
 		add(JSP,BorderLayout.PAGE_END);	
 		JSP.setPreferredSize(new Dimension(300,500));

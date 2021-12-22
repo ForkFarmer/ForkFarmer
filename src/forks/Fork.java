@@ -33,10 +33,7 @@ import types.Percentage;
 import types.ReadTime;
 import types.TimeU;
 import types.Wallet;
-import util.FFUtil;
-import util.Ico;
-import util.NetSpace;
-import util.Util;
+import util.*;
 import util.apache.ReversedLinesFileReader;
 
 public class Fork {
@@ -448,7 +445,7 @@ public class Fork {
 	
 	
 	public void showLastException () {
-		ForkFarmer.newFrame(name + ": Debug View", ico, new DebugView(this));
+		ForkFarmer.newFrame(name + I18n.Fork.showDebugFrameTitle, ico, new DebugView(this));
 	}
 	
 	public Optional<Integer> getIndex() {
@@ -469,7 +466,7 @@ public class Fork {
 			while ( null != (l = br.readLine()))
 				sb.append(l + "\n");
 			
-			ForkFarmer.showMsg("Send Transaction", sb.toString());
+			ForkFarmer.showMsg(I18n.Fork.sendTransactionMsgTitle, sb.toString());
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

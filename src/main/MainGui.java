@@ -18,10 +18,7 @@ import forks.Fork;
 import forks.ForkController;
 import forks.ForkView;
 import transaction.TransactionView;
-import util.HttpServer;
-import util.Ico;
-import util.NetSpace;
-import util.Util;
+import util.*;
 import util.swing.SwingEX;
 import util.swing.SwingEX.LTPanel;
 import web.XchForks;
@@ -34,11 +31,11 @@ public class MainGui extends JPanel {
 	static JTextField targetAddress = new JTextField(20);
 	static JTextField targetAmt = new JTextField(10);
 	static JTextField targetFee = new JTextField(5);
-	static JButton sendBtn = new JButton("Send");
+	static JButton sendBtn = new JButton(I18n.MainGui.sendBtn);
 	private static NetSpace plotSize = new NetSpace("0 TiB");
-	private static final JLabel plotlbl = new JLabel("Farm Size: ?");
-	private static final JLabel valuelbl = new JLabel("Value: " + Settings.GUI.currencySymbol + "0.0");
-	private static final JLabel forklbl = new JLabel(Integer.toString(Fork.LIST.size()) + " Forks", SwingConstants.CENTER);
+	private static final JLabel plotlbl = new JLabel(I18n.MainGui.farmSize+" ?");
+	private static final JLabel valuelbl = new JLabel(I18n.MainGui.value + Settings.GUI.currencySymbol + "0.0");
+	private static final JLabel forklbl = new JLabel(Integer.toString(Fork.LIST.size()) + I18n.MainGui.forks, SwingConstants.CENTER);
 	
 	GridBagConstraints c = new GridBagConstraints();
 	
@@ -49,7 +46,7 @@ public class MainGui extends JPanel {
 		JPanel tPanel = new JPanel();
 		tPanel.setLayout(new GridBagLayout());
 		c = new GridBagConstraints();
-		tPanel.setBorder(new TitledBorder("Create Transaction: (address, amt, fee)"));
+		tPanel.setBorder(new TitledBorder(I18n.MainGui.createTransaction));
 
 		c.fill = GridBagConstraints.BOTH;
 		targetFee.setText("0");
@@ -71,34 +68,34 @@ public class MainGui extends JPanel {
         	JPanel settingPanel = new JPanel(new GridBagLayout());
         	
         	JPanel logReader = new JPanel(new GridLayout(2,1));
-        	logReader.setBorder(new TitledBorder("Log Reader:"));
+        	logReader.setBorder(new TitledBorder(I18n.MainGui.logReader));
         	JPanel daemonReader = new JPanel(new GridLayout(2,1));
-        	daemonReader.setBorder(new TitledBorder("Daemon Reader:"));
+        	daemonReader.setBorder(new TitledBorder(I18n.MainGui.daemonReader));
         	JPanel curencyPanel = new JPanel(new GridLayout(1,2));
-        	curencyPanel.setBorder(new TitledBorder("Currency:"));
+        	curencyPanel.setBorder(new TitledBorder(I18n.MainGui.currency));
         	JPanel httpServerPanel = new JPanel(new GridLayout(1,2));
-        	httpServerPanel.setBorder(new TitledBorder("GUI Http Server:"));
+        	httpServerPanel.setBorder(new TitledBorder(I18n.MainGui.guiHttpServer));
         	
         	JPanel autoUpdatePanel = new JPanel(new GridLayout(1,2));
-        	autoUpdatePanel.setBorder(new TitledBorder("Automatic price/cold wallet updates"));
+        	autoUpdatePanel.setBorder(new TitledBorder(I18n.MainGui.automaticPriceOrColdWalletUpdates));
         	
-        	LTPanel lriSleep = new SwingEX.LTPanel("    Intra Delay (ms): " , Integer.toString(Settings.GUI.logReaderIntraDelay));
-    		LTPanel lreSleep = new SwingEX.LTPanel("    Exo Delay (ms): " , Integer.toString(Settings.GUI.logReaderExoDelay));
+        	LTPanel lriSleep = new LTPanel(I18n.MainGui.intraDelay , Integer.toString(Settings.GUI.logReaderIntraDelay));
+    		LTPanel lreSleep = new LTPanel(I18n.MainGui.exoDelay , Integer.toString(Settings.GUI.logReaderExoDelay));
     		
-    		LTPanel dWorkers = new SwingEX.LTPanel("    Worker threads (requires restart): " , Integer.toString(Settings.GUI.daemonReaderWorkers));
-    		LTPanel dIntraSleep = new SwingEX.LTPanel("    Delay (ms): " , Integer.toString(Settings.GUI.daemonReaderDelay));
+    		LTPanel dWorkers = new LTPanel(I18n.MainGui.workerThreads , Integer.toString(Settings.GUI.daemonReaderWorkers));
+    		LTPanel dIntraSleep = new LTPanel(I18n.MainGui.delay , Integer.toString(Settings.GUI.daemonReaderDelay));
     		
-    		LTPanel curencySymbol = new SwingEX.LTPanel("    Symbol: " , Settings.GUI.currencySymbol);
-    		LTPanel curencyRatio = new SwingEX.LTPanel("    Ratio x*$: " , Double.toString(Settings.GUI.currencyRatio));
+    		LTPanel curencySymbol = new LTPanel(I18n.MainGui.symbol , Settings.GUI.currencySymbol);
+    		LTPanel curencyRatio = new LTPanel(I18n.MainGui.ratio , Double.toString(Settings.GUI.currencyRatio));
     		
-    		JCheckBox autoUpdate = new JCheckBox("xchforks.com/alltheblocks.net");
+    		JCheckBox autoUpdate = new JCheckBox(I18n.MainGui.xchforksUrl);
     		autoUpdate.setSelected(Settings.GUI.autoUpdate);
     		
-    		JCheckBox lockColumns = new JCheckBox("Lock Columns");
+    		JCheckBox lockColumns = new JCheckBox(I18n.MainGui.lockColumns);
     		lockColumns.setSelected(Settings.GUI.lockColumns);
     		
-    		JCheckBox httpServerChk = new JCheckBox("Enabled");
-    		LTPanel httpServerPort = new SwingEX.LTPanel("Port: " , Integer.toString(Settings.GUI.httpServerPort));
+    		JCheckBox httpServerChk = new JCheckBox(I18n.MainGui.enable);
+    		LTPanel httpServerPort = new LTPanel(I18n.MainGui.port , Integer.toString(Settings.GUI.httpServerPort));
     		
     		logReader.add(lriSleep);
     		logReader.add(lreSleep);
@@ -145,7 +142,7 @@ public class MainGui extends JPanel {
         		setColumnLock(lockColumns.isSelected());
         	});
         	
-        	if (true == ForkFarmer.showPopup("Settings:", settingPanel)) {
+        	if (true == ForkFarmer.showPopup(I18n.MainGui.settingTitle, settingPanel)) {
 
         		Settings.GUI.logReaderIntraDelay = lriSleep.getAsInt();
         		Settings.GUI.logReaderExoDelay = lreSleep.getAsInt();
@@ -209,13 +206,13 @@ public class MainGui extends JPanel {
 			f.sendTX(address,targetAmt.getText(),targetFee.getText());
 			targetAddress.setText("");
 			targetAmt.setText("");
-		}, 	() -> ForkFarmer.showMsg("Error", "No suitable fork found for address prefix"));
+		}, 	() -> ForkFarmer.showMsg(I18n.MainGui.errorTitle, I18n.MainGui.errorContent));
 		
 	}
 	public static void updatePlotSize(NetSpace ps) {
 		if (ps.szTB > plotSize.szTB) {
 			plotSize = ps;
-			plotlbl.setText("Farm Size: " + ps.toString());
+			plotlbl.setText(I18n.MainGui.farmSize + ps.toString());
 		}
 	}
 
@@ -225,11 +222,11 @@ public class MainGui extends JPanel {
 		for (Fork f : Fork.LIST)
 			totalValue += f.equity.amt;
 		
-		valuelbl.setText("Value: " + Settings.GUI.currencySymbol + Util.round(totalValue, 2));
+		valuelbl.setText(I18n.MainGui.value + Settings.GUI.currencySymbol + Util.round(totalValue, 2));
 	}
 	
 	public static void updateNumForks() {
-		forklbl.setText(Integer.toString(Fork.LIST.size()) + " Forks");
+		forklbl.setText(Integer.toString(Fork.LIST.size()) + I18n.MainGui.forks);
 	}
 	
 }

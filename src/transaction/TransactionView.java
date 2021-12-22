@@ -19,6 +19,7 @@ import main.Settings;
 import types.Balance;
 import types.Percentage;
 import types.TimeU;
+import util.I18n;
 import util.Ico;
 import util.swing.SwingEX;
 import util.swing.SwingUtil;
@@ -41,14 +42,14 @@ public class TransactionView extends JPanel {
 			show = true;
 			
 			addColumn("",   		22,		Icon.class,		t->t.getIcon()).showMandatory().fixed();
-			addColumn("Date",   	140,	String.class, 	t->t.date).showMandatory();
+			addColumn("Date",   	140,	String.class, 	t->t.date).showMandatory().colName(I18n.TransactionView.dateColName);
 			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).fixed();
-			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol);
-			addColumn("Name", 		80,		String.class, 	t->t.f.name);
-			addColumn("Effort",		80,		Percentage.class, 	t->t.effort);
-			addColumn("Prev Win",	90, 	TimeU.class, 	t->t.lastWinTime);
-			addColumn("To",   		450,	String.class, 	t->t.target).flex();
-			addColumn("Amount", 	80,		Balance.class, 	t->t.amount);
+			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol).colName(I18n.TransactionView.symbolColName);
+			addColumn("Name", 		80,		String.class, 	t->t.f.name).colName(I18n.TransactionView.nameColName);
+			addColumn("Effort",		80,		Percentage.class, 	t->t.effort).colName(I18n.TransactionView.effortColName);
+			addColumn("Prev Win",	90, 	TimeU.class, 	t->t.lastWinTime).colName(I18n.TransactionView.lastWinTimeColName);
+			addColumn("To",   		450,	String.class, 	t->t.target).flex().colName(I18n.TransactionView.targetColName);
+			addColumn("Amount", 	80,		Balance.class, 	t->t.amount).colName(I18n.TransactionView.amountColName);
 			addColumn("$", 			60,		Balance.class, 	t->t.value);
 			addColumn("RW", 		22,		Icon.class, 	Transaction::getIco).fixed();
 		
@@ -60,7 +61,7 @@ public class TransactionView extends JPanel {
 	
 	public TransactionView() {
 		setLayout(new BorderLayout());
-		setBorder(new TitledBorder("Transactions:"));
+		setBorder(new TitledBorder(I18n.TransactionView.transactionTitle));
 		add(JSP,BorderLayout.CENTER);
 		//Col.adjustWidths(TABLE,cols);
 		//TABLE.getColumnModel().getColumn(2).setCellRenderer(new MyRenderer());
@@ -74,10 +75,10 @@ public class TransactionView extends JPanel {
 		TABLE.getRowSorter().toggleSortOrder(MODEL.getIndex("Date"));
 		
 		TABLE.setComponentPopupMenu(POPUP_MENU);
-		POPUP_MENU.add(new SwingEX.JMI("View at ATB.net", 	Ico.ATB, 		() -> getSelected().forEach(Transaction::browse)));
-		POPUP_MENU.add(new SwingEX.JMI("Copy", 				Ico.CLIPBOARD,  TransactionView::copy));
-		POPUP_MENU.add(new SwingEX.JMI("Report", 			Ico.GRAPH,  	TransactionView::report));
-		POPUP_MENU.add(new SwingEX.JMI("Update Reward", 	Ico.TARGET,  	TransactionView::setReward));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.TransactionView.viewAtATB, 	Ico.ATB, 		() -> getSelected().forEach(Transaction::browse)));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.TransactionView.copy, 				Ico.CLIPBOARD,  TransactionView::copy));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.TransactionView.report, 			Ico.GRAPH,  	TransactionView::report));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.TransactionView.updateReward, 	Ico.TARGET,  	TransactionView::setReward));
 		
 		SwingUtil.addDoubleClickAction(TABLE, r -> {
 			if (1 != getSelected().size())
@@ -121,7 +122,7 @@ public class TransactionView extends JPanel {
 	}
 	
 	static private void report() {
-		ForkFarmer.newFrame("TxReport: ", Ico.LOGO, new TxReportView(getSelected()));
+		ForkFarmer.newFrame(I18n.TransactionView.title, Ico.LOGO, new TxReportView(getSelected()));
 	}
 	
 }

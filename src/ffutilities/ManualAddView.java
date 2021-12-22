@@ -11,6 +11,7 @@ import javax.swing.JPanel;
 import forks.Fork;
 import forks.ForkData;
 import types.Wallet;
+import util.I18n;
 import util.swing.SwingEX.LTPanel;
 
 @SuppressWarnings("serial")
@@ -18,11 +19,11 @@ public class ManualAddView extends JPanel {
 	String[] symArray = ForkData.LIST.stream().map(fd -> fd.coinPrefix).collect(Collectors.toList()).toArray(new String[0]);
 	final JComboBox<String> symbolBox = new JComboBox<String>(symArray);
 	
-	final LTPanel configPath = new LTPanel("Config Path: ");
-	final LTPanel exePath = new LTPanel("Exe Path: ");
-	final LTPanel logPath = new LTPanel("Log Path: ");
-	final JCheckBox walletNode = new JCheckBox("Wallet Node");
-	final JCheckBox fullNode = new JCheckBox("Full Node");
+	final LTPanel configPath = new LTPanel(I18n.ManualAddView.configPath);
+	final LTPanel exePath = new LTPanel(I18n.ManualAddView.exePath);
+	final LTPanel logPath = new LTPanel(I18n.ManualAddView.logPath);
+	final JCheckBox walletNode = new JCheckBox(I18n.ManualAddView.walletNode);
+	final JCheckBox fullNode = new JCheckBox(I18n.ManualAddView.fullNode);
 	
 	public ManualAddView() {
 		setLayout(new GridLayout(5,1));
@@ -54,7 +55,7 @@ public class ManualAddView extends JPanel {
 		f.fullNode = fullNode.isSelected();
 		f.walletNode = walletNode.isSelected();
 		
-		f.wallet = new Wallet("","Restart FF to update", -1);
+		f.wallet = new Wallet("",I18n.ManualAddView.afterLoadTip, -1);
 		
 		return f;
 	}

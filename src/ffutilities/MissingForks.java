@@ -26,6 +26,7 @@ import forks.Fork;
 import forks.ForkData;
 import forks.ForkView;
 import main.MainGui;
+import util.I18n;
 import util.Ico;
 import util.Util;
 import util.swing.SwingEX;
@@ -34,7 +35,7 @@ import util.swing.jfuntable.JFunTableModel;
 
 @SuppressWarnings("serial")
 public class MissingForks extends JPanel {
-	final JCheckBox viewAllForks = new JCheckBox("View All Forks");
+	final JCheckBox viewAllForks = new JCheckBox(I18n.MissingForks.viewAllCheckBoxLabel);
 	final List<ForkData> LIST = new ArrayList<>();
 	final PortCheckModel MODEL = new PortCheckModel();
 	
@@ -47,10 +48,10 @@ public class MissingForks extends JPanel {
 			
 			addColumn("",   			22,		Icon.class,		f->f.atbIcon).showMandatory();
 			addColumn(" ",   			22,		Icon.class,		f->f.ico).showMandatory();
-			addColumn("Symbol",  		50,		String.class, 	f->f.coinPrefix).showMandatory();
-			addColumn("Name",   		-1,		String.class,	f->f.displayName).showMandatory();
-			addColumn("UserFolder",  	140,	String.class,	f->f.userFolder).showMandatory();
-			addColumn("DaemonFolder", 	160,	String.class, 	f->f.daemonFolder).showMandatory();
+			addColumn("Symbol",  		50,		String.class, 	f->f.coinPrefix).showMandatory().colName(I18n.MissingForks.symbolColName);
+			addColumn("Name",   		-1,		String.class,	f->f.displayName).showMandatory().colName(I18n.MissingForks.nameColName);
+			addColumn("UserFolder",  	140,	String.class,	f->f.userFolder).showMandatory().colName(I18n.MissingForks.userfolderColName);
+			addColumn("DaemonFolder", 	160,	String.class, 	f->f.daemonFolder).showMandatory().colName(I18n.MissingForks.daemonfolderColName);
 			addColumn("1",   			22,		Icon.class,		f->(null != f.websiteURL) ? Ico.HOME : null).showMandatory();
 			addColumn("2",   			22,		Icon.class,		f->(null != f.gitPath) ? Ico.GITHUB: null).showMandatory();
 			addColumn("3",   			22,		Icon.class,		f->(null != f.discordURL) ? Ico.DISCORD : null).showMandatory();
@@ -123,7 +124,7 @@ public class MissingForks extends JPanel {
 		final JPopupMenu POPUP_MENU = new JPopupMenu();
 		TABLE.setComponentPopupMenu(POPUP_MENU);
 		
-		POPUP_MENU.add(new SwingEX.JMI("Unhide", null, () -> unhide()));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.MissingForks.unhide, null, () -> unhide()));
 		
 		DefaultTableCellRenderer balanceRendererR = new DefaultTableCellRenderer(){
 	        @Override
