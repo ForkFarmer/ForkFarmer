@@ -1,8 +1,8 @@
 package util;
 
-import main.ForkFarmer;
-
+import java.io.*;
 import java.util.Locale;
+import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
 /**
@@ -12,10 +12,45 @@ import java.util.ResourceBundle;
  */
 public class I18n {
 
-    private static ResourceBundle currentSystemBundle = init(Locale.getDefault());
-    private static ResourceBundle defaultBundle = init(Locale.ENGLISH);
+    private static ResourceBundle resourceBundle = initResourceBundle();
 
-    private static ResourceBundle init(Locale locale) {
+    private static ResourceBundle initResourceBundle() {
+        // load user custom ForkFarmer.properties
+        ResourceBundle bundle = getCustomI18nResourceBundle();
+
+        // load system default i18n_xx_xx.properties by locale
+        if (bundle == null) {
+            bundle = getBundleByLocale(Locale.getDefault());
+        }
+        // load system default i18n_en.properties
+        if (bundle == null) {
+            bundle = getBundleByLocale(Locale.ENGLISH);
+        }
+
+        return bundle;
+    }
+
+    private static ResourceBundle getCustomI18nResourceBundle() {
+        ResourceBundle bundle = null;
+        BufferedInputStream inputStream = null;
+        try {
+        String proFilePath = System.getProperty("user.dir") + File.separator + "ForkFarmer.properties";
+            inputStream = new BufferedInputStream(new FileInputStream(proFilePath));
+            bundle = new PropertyResourceBundle(inputStream);
+        } catch (Exception e) {
+
+        }finally {
+            if(inputStream != null){
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        return bundle;
+    }
+
+    private static ResourceBundle getBundleByLocale(Locale locale) {
         ResourceBundle bundle = null;
         try {
             bundle = ResourceBundle.getBundle("i18n", locale);
@@ -25,27 +60,17 @@ public class I18n {
     }
 
     public static String get(String key) {
-        String val=  null;
-        try{
-            val = currentSystemBundle.getString(key);
-        }catch (Exception e){
-        }
-        if(val == null){
-            val = defaultBundle.getString(key);
-        }
-
-        return val;
+        return resourceBundle.getString(key);
     }
 
-    public static void main(String[] args) {
-        System.out.println(ForkFarmer.forkFarmerTitle);
-    }
     public static String getWithVariable(String key, String... values) {
         String val = get(key);
         return replaceVar(val, values);
     }
 
-    // replace variable {1}、 {2} ... {n}
+    /**
+     *  replace variable {1}、 {2} ... {n}
+     */
     public static String replaceVar(String val, String... values) {
         if (val == null) {
             return null;
