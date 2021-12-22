@@ -25,6 +25,7 @@ import javax.swing.event.ListSelectionListener;
 import forks.Fork;
 import logging.LogModel;
 import logging.LogView;
+import util.I18n;
 import util.Ico;
 import util.Util;
 import util.swing.SwingEX;
@@ -41,15 +42,15 @@ public class PeerView extends JPanel {
 	private final JTable TABLE = new JTable(MODEL);
 	private final JScrollPane JSP = new JScrollPane(TABLE);
 	private final JTextField newPeerField = new JTextField();
-	private final JButton atbPeersBtn = new JButton("Get ATB Peers", Ico.ATB);
+	private final JButton atbPeersBtn = new JButton(I18n.PeerView.getAtbBtn, Ico.ATB);
 	
-	private final JButton addPeers = new SwingEX.Btn("Add Peers", Ico.PLUS, () -> {
+	private final JButton addPeers = new SwingEX.Btn(I18n.PeerView.addPeerBtn, Ico.PLUS, () -> {
 		List<String> peerList = Arrays.asList(newPeerField.getText().split("\\s+"));
 		new Thread(() -> addPeers(peerList)).start();
 	});
 	
-	private final JButton copyPeers = new SwingEX.Btn("Copy", 	Ico.CLIPBOARD,  () -> {copy();});
-	private final JButton copyCLI = new SwingEX.Btn("CLI Copy", Ico.CLI,  () -> {copyCLI();});
+	private final JButton copyPeers = new SwingEX.Btn(I18n.PeerView.copy, 	Ico.CLIPBOARD,  () -> {copy();});
+	private final JButton copyCLI = new SwingEX.Btn(I18n.PeerView.cliCopy, Ico.CLI,  () -> {copyCLI();});
 	
 	
 	private final LogModel PVLOG = new LogModel();
@@ -58,11 +59,11 @@ public class PeerView extends JPanel {
 		public PeerTableModel() {
 			super();
 			
-			addColumn("Address",   	-1,		String.class,	p->p.address);
-			addColumn("Height",   	80,		String.class,	p->p.height);
-			addColumn("Time",  		160,	String.class,	p->p.time);
-			addColumn("Upload",   	80,		double.class, 	p->p.ul);
-			addColumn("Dowload",   	80,		double.class, 	p->p.dl);
+			addColumn("Address",   	-1,		String.class,	p->p.address).colName(I18n.PeerView.addressColName);
+			addColumn("Height",   	80,		String.class,	p->p.height).colName(I18n.PeerView.heightColName);
+			addColumn("Time",  		160,	String.class,	p->p.time).colName(I18n.PeerView.timeColName);
+			addColumn("Upload",   	80,		double.class, 	p->p.ul).colName(I18n.PeerView.uploadColName);
+			addColumn("Dowload",   	80,		double.class, 	p->p.dl).colName(I18n.PeerView.dowloadColName);
 			
 			onGetRowCount(() -> LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(LIST.get(r)));
@@ -99,7 +100,7 @@ public class PeerView extends JPanel {
 		copyPeers.setEnabled(false);
 		copyCLI.setEnabled(false);
 		
-		addPeers.setToolTipText("Peer format ip:port delimited by space");
+		addPeers.setToolTipText(I18n.PeerView.addPeerBtnTipText);
 		
 		add(MENU,BorderLayout.PAGE_START);
 		

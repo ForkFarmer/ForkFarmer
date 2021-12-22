@@ -1,10 +1,12 @@
 package types;
 
+import util.I18n;
+
 import java.text.DecimalFormat;
 
 public class ReadTime implements Comparable<ReadTime> {
 	public static final ReadTime EMPTY = new ReadTime("");
-	public static final ReadTime TIMEOUT = new ReadTime("Timeout");
+	public static final ReadTime TIMEOUT = new ReadTime(I18n.ReadTime.readTimeout);
 	public final double time;
 	private final String timeStr;
 	
