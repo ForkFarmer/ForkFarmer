@@ -1,12 +1,10 @@
 package forks;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
+import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -204,7 +202,7 @@ public class ForkController {
 		POPUP_MENU.addSeparator();
 		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.debug,			Ico.BUG,		() -> ForkView.getSelected().forEach(Fork::showLastException)));
 		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.ffLogs,		Ico.CLIPBOARD,	() -> ForkFarmer.showFrame(I18n.ForkController.ffLogsTitle, null, ForkFarmer.LOG.newFrameView())));
-		
+
 		
 		return POPUP_MENU;
 	}
@@ -309,7 +307,7 @@ public class ForkController {
 				if (SHELL.POWERSHELL == s)
 					Runtime.getRuntime().exec("cmd /c start powershell.exe -noexit -command " + "cd " + nativeDir);
 				else if (SHELL.CMD == s)
-					Runtime.getRuntime().exec("cmd /c start cmd.exe /K c: " + "cd " + nativeDir);
+					Runtime.getRuntime().exec("cmd /c start cmd.exe /K " + "cd /d " + nativeDir);
 				else if (SHELL.TERMINAL == s)
 					Runtime.getRuntime().exec("gnome-terminal --working-directory=" + nativeDir);
 			} catch (IOException e) {
