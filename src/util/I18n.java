@@ -11,30 +11,18 @@ import java.util.ResourceBundle;
  * @date 2021/12/21 3:23 下午
  */
 public class I18n {
-
-    private static ResourceBundle resourceBundle = initResourceBundle();
-
-    private static ResourceBundle initResourceBundle() {
-        // load user custom ForkFarmer.properties
-        ResourceBundle bundle = getCustomI18nResourceBundle();
-
-        // load system default i18n_xx_xx.properties by locale
-        if (bundle == null) {
-            bundle = getBundleByLocale(Locale.getDefault());
-        }
-        // load system default i18n_en.properties
-        if (bundle == null) {
-            bundle = getBundleByLocale(Locale.ENGLISH);
-        }
-
-        return bundle;
-    }
+    // user custom ForkFarmer.properties
+    private static  ResourceBundle userCustomResourceBundle = getCustomI18nResourceBundle();
+    // i18n_xx_xx.properties by locale
+    private static ResourceBundle systemLocaleResourceBundle = getBundleByLocale(Locale.getDefault());
+    // system default i18n_en.properties
+    private static ResourceBundle defaultEnglishResourceBundle = getBundleByLocale(Locale.ENGLISH);
 
     private static ResourceBundle getCustomI18nResourceBundle() {
         ResourceBundle bundle = null;
         BufferedInputStream inputStream = null;
         try {
-        String proFilePath = System.getProperty("user.dir") + File.separator + "ForkFarmer.properties";
+            String proFilePath = System.getProperty("user.dir") + File.separator + "ForkFarmer.properties";
             inputStream = new BufferedInputStream(new FileInputStream(proFilePath));
             bundle = new PropertyResourceBundle(inputStream);
         } catch (Exception e) {
@@ -60,7 +48,20 @@ public class I18n {
     }
 
     public static String get(String key) {
-        return resourceBundle.getString(key);
+        String val = null;
+        if(userCustomResourceBundle != null){
+            val = userCustomResourceBundle.getString(key);
+        }
+
+        if(val == null && systemLocaleResourceBundle != null){
+            val = systemLocaleResourceBundle.getString(key);
+        }
+
+        if(val == null){
+            val = defaultEnglishResourceBundle.getString(key);
+        }
+
+        return val;
     }
 
     public static String getWithVariable(String key, String... values) {
