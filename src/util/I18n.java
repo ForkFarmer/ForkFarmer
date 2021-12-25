@@ -1,6 +1,9 @@
 package util;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Locale;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
@@ -12,7 +15,7 @@ import java.util.ResourceBundle;
  */
 public class I18n {
     // user custom ForkFarmer.properties
-    private static  ResourceBundle userCustomResourceBundle = getCustomI18nResourceBundle();
+    private static ResourceBundle userCustomResourceBundle = getCustomI18nResourceBundle();
     // i18n_xx_xx.properties by locale
     private static ResourceBundle systemLocaleResourceBundle = getBundleByLocale(Locale.getDefault());
     // system default i18n_en.properties
@@ -47,21 +50,36 @@ public class I18n {
         return bundle;
     }
 
+    /**
+     * get the localized language word by key,and the key must has default value in i18n_en.properties
+     * @param key - The key must not be null
+     * @return
+     */
     public static String get(String key) {
-        String val = null;
-        if(userCustomResourceBundle != null){
-            val = userCustomResourceBundle.getString(key);
+        if (key == null) {
+            throw new RuntimeException("localized language key must not be null");
         }
 
-        if(val == null && systemLocaleResourceBundle != null){
-            val = systemLocaleResourceBundle.getString(key);
-        }
+        String val = getStringFromResourceBundle(key, userCustomResourceBundle);
 
-        if(val == null){
-            val = defaultEnglishResourceBundle.getString(key);
-        }
+        if (val == null)
+            val = getStringFromResourceBundle(key, systemLocaleResourceBundle);
 
+        if (val == null)
+            val = getStringFromResourceBundle(key, defaultEnglishResourceBundle);
+
+        // the key should has a default value in i18n_en.properties
+        if (val == null) {
+            throw new RuntimeException(key + " is not config in i18n_en.properties");
+        }
         return val;
+    }
+
+    private static String getStringFromResourceBundle(String key, ResourceBundle resourceBundle) {
+        if(resourceBundle != null && resourceBundle.containsKey(key)){
+            return resourceBundle.getString(key);
+        }
+        return null;
     }
 
     public static String getWithVariable(String key, String... values) {
