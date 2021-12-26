@@ -70,7 +70,8 @@ public final class Ico {
 	
 	public static final ImageIcon EXPAND	= loadIcon("icons/expand.png",16);
 	public static final ImageIcon KEY		= loadIcon("icons/key.png",16);
-	
+	public static final ImageIcon COPY_DIR	= loadIcon("icons/folder_new.png",16);
+
 	//circle icons
 	public static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");
 	public static final ImageIcon RED 		= Ico.loadIcon("icons/circles/red.png");
