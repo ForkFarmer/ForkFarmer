@@ -3,8 +3,10 @@ package forks;
 import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URI;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -59,7 +61,8 @@ public class ForkController {
 		final JMenu COPY_SUBMENU = new SwingEX.JMIco(I18n.ForkController.copy, Ico.CLIPBOARD);
 		final JMenu TOOLS_SUBMENU = new SwingEX.JMIco(I18n.ForkController.tools, Ico.TOOLS);
 		final JMenu COMMUNITY_SUBMENU = new SwingEX.JMIco(I18n.ForkController.community, Ico.PEOPLE);
-		
+		final JMenu SETUP_SUBMENU = new SwingEX.JMIco(I18n.ForkController.setup, Ico.GEAR);
+
 		POPUP_MENU.addPopupMenuListener(new PopupMenuListener() {
 			@Override public void popupMenuCanceled(PopupMenuEvent pme) {
 				
@@ -157,7 +160,6 @@ public class ForkController {
 		}
 		
 		ACTION_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionEditStart,	Ico.EDIT_START, 	ForkStarter::edit));
-		ACTION_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionSetPassFile,	Ico.KEY, 			() -> new Thread(ForkController::setPassKey).start()));
 		ACTION_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionHide, 			Ico.HIDE,  			ForkController::removeSelected));
 	
 		POPUP_MENU.add(WALLET_SUBMENU);
@@ -191,7 +193,12 @@ public class ForkController {
 			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.chiaforksblockchain, Ico.DOWNLOAD, () -> Util.openLink("https://chiaforksblockchain.com/")));
 			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.casinoMaizeFarm, 			Ico.ROULETTE, () -> Util.openLink("https://casino.maize.farm/?ref=241")));
 			COMMUNITY_SUBMENU.addSeparator();
-			
+
+		POPUP_MENU.add(SETUP_SUBMENU);
+			SETUP_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionSetPassFile,	    Ico.KEY, () -> new Thread(ForkController::setPassKey).start()));
+			SETUP_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.copyPlotDirsFromChia, 	Ico.COPY_DIR,() -> new Thread(ForkController::copyPlotDirsFromChia).start()));
+			SETUP_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.copyPrivateKeyFromChia, 	Ico.PLUS,() -> new Thread(ForkController::copyPrivateKeysFromChia).start()));
+
 		POPUP_MENU.addSeparator();
 		
 		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.addColdWallet,	Ico.SNOW,  	() -> ForkController.addColdWallet(null)));
@@ -445,6 +452,139 @@ public class ForkController {
 		} catch (Exception e) {
 			System.out.println("Serious UNCAUGHT EXCEPTION!!!!!!!!!!!!!!!!!!!!!!");
 			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * read config.yaml get plotDirs and run chia cli to add or remove
+	 * if Chia's plot Dirs is empty,it will delete all plot Dirs of the fork
+	 */
+	public static synchronized void copyPlotDirsFromChia() {
+		List<Fork> selectedForks = ForkView.getSelected();
+		if (selectedForks.size() > 0) {
+			ForkFarmer.LOG.add(String.format(I18n.ForkController.copyPlotDirsFromChiaBegin, selectedForks.size()));
+			// get all plot Dirs of Chia
+			Fork fromFork = getChia();
+			List<String> chiaPlotDirs = fromFork.getPlotDirsFromConfig();
+
+			for (Fork fork : selectedForks) {
+				List<String> forkPlotDirs = fork.getPlotDirsFromConfig();
+
+				// add the dirs that not in current fork
+				// remove the dirs that not in chia
+				// ignore the dir is not exists or empty
+				int add = 0, del = 0, keep = 0;
+				for (String chiaPlotDir : chiaPlotDirs) {
+					if (forkPlotDirs.contains(chiaPlotDir)) {
+						ForkFarmer.LOG.add(String.format(I18n.ForkController.copyPlotDirsFromChiaSkip, fork.name, chiaPlotDir));
+						keep++;
+					} else {
+						ForkFarmer.LOG.add(String.format(I18n.ForkController.copyPlotDirsFromChiaAdd, fork.name, chiaPlotDir));
+						Util.runProcessWait(fork.exePath, "plots", "add", "-d", chiaPlotDir);
+						add++;
+					}
+				}
+
+				for (String forkPlotDir : forkPlotDirs) {
+					if (chiaPlotDirs.contains(forkPlotDir)) {
+
+					} else {
+						ForkFarmer.LOG.add(String.format(I18n.ForkController.copyPlotDirsFromChiaDel, fork.name, forkPlotDir));
+						Util.runProcessWait(fork.exePath, "plots", "remove", "-d", forkPlotDir);
+						del++;
+					}
+				}
+				ForkFarmer.LOG.add(String.format(I18n.ForkController.copyPlotDirsFromChiaResult, fork.name, add, del, keep));
+			}
+		}
+	}
+
+	private static Fork getChia() {
+		Fork fromFork = null;
+		for (Fork fork1 : Fork.LIST) {
+			if (fork1.symbol.equalsIgnoreCase("xch")) {
+				fromFork = fork1;
+				break;
+			}
+		}
+		return fromFork;
+	}
+
+	/**
+	 * we won't delete any private key!!!
+	 * if Chia's private key is empty ,it won't delete the private Key of a fork
+	 * XXX create temp key file is a dangerous action，may be change to chia wallet rpc /add_key
+	 *  but I didn't run curl success to request chia http rpc in Windows
+	 */
+	public static synchronized void copyPrivateKeysFromChia() {
+		Fork chia = getChia();
+		List<Fork> selectedForks = ForkView.getSelected();
+		if (selectedForks.size() > 0) {
+			// 1. get chia's keys
+			List<Map<String, String>> chiaKeywordsList = chia.getPrivateKeys();
+			if (chiaKeywordsList == null || chiaKeywordsList.size() == 0) {
+				return;
+			}
+			Map<String, File> fingerprintAndKeyFilePathMap = new HashMap<>(chiaKeywordsList.size());
+
+			// 2. save all private keys to temp file
+			try {
+				for (Map<String, String> k : chiaKeywordsList) {
+					String fingerprint = k.get("Fingerprint");
+					String words = k.get("words");
+
+					//  save fingerprint 2 file
+					File tempFile = new File(System.getProperty("user.dir") + File.separator + "." + fingerprint + ".key");
+					if (tempFile.exists()) {
+						tempFile.delete();
+					} else {
+						tempFile.createNewFile();
+						FileWriter fw = new FileWriter(tempFile);
+						fw.write(words);
+						fw.flush();
+						fw.close();
+					}
+					fingerprintAndKeyFilePathMap.put(fingerprint, tempFile);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			if (fingerprintAndKeyFilePathMap.size() == 0) {
+				return;
+			}
+
+			// 3. import all keys to selected Fork
+			for (Fork fork : selectedForks) {
+				try {
+					for (Map.Entry<String, File> entry : fingerprintAndKeyFilePathMap.entrySet()) {
+						String fingerprint = entry.getKey();
+						File keyFile = entry.getValue();
+						if (keyFile.exists()) {
+							String importFingerprint = fork.importPrivateKey(entry.getValue().getAbsolutePath());
+							boolean importSuccess = fingerprint.equals(importFingerprint);
+							if (importSuccess) {
+								ForkFarmer.LOG.add(String.format(I18n.ForkController.copyPrivateKeysFromChiaToForkSuccess, fingerprint, fork.name));
+							} else {
+								ForkFarmer.LOG.add(String.format(I18n.ForkController.copyPrivateKeysFromChiaToForkFail, fingerprint, fork.name));
+							}
+						}
+					}
+				} catch (Exception e) {
+					ForkFarmer.LOG.add(String.format(I18n.ForkController.copyPrivateKeysFromChiaToForkError, fork.name));
+				}
+			}
+
+			// 4.delete the private key temp file
+			for (Map.Entry<String, File> entry : fingerprintAndKeyFilePathMap.entrySet()) {
+				File keyFile = entry.getValue();
+				try {
+					if (keyFile.exists()) {
+						keyFile.delete();
+					}
+				} catch (Exception e) {
+				}
+			}
 		}
 	}
 

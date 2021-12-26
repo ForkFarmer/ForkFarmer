@@ -277,6 +277,7 @@ public class I18n {
         public static final String action = I18n.get("ForkController.menu.action");
         public static final String wallet = I18n.get("ForkController.menu.wallet");
         public static final String explore = I18n.get("ForkController.menu.explore");
+        public static final String setup = I18n.get("ForkController.menu.setup");
         public static final String copy = I18n.get("ForkController.menu.copy");
         public static final String tools = I18n.get("ForkController.menu.tools");
         public static final String community = I18n.get("ForkController.menu.community");
@@ -294,7 +295,7 @@ public class I18n {
         public static final String actionActivate = I18n.get("ForkController.menu.action.activate");
         public static final String actionActivateCustom = I18n.get("ForkController.menu.action.ActivateCustom");
         public static final String actionEditStart = I18n.get("ForkController.menu.action.editStart");
-        public static final String actionSetPassFile = I18n.get("ForkController.menu.action.setPassFile");
+        public static final String actionSetPassFile = I18n.get("ForkController.menu.setup.setPassFile");
         public static final String actionHide = I18n.get("ForkController.menu.action.hide");
         public static final String homepage = I18n.get("ForkController.menu.community.homepage");
         public static final String discord = I18n.get("ForkController.menu.community.discord");
@@ -306,6 +307,16 @@ public class I18n {
         public static final String forkschiaexchange = I18n.get("ForkController.menu.community.forkschiaexchange");
         public static final String chiaforksblockchain = I18n.get("ForkController.menu.community.chiaforksblockchain");
         public static final String casinoMaizeFarm = I18n.get("ForkController.menu.community.casinoMaizeFarm");
+        public static final String copyPlotDirsFromChia = I18n.get("ForkController.menu.setup.copyPlotDirsFromChia");
+        public static final String copyPlotDirsFromChiaBegin = I18n.get("ForkController.copyPlotDirsFromChia.begin");
+        public static final String copyPlotDirsFromChiaResult = I18n.get("ForkController.copyPlotDirsFromChia.result");
+        public static final String copyPlotDirsFromChiaSkip = I18n.get("ForkController.copyPlotDirsFromChia.skip");
+        public static final String copyPlotDirsFromChiaAdd = I18n.get("ForkController.copyPlotDirsFromChia.add");
+        public static final String copyPlotDirsFromChiaDel = I18n.get("ForkController.copyPlotDirsFromChia.del");
+        public static final String copyPrivateKeyFromChia = I18n.get("ForkController.menu.setup.copyPrivateKeyFromChia");
+        public static final String copyPrivateKeysFromChiaToForkSuccess  = I18n.get("ForkController.copyPrivateKeysFromChia.success");
+        public static final String copyPrivateKeysFromChiaToForkFail  = I18n.get("ForkController.copyPrivateKeysFromChia.fail");
+        public static final String copyPrivateKeysFromChiaToForkError  = I18n.get("ForkController.copyPrivateKeysFromChia.error");
         public static final String multiWalletIndex = I18n.get("ForkController.menu.wallet.multiWalletIndex");
         public static final String walletAddColdWallet = I18n.get("ForkController.menu.wallet.addColdWallet");
         public static final String viewLog = I18n.get("ForkController.menu.explore.viewLog");

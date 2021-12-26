@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -573,5 +574,64 @@ public class Fork {
 		loadFarmSummary();
 		ForkView.update(this);
 	}
-	
+	public List<String> getPlotDirsFromConfig(){
+		List<String> chiaPlotDirs = null;
+		try {
+			String harvesterPlotDirsKey = "harvester.plot_directories";
+			YamlUtil chiaCofingYaml = new YamlUtil(this.configPath);
+			chiaPlotDirs = chiaCofingYaml.getValueByKey(harvesterPlotDirsKey, null);
+		} catch (Exception e) {
+			lastException = e;
+		}
+		if(chiaPlotDirs == null){
+			chiaPlotDirs = new ArrayList<>(0);
+		}
+		return chiaPlotDirs;
+	}
+
+	// map item: {fingerprint:[24 words]}
+	public List<Map<String, String>> getPrivateKeys() {
+		String chiaKeyResponseString = Util.runProcessWait(exePath, "keys", "show", "--show-mnemonic-seed");
+		List<Map<String, String>> keyList = new ArrayList<>();
+		if (chiaKeyResponseString != null) {
+			boolean startFlag = false;
+			String[] lines = chiaKeyResponseString.split("\\r?\\n");
+			Map<String, String> keyword = null;
+			for (String line : lines) {
+				if (line != null && line.length() > 0 && line.trim().length() > 0) {
+					if (line.startsWith("Fingerprint: ")) {
+						String Fingerprint = line.substring("Fingerprint: ".length());
+						keyword = new HashMap<>(2);
+						keyList.add(keyword);
+						keyword.put("Fingerprint", Fingerprint);
+					}
+					if (startFlag) {
+						keyword.put("words", line.trim());
+						startFlag = false;
+					}
+					if (line.indexOf("Mnemonic seed (24 secret words):") > -1) {
+						startFlag = true;
+					}
+				}
+			}
+		}
+		return keyList;
+	}
+
+	/**
+	 *
+	 * @param keyFilePath - The key txt file
+	 * @return if add success will return the fingerprint
+	 */
+	public String importPrivateKey(String keyFilePath) {
+		try {
+			String execResult = Util.runProcessWait(exePath, "keys", "add", "-f", keyFilePath);
+			if(execResult != null && execResult.indexOf("Added private key with public key fingerprint") > -1){
+				return execResult.substring("Added private key with public key fingerprint".length()+1).trim();
+			}
+		} catch (Exception e) {
+		}
+		return null;
+	}
+
 }
