@@ -53,7 +53,7 @@ public class XchForks {
 	                String authorizationHeader = "Basic " + base64Credentials;
 	        
 	        HttpRequest request = HttpRequest.newBuilder()
-	                .uri(URI.create("https://xchforks.com/api/v1/listings"))
+	                .uri(URI.create("https://xchuniverse.com/api/v1/listings"))
 	                .timeout(Duration.ofSeconds(5))
 	                .header("Authorization", authorizationHeader)
 	                .build();
