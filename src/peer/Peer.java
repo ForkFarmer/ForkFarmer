@@ -3,17 +3,19 @@ package peer;
 public class Peer {
 	final String address;
 	final String time;
+	final String nodeID;
 	final double ul;
 	final double dl;
 	final int height;
 	
 	
-	public Peer (String address, String time, double ul, double dl, int height) {
+	public Peer (String address, String nodeID, String time, double ul, double dl, int height) {
 		this.address = address;
 		this.time = time;
 		this.ul = ul;
 		this.dl = dl;
 		this.height = height;
+		this.nodeID = nodeID;
 	}
 
 	
@@ -36,13 +38,14 @@ public class Peer {
 		String[] lines = nodeStr.split("\\s+");
 		
 		String address = lines[1] + ":" + lines[2].substring(lines[2].indexOf("/")+1);
+		String nodeID = lines[3].substring(0, 8);
 		String time = lines[4] + " " + lines[5] + " " + lines[6];
 		int sep = lines[7].indexOf("|");
 		double ul = Double.parseDouble(lines[7].substring(0, sep));
 		double dl = Double.parseDouble(lines[7].substring(sep+1));
 		int height = Integer.parseInt(lines[10]);
 		
-		return new Peer(address,time, ul, dl, height);
+		return new Peer(address,nodeID, time, ul, dl, height);
 	}
 	
 	/*
@@ -61,12 +64,13 @@ public class Peer {
 		String[] lines = nodeStr.split("\\s+");
 		
 		String address = lines[1] + ":" + lines[2].substring(lines[2].indexOf("/")+1);
+		String nodeID = lines[3].substring(0, 8);
 		String time = lines[4] + " " + lines[5] + " " + lines[6];
 		int sep = lines[7].indexOf("|");
 		double ul = Double.parseDouble(lines[7].substring(0, sep));
 		double dl = Double.parseDouble(lines[7].substring(sep+1));
 		int height = Integer.parseInt(lines[8]);
-		return new Peer(address,time, ul, dl, height);
+		return new Peer(address,nodeID,time, ul, dl, height);
 	}
 	
 

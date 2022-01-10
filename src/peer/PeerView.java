@@ -51,6 +51,7 @@ public class PeerView extends JPanel {
 	
 	private final JButton copyPeers = new SwingEX.Btn(I18n.PeerView.copy, 	Ico.CLIPBOARD,  () -> {copy();});
 	private final JButton copyCLI = new SwingEX.Btn(I18n.PeerView.cliCopy, Ico.CLI,  () -> {copyCLI();});
+	private final JButton deleteBtn = new SwingEX.Btn(I18n.PeerView.deleteBtn, null,  () -> {deletePeers();});
 	
 	
 	private final LogModel PVLOG = new LogModel();
@@ -60,10 +61,11 @@ public class PeerView extends JPanel {
 			super();
 			
 			addColumn("Address",   	-1,		String.class,	p->p.address).colName(I18n.PeerView.addressColName);
-			addColumn("Height",   	80,		String.class,	p->p.height).colName(I18n.PeerView.heightColName);
+			addColumn("Height",   	80,		Integer.class,	p->p.height).colName(I18n.PeerView.heightColName);
 			addColumn("Time",  		160,	String.class,	p->p.time).colName(I18n.PeerView.timeColName);
 			addColumn("Upload",   	80,		double.class, 	p->p.ul).colName(I18n.PeerView.uploadColName);
-			addColumn("Dowload",   	80,		double.class, 	p->p.dl).colName(I18n.PeerView.dowloadColName);
+			addColumn("Download",  	80,		double.class, 	p->p.dl).colName(I18n.PeerView.dowloadColName);
+			addColumn("NodeID",  	80,		String.class, 	p->p.nodeID).colName(I18n.PeerView.nodeIDColName);
 			
 			onGetRowCount(() -> LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(LIST.get(r)));
@@ -88,6 +90,7 @@ public class PeerView extends JPanel {
 		JMenuBar MENU = new JMenuBar();
 		MENU.add(copyPeers);
 		MENU.add(copyCLI);
+		MENU.add(deleteBtn);
 		MENU.add(new JSeparator());
 		MENU.add(addPeers);
 		MENU.add(newPeerField);
@@ -189,6 +192,22 @@ public class PeerView extends JPanel {
 		
 		Util.copyToClip(sb.toString());
 	}
+	
+	private void deletePeers() {
+		List<Peer> peerList = SwingUtil.getSelected(TABLE, LIST);
+		
+		PVLOG.add("Removing " + peerList.size() + " peers");
+		new Thread(() -> {
+			for (Peer p : peerList) {
+				PVLOG.add(f.name + " show -r " + p.nodeID);
+				@SuppressWarnings("unused")
+				String s = Util.runProcessWait(f.exePath,"show","-r", p.nodeID);
+			}
+			PVLOG.add("Done removing peers");	
+		}).start();
+		
+	}
+
 
 	private void copy() {
 		List<Peer> peerList = SwingUtil.getSelected(TABLE, LIST);

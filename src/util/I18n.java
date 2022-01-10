@@ -11,7 +11,7 @@ import java.util.ResourceBundle;
 /**
  * @author liyifeng
  * @version 1.0
- * @date 2021/12/21 3:23 下午
+ * @date 2021/12/21 3:23 ä¸‹å�ˆ
  */
 public class I18n {
     // user custom ForkFarmer.properties
@@ -88,7 +88,7 @@ public class I18n {
     }
 
     /**
-     *  replace variable {1}、 {2} ... {n}
+     *  replace variable {1}ã€� {2} ... {n}
      */
     public static String replaceVar(String val, String... values) {
         if (val == null) {
@@ -200,12 +200,15 @@ public class I18n {
         public static final String addPeerBtn = I18n.get("PeerView.addPeerBtn");
         public static final String copy = I18n.get("PeerView.copy");
         public static final String cliCopy = I18n.get("PeerView.cliCopy");
+        public static final String deleteBtn = I18n.get("PeerView.deleteBtn");
         public static final String addressColName = I18n.get("PeerView.tableHeader.addressColName");
         public static final String heightColName = I18n.get("PeerView.tableHeader.heightColName");
         public static final String timeColName = I18n.get("PeerView.tableHeader.timeColName");
         public static final String uploadColName = I18n.get("PeerView.tableHeader.uploadColName");
         public static final String dowloadColName = I18n.get("PeerView.tableHeader.dowloadColName");
+        public static final String nodeIDColName = I18n.get("PeerView.tableHeader.nodeIDColName");
         public static final String addPeerBtnTipText = I18n.get("PeerView.addPeerBtnTipText");
+        
     }
 
     public static class LogModel {

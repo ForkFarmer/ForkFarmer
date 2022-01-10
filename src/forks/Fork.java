@@ -124,7 +124,7 @@ public class Fork {
 					String fingerprint = l.substring("Fingerprint: ".length());;
 					while (null != (l = br.readLine())) {
 						if (l.contains("First wallet address: ")) {
-							String address = l.substring("First wallet address: ".length());
+							String address = Util.getWordAfter(l, "First wallet address: ");
 							walletList.add(new Wallet(fingerprint, address,walletIndex));
 							walletIndex++;
 							break;

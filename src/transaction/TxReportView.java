@@ -62,6 +62,8 @@ public class TxReportView extends JPanel {
 		//topPanel.add(topCenter, BorderLayout.CENTER);
 		topPanel.add(effortLbl,BorderLayout.LINE_END);
 		
+		TABLE.setAutoCreateRowSorter(true);
+		
 		add(topPanel,BorderLayout.PAGE_START);
 	    
 		for (Transaction to : selList) {

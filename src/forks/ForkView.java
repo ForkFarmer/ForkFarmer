@@ -73,10 +73,10 @@ public class ForkView extends JPanel {
 			addColumn("Load", 		 40, 	String.class, 	f->f.load).colName(I18n.ForkView.loadColName);
 			addColumn("Time",		 50,	ReadTime.class, f->f.readTime).show().viewRight().colName(I18n.ForkView.timeColName);
 			addColumn("Full Node",	 30,	Boolean.class, 	f->f.fullNode).editable().fixed().colIco(Ico.P2P_GREY).colName(I18n.ForkView.fullNodeColName);
-			addColumn("Wallet Node", 30,	Boolean.class, 	f->f.walletNode).editable().fixed().colIco(Ico.WALLET_GRAY).colName(I18n.ForkView.walletNodeColName);
+			addColumn("Wallet Node", 30,	Boolean.class, 	f->f.walletNode).editable().fixed().colIco(Ico.WALLET_GRAY);
 			addColumn("", 			 22, 	Icon.class, 	f->f.statusIcon).showMandatory().fixed();
 			addColumn("Nothing", 	 30, 	Boolean.class, 	f->f.nothing).editable().fixed().colName("");
-			addColumn("ATB Status",	 22, 	Icon.class, 	f->f.fd.atbIcon).show().fixed().colIco(Ico.ATB_GRAY).colName(I18n.ForkView.atbStatusColName);
+			addColumn("ATB Status",	 22, 	Icon.class, 	f->f.fd.atbIcon).show().fixed().colIco(Ico.ATB_GRAY);
 			
 			BALANCE_COLUMN = getIndex("Balance");
 			PRICE_COLUMN = getIndex("$");

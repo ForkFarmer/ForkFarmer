@@ -226,7 +226,7 @@ public class MainGui extends JPanel {
 	}
 	
 	public static void updateNumForks() {
-		forklbl.setText(Integer.toString(Fork.LIST.size()) + I18n.MainGui.forks);
+		forklbl.setText(Integer.toString(Fork.LIST.size()) + " " + I18n.MainGui.forks);
 	}
 	
 }
