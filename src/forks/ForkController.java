@@ -368,14 +368,18 @@ public class ForkController {
 	}
 	
 	static private void staggerStartDialog() {
-		String delay = JOptionPane.showInputDialog(ForkFarmer.FRAME,I18n.ForkController.staggerDiagleLabel, "60");
+		String delay = JOptionPane.showInputDialog(ForkFarmer.FRAME,"Enter Start Interval: (Seconds)", "60");
 		
 		if (null == delay)
 			return;
 		int delayInt = Integer.parseInt(delay);
 
+		staggerStart(ForkView.getSelected(),delayInt);
+	}
+	
+	static public void staggerStart(List<Fork> list, int delayInt) {
 		new Thread(() -> {
-			ForkView.getSelected().stream().forEach(f -> {
+			list.stream().forEach(f -> {
 				ForkStarter.start(f); Util.sleep(delayInt * 1000);
 			});
 		}).start();

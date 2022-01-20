@@ -344,14 +344,16 @@ public class Fork {
 					readT = true;
 				}
 				
-				if (i > 250 || timeStamp.equals(lastTimeStamp)) {
-					lastTimeStamp = firstTime;
+				if (i > 1000 || timeStamp.equals(lastTimeStamp)) {
 					break;
 				}	
 				
 				if (null != (t = Util.wordAfterIfExist(s, "percent full: ")))
 					load = new Percentage(t);
 				
+				if (s.contains("Farmed unfinished_block") & !walletNode)
+					Transaction.fromLog(this,s);
+					
 				if (!readT && null != (t = Util.wordAfterIfExist(s, "Time: "))) {
 					readTime = new ReadTime(Double.parseDouble(t));
 					readT = true;
@@ -376,6 +378,7 @@ public class Fork {
 					
 				
 			}
+			lastTimeStamp = firstTime;
 			
 		} catch (Exception e) {
 			lastException = e;

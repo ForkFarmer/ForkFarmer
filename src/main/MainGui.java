@@ -35,7 +35,7 @@ public class MainGui extends JPanel {
 	private static NetSpace plotSize = new NetSpace("0 TiB");
 	private static final JLabel plotlbl = new JLabel(I18n.MainGui.farmSize+" ?");
 	private static final JLabel valuelbl = new JLabel(I18n.MainGui.value + Settings.GUI.currencySymbol + "0.0");
-	private static final JLabel forklbl = new JLabel(Integer.toString(Fork.LIST.size()) + I18n.MainGui.forks, SwingConstants.CENTER);
+	private static final JLabel forklbl = new JLabel(Integer.toString(Fork.LIST.size()) + " " + I18n.MainGui.forks, SwingConstants.CENTER);
 	
 	GridBagConstraints c = new GridBagConstraints();
 	

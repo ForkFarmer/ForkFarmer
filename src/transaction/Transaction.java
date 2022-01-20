@@ -74,6 +74,9 @@ public class Transaction {
 	}
 	
 	public ImageIcon getIcon() {
+		if (blockReward)
+			return R_ARROW;
+		
 		if (null != f.wallet.addr)
 			if (f.wallet.addr.equals(target))
 				return R_ARROW;
@@ -190,22 +193,8 @@ public class Transaction {
 		Util.closeQuietly(br);
 		Util.closeQuietly(pw);
 		Util.waitForProcess(p);
-			
-		if (null != newTX) {
-			synchronized(Transaction.LIST) {
-			// update fork last win handle
-			if (null != f.lastWin && newTX.blockReward)
-				newTX.lastWinTime = f.lastWin.getTimeSince();
-				
-			f.lastWin = LIST.stream()
-				.filter(t -> f == t.f && t.blockReward)
-				.reduce((a,b) -> a.getTimeSince().inMinutes() < b.getTimeSince().inMinutes() ? a:b).orElse(null);
-			
-			}
-			
-			ForkView.update(f);
-			TransactionView.refresh();
-		}
+		
+		update(f, newTX);
 		
 		ForkFarmer.LOG.add(f.name + " done getting transactions");
 
@@ -213,6 +202,24 @@ public class Transaction {
 		
 	}
 	
+	private static void update(Fork f, Transaction newTX) {
+		if (null == newTX)
+			return;
+		synchronized(Transaction.LIST) {
+			// update fork last win handle
+			if (null != f.lastWin && newTX.blockReward)
+				newTX.lastWinTime = f.lastWin.getTimeSince();
+				
+			f.lastWin = LIST.stream()
+				.filter(t -> f == t.f && t.blockReward)
+				.reduce((a,b) -> a.getTimeSince().inMinutes() < b.getTimeSince().inMinutes() ? a:b).orElse(null);
+		}
+			
+		ForkView.update(f);
+		TransactionView.refresh();
+	}
+		
+		
 	public void browse() {
 		
 		String atbPath = f.fd.atbPath;
@@ -220,6 +227,20 @@ public class Transaction {
 			String addr = target;
 			Util.openLink("https://alltheblocks.net/" + atbPath + "/address/" + addr);
 		}
+	}
+
+	public static void fromLog(Fork f, String s) {
+		String timeStamp = s.substring(0,19);
+		timeStamp = timeStamp.replace("T", " ");
+		
+		String txHAsh = Util.getWordAfter(s, "Farmed unfinished_block ");
+
+		Transaction t = new Transaction(f,txHAsh,f.fd.fullReward,"Log Farming Reward",timeStamp,true);
+		synchronized(Transaction.LIST) {
+			LIST.add(t);
+		}
+		update(f,t);
+		
 	}
 	
 }

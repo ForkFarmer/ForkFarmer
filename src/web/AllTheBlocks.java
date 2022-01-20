@@ -53,6 +53,8 @@ public class AllTheBlocks {
 			for (Fork f: Fork.LIST) {
 				if (null != f.wallet && f.wallet.cold)
 					addrList.add(f.wallet.addr);
+				else if (!f.walletNode)
+					addrList.add(f.wallet.addr);
 			}
 			
 			if (0 == addrList.size())
