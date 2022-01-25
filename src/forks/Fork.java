@@ -98,7 +98,7 @@ public class Fork {
 			return;
 		
 		ForkFarmer.LOG.add(name + " getting receive address");
-		
+			
 		Process p = null;
 		BufferedReader br = null;
 		try {
@@ -351,7 +351,7 @@ public class Fork {
 				if (null != (t = Util.wordAfterIfExist(s, "percent full: ")))
 					load = new Percentage(t);
 				
-				if (s.contains("Farmed unfinished_block") & !walletNode)
+				if (s.contains("Farmed unfinished_block") & (!walletNode || fd.coinPrefix.toUpperCase().equals("SIX")))
 					Transaction.fromLog(this,s);
 					
 				if (!readT && null != (t = Util.wordAfterIfExist(s, "Time: "))) {

@@ -14,7 +14,6 @@ import main.ForkFarmer;
 import main.Settings;
 import util.I18n;
 import util.Util;
-import util.swing.SwingEX;
 import util.swing.SwingEX.LTPanel;
 import util.swing.jfuntable.KVPair;
 import util.swing.jfuntable.KVTable;
