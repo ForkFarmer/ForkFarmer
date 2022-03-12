@@ -4,7 +4,7 @@ Java GUI Frontend for XCH Forks. Supports basic farm management: farmer status, 
 
 Discord: https://discord.gg/vhwVg5kKNR
 
-Java 8 Minimum, Java 11+ required for web-features (price updates, version checks, cold wallets): https://www.oracle.com/java/technologies/downloads/
+Java 11+ required: https://www.oracle.com/java/technologies/downloads/
 
 (On Linux) sudo apt install openjdk-11-jdk
 
