@@ -11,9 +11,9 @@ import java.nio.charset.Charset;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,13 +28,19 @@ import debug.DebugView;
 import ffutilities.ForkPorts;
 import main.ForkFarmer;
 import main.MainGui;
+import peer.Peer;
 import transaction.Transaction;
 import types.Balance;
 import types.Percentage;
 import types.ReadTime;
 import types.TimeU;
 import types.Wallet;
-import util.*;
+import util.FFUtil;
+import util.I18n;
+import util.Ico;
+import util.NetSpace;
+import util.Util;
+import util.YamlUtil;
 import util.apache.ReversedLinesFileReader;
 
 public class Fork {
@@ -44,7 +50,9 @@ public class Fork {
 
 	public transient Balance balance = new Balance();
 	public transient Balance equity = new Balance();
-	public transient Balance height = new Balance();
+	public transient Balance walletHeight = new Balance();
+	public transient Balance fullnodeHeight = new Balance();
+	public transient Balance maxpeerHeight = new Balance();
 
 	public String symbol;
 	public String exePath;
@@ -68,6 +76,7 @@ public class Fork {
 	transient public double estEarn;
 	transient public Transaction lastWin;
 	transient public Exception lastException;
+	transient public List<Peer> peerList = new ArrayList<>();
 	transient public List<Wallet> walletList = new ArrayList<>();
 	transient public boolean nothing;
 	transient String lastTimeStamp;
@@ -76,6 +85,9 @@ public class Fork {
 	transient public boolean xchfSupport;
 	transient public Percentage load = Percentage.EMPTY;
 	transient public int numH;
+	transient public double upload;
+	transient public double download;
+	
 	
 	public String walletAddr;
 	public boolean fullNode = true;
@@ -219,14 +231,22 @@ public class Fork {
 					p.destroyForcibly();
 					syncStatus = "";
 					break;
-				} else if (l.contains("-Total Balance: ")) {
-					newBalance.add(Double.parseDouble(Util.getWordAfter(l, "-Total Balance: ")));
 				} else if (l.contains("Wallet height: ")) {
 					String heightStr = Util.getWordAfter(l, "Wallet height: ");
-					height = new Balance(Integer.parseInt(heightStr));
+					walletHeight = new Balance(Integer.parseInt(heightStr));
 				} else if (l.contains("Sync status: ")) {
 					syncStatus = l.substring("Sync status: ".length());
 				}
+				
+				if (l.startsWith("Wallet ID")) {
+					String idNAme = l;
+					String totalLine 	 = br.readLine();
+					String pendingLine 	 = br.readLine();
+					String spendableLine = br.readLine();
+					if (idNAme.contains("STANDARD_WALLET"))
+						newBalance.add(Double.parseDouble(Util.getWordAfter(totalLine, "-Total Balance: ")));
+				}
+				
 			}
 			
 			boolean balancedChanged = updateBalance(newBalance);
@@ -308,7 +328,7 @@ public class Fork {
 		if (cold)
 			return;
 		
-		boolean readH = false, readT = false;
+		boolean readWH = false, readT = false, readFNH = false;
 		File logFile = new File(logPath);
 		if (!logFile.exists())
 			return;
@@ -351,7 +371,8 @@ public class Fork {
 				if (null != (t = Util.wordAfterIfExist(s, "percent full: ")))
 					load = new Percentage(t);
 				
-				if (s.contains("Farmed unfinished_block") & (!walletNode || fd.coinPrefix.toUpperCase().equals("SIX")))
+				if (s.contains("Farmed unfinished_block") & (!walletNode || fd.coinPrefix.toUpperCase().equals("SIX")
+						|| fd.coinPrefix.toUpperCase().equals("XCH") ))
 					Transaction.fromLog(this,s);
 					
 				if (!readT && null != (t = Util.wordAfterIfExist(s, "Time: "))) {
@@ -368,12 +389,22 @@ public class Fork {
 				} else if (!readT && s.contains("Harvester did not respond")) {
 					readTime = ReadTime.TIMEOUT;
 					readT = true;
-				} else if (!readH && null != (t = Util.wordAfterIfExist(s, "wallet peak to height "))) {
+				} else if (!readWH && null != (t = Util.wordAfterIfExist(s, "wallet peak to height "))) {
 					t = t.replace(",", "");
-					height = new Balance(Integer.parseInt(t));
-					readH = true;
+					walletHeight = new Balance(Integer.parseInt(t));
+					readWH = true;
+				} else if (!readWH && null != (t = Util.wordAfterIfExist(s, "Peak set to : "))) {
+					walletHeight = new Balance(Integer.parseInt(t));
+					readWH = true;
+				} else if (!readWH && null != (t = Util.wordAfterIfExist(s, "Peak set to: "))) {
+					walletHeight = new Balance(Integer.parseInt(t));
+					readWH = true;
 				} else if (s.contains("Adding coin") || s.contains("Removing coin")) {
 					updateWallet = true;
+				} else if(!readFNH && null != (t = Util.wordAfterIfExist(s, "Updated peak to height "))) {
+					t = t.replace(",", "");
+					fullnodeHeight = new Balance(Integer.parseInt(t));
+					readFNH = true;
 				}
 					
 				
@@ -397,6 +428,50 @@ public class Fork {
 		
 		Util.closeQuietly(lr);
 		ForkView.updateLog(this);
+	}
+	
+	public List<Peer> loadPeers() {
+		peerList.clear();
+		boolean singleMode = false;
+		Process p = null;
+		BufferedReader br = null;
+		
+		try {
+			p = Util.startProcess(exePath, "show", "-c");
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				
+			String l = null;
+			while ( null != (l = br.readLine())) {
+				if (l.startsWith("Connections:")) {
+					l = br.readLine();
+					if (l.startsWith("Type") && l.contains("Hash"))
+						singleMode = true;
+					continue;
+				}
+					
+				if (l.contains("FULL_NODE ")) {
+					if (singleMode) {
+						peerList.add(Peer.factorySingleLine(l));
+		           	} else {
+		           		String l2 = br.readLine();
+		           		peerList.add(Peer.factoryMultiLine(l + l2));
+		           	}
+				}
+	           		
+			}
+		} catch (Exception e) {
+			lastException = e;
+		};
+		
+		Util.waitForProcess(p);
+		Util.closeQuietly(br);
+		
+		peerList.stream().map(z -> z.height).mapToInt(z -> z).max().ifPresent(i -> maxpeerHeight = new Balance(i));
+		
+		upload = peerList.stream().map(z -> z.ul).mapToDouble(z -> z).sum();
+		download = peerList.stream().map(z -> z.dl).mapToDouble(z -> z).sum();
+		
+		return peerList;
 	}
 
 	void updateIcon() {
@@ -575,6 +650,7 @@ public class Fork {
 		loadWallets();
 		loadWallet();
 		loadFarmSummary();
+		loadPeers();
 		ForkView.update(this);
 	}
 	public List<String> getPlotDirsFromConfig(){

@@ -145,7 +145,9 @@ public class I18n {
         public static final String balanceColName = I18n.get("ForkView.tableHeader.balanceColName");
         public static final String equityColName = I18n.get("ForkView.tableHeader.equityColName");
         public static final String netspaceColName = I18n.get("ForkView.tableHeader.netspaceColName");
-        public static final String heightColName = I18n.get("ForkView.tableHeader.heightColName");
+        public static final String walletHeightColName = I18n.get("ForkView.tableHeader.walletHeightColName");
+        public static final String fullnodeHeightColName = I18n.get("ForkView.tableHeader.fullnodeHeightColName");
+        public static final String maxpeerHeightColName = I18n.get("ForkView.tableHeader.maxpeerHeightColName");
         public static final String farmSizeColName = I18n.get("ForkView.tableHeader.farmSizeColName");
         public static final String versionColName = I18n.get("ForkView.tableHeader.versionColName");
         public static final String latestVerColName = I18n.get("ForkView.tableHeader.latestVerColName");
@@ -159,8 +161,11 @@ public class I18n {
         public static final String effortColName = I18n.get("ForkView.tableHeader.effortColName");
         public static final String addressColName = I18n.get("ForkView.tableHeader.addressColName");
         public static final String rewardColName = I18n.get("ForkView.tableHeader.rewardColName");
+        public static final String peersColName = I18n.get("ForkView.tableHeader.peersColName");
         public static final String walletsColName = I18n.get("ForkView.tableHeader.walletsColName");
         public static final String harvestersColName = I18n.get("ForkView.tableHeader.harvestersColName");
+        public static final String uploadColName = I18n.get("ForkView.tableHeader.uploadColName");
+        public static final String downloadColName = I18n.get("ForkView.tableHeader.downloadColName");
         public static final String loadColName = I18n.get("ForkView.tableHeader.loadColName");
         public static final String timeColName = I18n.get("ForkView.tableHeader.timeColName");
         public static final String fullNodeColName = I18n.get("ForkView.tableHeader.full_nodeColName");
@@ -321,6 +326,7 @@ public class I18n {
         public static final String copyPrivateKeysFromChiaToForkFail  = I18n.get("ForkController.copyPrivateKeysFromChia.fail");
         public static final String copyPrivateKeysFromChiaToForkError  = I18n.get("ForkController.copyPrivateKeysFromChia.error");
         public static final String multiWalletIndex = I18n.get("ForkController.menu.wallet.multiWalletIndex");
+        public static final String assetToken = I18n.get("ForkController.menu.assetTokens");
         public static final String walletAddColdWallet = I18n.get("ForkController.menu.wallet.addColdWallet");
         public static final String viewLog = I18n.get("ForkController.menu.explore.viewLog");
         public static final String openConfig = I18n.get("ForkController.menu.explore.openConfig");

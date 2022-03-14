@@ -1,6 +1,11 @@
 package util.swing;
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.image.BufferedImage;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +40,26 @@ public class CompoundIcon implements Icon
 			icon.paintIcon(c, g, xPos, y);
 			xPos += icon.getIconWidth()+1;
 		}
-
+	
+	}
+	
+	public ImageIcon getImage() {
+	      int w = getIconWidth();
+	      int h = getIconHeight();
+	      GraphicsEnvironment ge = 
+	        GraphicsEnvironment.getLocalGraphicsEnvironment();
+	      GraphicsDevice gd = ge.getDefaultScreenDevice();
+	      GraphicsConfiguration gc = gd.getDefaultConfiguration();
+	      BufferedImage image = gc.createCompatibleImage(w, h,BufferedImage.TYPE_INT_ARGB);
+	      Graphics2D g = image.createGraphics();
+	      int xPos = 0;
+			for (final ImageIcon icon: iconList)
+			{
+				g.drawImage(icon.getImage(),xPos,0,null);
+				xPos += icon.getIconWidth()+1;
+			}
+	      
+	      g.dispose();
+	      return new ImageIcon(image);
 	}
 }

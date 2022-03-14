@@ -4,9 +4,9 @@ public class Peer {
 	final String address;
 	final String time;
 	final String nodeID;
-	final double ul;
-	final double dl;
-	final int height;
+	public final double ul;
+	public final double dl;
+	public final int height;
 	
 	
 	public Peer (String address, String nodeID, String time, double ul, double dl, int height) {
@@ -28,13 +28,14 @@ public class Peer {
 	5 01
 	6 16:54:11
 	7 6.0|11.8
-	8 -SB
-	9 Height:
-	10 655519
-	11 -Hash:
-	12 ad8be9fa...
+	8 -SB --------- removed
+	8 Height:
+	9 655519
+	10 -Hash:
+	11 ad8be9fa...
 	 */
 	public static Peer factoryMultiLine(String nodeStr) {
+		nodeStr = nodeStr.replace("-SB", "");
 		String[] lines = nodeStr.split("\\s+");
 		
 		String address = lines[1] + ":" + lines[2].substring(lines[2].indexOf("/")+1);
@@ -43,7 +44,7 @@ public class Peer {
 		int sep = lines[7].indexOf("|");
 		double ul = Double.parseDouble(lines[7].substring(0, sep));
 		double dl = Double.parseDouble(lines[7].substring(sep+1));
-		int height = Integer.parseInt(lines[10]);
+		int height = Integer.parseInt(lines[9]);
 		
 		return new Peer(address,nodeID, time, ul, dl, height);
 	}

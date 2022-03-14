@@ -1,19 +1,23 @@
 package forks;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -27,6 +31,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import cats.CatView;
 import ffutilities.ForkLogViewer;
 import ffutilities.ManualAddView;
 import ffutilities.MissingForks;
@@ -41,6 +46,7 @@ import types.Wallet;
 import util.I18n;
 import util.Ico;
 import util.Util;
+import util.swing.CompoundIcon;
 import util.swing.SwingEX;
 import web.AllTheBlocks;
 import web.Github;
@@ -100,6 +106,13 @@ public class ForkController {
 						
 			private void populateMenu(Fork f) {
             	
+				List<ImageIcon> catFrame = new ArrayList<>();
+				catFrame.add(f.ico);
+				catFrame.add(Ico.CAT);
+				CompoundIcon ci = new CompoundIcon(catFrame);
+				WALLET_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.assetToken,		Ico.CAT,  	() -> ForkFarmer.newFrame(f.name + " Cats",ci.getImage(), new CatView(f))));
+				WALLET_SUBMENU.addSeparator();
+				
             	ForkData fd = ForkData.MAP.get(f.symbol);
             	if (null != fd) {
 	            	if (null != fd.websiteURL)
@@ -143,8 +156,6 @@ public class ForkController {
             	if (WALLET_SUBMENU.getItemCount() > 0)
             		WALLET_SUBMENU.addSeparator();
             	WALLET_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.walletAddColdWallet,	Ico.WALLET_COLD,	() -> addColdWallet(f)));
-            	
-	
 			}
 		});
 		
@@ -207,7 +218,7 @@ public class ForkController {
 		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.showPeers,Ico.P2P,		() -> ForkView.getSelected().forEach(f ->
 			ForkFarmer.newFrame(f.name + I18n.ForkController.showPeersTitleSuffix, f.ico, new PeerView(f)))));
 		POPUP_MENU.addSeparator();
-		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.debug,			Ico.BUG,		() -> ForkView.getSelected().forEach(Fork::showLastException)));
+		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.debug,		Ico.BUG,		() -> ForkView.getSelected().forEach(Fork::showLastException)));
 		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.ffLogs,		Ico.CLIPBOARD,	() -> ForkFarmer.showFrame(I18n.ForkController.ffLogsTitle, null, ForkFarmer.LOG.newFrameView())));
 
 		
@@ -444,6 +455,7 @@ public class ForkController {
 						SVC.submit(() -> {
 							f.loadFarmSummary();
 							f.loadWallet();
+							f.loadPeers();
 							ForkView.update(f);
 						}); 
 					Util.blockUntilAvail(SVC);

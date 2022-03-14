@@ -39,7 +39,8 @@ public class ForkView extends JPanel {
 	private static final JScrollPane JSP = new JScrollPane(TABLE);
 	
 	public static class ForkTableModel extends JFunTableModel<Fork> implements Reorderable {
-		private int BALANCE_COLUMN, PRICE_COLUMN, HEIGHT_COLUMN, TIME_COLUMN, LIGHT_COLUMN, ATB_COLUMN, LOAD_COLUMN;
+		private int BALANCE_COLUMN, PRICE_COLUMN, TIME_COLUMN, LIGHT_COLUMN, ATB_COLUMN, LOAD_COLUMN;
+		private int W_HEIGHT_COLUMN, MAX_HEIGHT_COLUMN, FN_HEIGHT_COLUMN;
 		
 		public ForkTableModel() {
 			super();
@@ -54,7 +55,9 @@ public class ForkView extends JPanel {
 			addColumn("$",			 60, 	Double.class, 	f->f.price).show().editable();
 			addColumn("Equity",		 60, 	Balance.class, 	f->f.equity).viewRight().colName(I18n.ForkView.equityColName);
 			addColumn("Netspace",	 80, 	NetSpace.class, f->f.fd.netspace).show().colName(I18n.ForkView.netspaceColName);
-			addColumn("Height",		 80, 	Balance.class,  f->f.height).colName(I18n.ForkView.heightColName);
+			addColumn("W Height", 	 80, 	Balance.class,  f->f.walletHeight).colName(I18n.ForkView.walletHeightColName);
+			addColumn("FN Height",	 80, 	Balance.class,  f->f.fullnodeHeight).colName(I18n.ForkView.fullnodeHeightColName);
+			addColumn("Max Height",	 80, 	Balance.class,  f->f.maxpeerHeight).colName(I18n.ForkView.maxpeerHeightColName);
 			addColumn("Farm Size",	 80, 	NetSpace.class, f->f.plotSpace).colName(I18n.ForkView.farmSizeColName);
 			addColumn("Version",	 80, 	String.class,   f->f.version).colName(I18n.ForkView.versionColName);
 			addColumn("Latest Ver",	 80, 	String.class,   f->f.latestVersion).colName(I18n.ForkView.latestVerColName);
@@ -68,8 +71,11 @@ public class ForkView extends JPanel {
 			addColumn("Effort",		 50,	Percentage.class, 	Fork::getEffort).colName(I18n.ForkView.effortColName);
 			addColumn("Address",	 450,	Wallet.class, 	f->f.wallet).show().flex().colName(I18n.ForkView.addressColName);
 			addColumn("Reward",		 40,	Double.class, 	f->f.fullReward).editable().colName(I18n.ForkView.rewardColName);
+			addColumn("# Peers",	 40,	Integer.class, 	f->f.peerList.size()).colName(I18n.ForkView.peersColName);
 			addColumn("# Wallets",	 40,	Integer.class, 	f->f.walletList.size()).colName(I18n.ForkView.walletsColName);
 			addColumn("# Harvesters",40,	Integer.class, 	f->f.numH).colName(I18n.ForkView.harvestersColName);
+			addColumn("MiB up",		 60,	Double.class, 	f->f.upload).colName(I18n.ForkView.uploadColName);
+			addColumn("MiB down",	 60,	Double.class, 	f->f.download).colName(I18n.ForkView.downloadColName);
 			addColumn("Load", 		 40, 	String.class, 	f->f.load).colName(I18n.ForkView.loadColName);
 			addColumn("Time",		 50,	ReadTime.class, f->f.readTime).show().viewRight().colName(I18n.ForkView.timeColName);
 			addColumn("Full Node",	 30,	Boolean.class, 	f->f.fullNode).editable().fixed().colIco(Ico.P2P_GREY).colName(I18n.ForkView.fullNodeColName);
@@ -82,7 +88,9 @@ public class ForkView extends JPanel {
 			PRICE_COLUMN = getIndex("$");
 
 			// these updated a lot
-			HEIGHT_COLUMN = getIndex("Height");
+			W_HEIGHT_COLUMN = getIndex("W Height");
+			FN_HEIGHT_COLUMN = getIndex("FN Height");
+			MAX_HEIGHT_COLUMN = getIndex("Max Height");
 			TIME_COLUMN = getIndex("Time");
 			LOAD_COLUMN = getIndex("Load");
 			LIGHT_COLUMN = getIndex("");
@@ -192,7 +200,9 @@ public class ForkView extends JPanel {
 				MODEL.fireTableCellUpdated(row, MODEL.TIME_COLUMN);
 				MODEL.fireTableCellUpdated(row, MODEL.LIGHT_COLUMN);
 				MODEL.fireTableCellUpdated(row, MODEL.ATB_COLUMN);
-				MODEL.fireTableCellUpdated(row, MODEL.HEIGHT_COLUMN);
+				MODEL.fireTableCellUpdated(row, MODEL.W_HEIGHT_COLUMN);
+				MODEL.fireTableCellUpdated(row, MODEL.FN_HEIGHT_COLUMN);
+				MODEL.fireTableCellUpdated(row, MODEL.MAX_HEIGHT_COLUMN);
 				MODEL.fireTableCellUpdated(row, MODEL.LOAD_COLUMN);
 			});
 		}); 

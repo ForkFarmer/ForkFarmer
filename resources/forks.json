@@ -782,7 +782,7 @@
     "price": 0.0,
     "baseRatio": 1.0,
     "reward": 8.0,
-    "mojoPerCoin": 1000000000000,
+    "mojoPerCoin": 1000,
     "zeroBitsFilter": 9,
     "difficultyConstantFactorExponent": 64,
     "blockPerDay": 4608,
@@ -1358,6 +1358,36 @@
     "gitPath": "strandedathome/rolls-blockchain",
     "discordURL": "https://discord.gg/xA9FHJpfEB",
     "twitterURL": "https://twitter.com/pecanrolls",
+    "prefarm": 1000000
+  },
+ {
+    "displayName": "BPX",
+    "coinPrefix": "BPX",
+    "mojoPerCoin": 1000000000000,
+    "pathName": "bpx",
+    "userFolder": ".bpx",
+    "daemonFolder": "bpx-blockchain",
+    "price": 0.0,
+    "baseRatio": 0.125,
+    "reward": 200.0,
+    "websiteURL": "https://bpxcoin.cc/",
+    "gitPath": "bpx-network/bpx-blockchain",
+    "discordURL": "https://discord.gg/aKdG6UvTnG",
+    "prefarm": 20000000
+  },
+ {
+    "displayName": "Gold",
+    "coinPrefix": "gl",
+    "mojoPerCoin": 1000000000000,
+    "pathName": "gold",
+    "userFolder": ".gold",
+    "daemonFolder": "gold-blockchain",
+    "price": 0.0,
+    "baseRatio": 0.125,
+    "reward": 1.0,
+    "websiteURL": "https://bpxcoin.cc/",
+    "gitPath": "goldcoin-gl/gold-blockchain",
+    "discordURL": "https://discord.gg/aztfwHdvjN",
     "prefarm": 1000000
   }
 ]

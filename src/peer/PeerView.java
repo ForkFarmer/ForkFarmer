@@ -102,6 +102,7 @@ public class PeerView extends JPanel {
 		addPeers.setEnabled(false);
 		copyPeers.setEnabled(false);
 		copyCLI.setEnabled(false);
+		deleteBtn.setEnabled(false);
 		
 		addPeers.setToolTipText(I18n.PeerView.addPeerBtnTipText);
 		
@@ -114,6 +115,7 @@ public class PeerView extends JPanel {
 		    public void valueChanged(ListSelectionEvent event) {
 		    	copyPeers.setEnabled(TABLE.getSelectedRow() > -1);
 		    	copyCLI.setEnabled(TABLE.getSelectedRow() > -1);
+		    	deleteBtn.setEnabled(TABLE.getSelectedRow() > -1);
 		    }
 		});
 		
@@ -149,35 +151,11 @@ public class PeerView extends JPanel {
 	
 	public void loadPeers() {
 		LIST.clear();
-		boolean singleMode = false;
-		Process p = null;
-		BufferedReader br = null;
-		try {
-			PVLOG.add("Loading peers...");
-			p = Util.startProcess(f.exePath, "show", "-c");
-			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			
-			String l = null;
-			while ( null != (l = br.readLine())) {
-				if (l.startsWith("Type") && l.contains("Hash"))
-					singleMode = true;
-				
-				if (l.contains("FULL_NODE ")) {
-					if (singleMode) {
-						LIST.add(Peer.factorySingleLine(l));
-	            	} else {
-	            		String l2 = br.readLine();
-	            		LIST.add(Peer.factoryMultiLine(l + l2));
-	            	}
-				}
-            		
-			}
-			PVLOG.add("Loaded " + LIST.size() + " peers" );
-		} catch (IOException e) {
-			PVLOG.add("Error loading peers" + e.getStackTrace());
-		}
-		Util.waitForProcess(p);
-		Util.closeQuietly(br);
+		
+		PVLOG.add("Loading peers...");
+		LIST.addAll(f.loadPeers());
+		PVLOG.add("Loaded " + LIST.size() + " peers" );
+		
 		SwingUtilities.invokeLater(() -> {
 			MODEL.fireTableDataChanged();
 		});
@@ -203,7 +181,8 @@ public class PeerView extends JPanel {
 				@SuppressWarnings("unused")
 				String s = Util.runProcessWait(f.exePath,"show","-r", p.nodeID);
 			}
-			PVLOG.add("Done removing peers");	
+			PVLOG.add("Done removing peers");
+			loadPeers();
 		}).start();
 		
 	}

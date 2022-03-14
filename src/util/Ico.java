@@ -51,6 +51,7 @@ public final class Ico {
 	public static final ImageIcon TOOLS 	= loadIcon("icons/tools.png");
 	public static final ImageIcon PEOPLE 	= loadIcon("icons/people.png");
 	public static final ImageIcon SNOW		= loadIcon("icons/snow.png",16);
+	public static final ImageIcon CAT		= loadIcon("icons/cat.png");
 	
 	public static final ImageIcon ROULETTE 	= loadIcon("icons/roulette.png");
 	
