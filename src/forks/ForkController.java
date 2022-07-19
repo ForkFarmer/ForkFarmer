@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import javax.swing.ImageIcon;
+import javax.swing.JColorChooser;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -41,6 +42,7 @@ import main.ForkFarmer;
 import main.MainGui;
 import main.Settings;
 import peer.PeerView;
+import transaction.TransactionView;
 import types.Balance;
 import types.Wallet;
 import util.I18n;
@@ -144,8 +146,7 @@ public class ForkController {
 	            			new Thread(() -> {
 	            				f.balance = new Balance();
 	            				f.syncStatus = "";
-	            				f.wallet = w;
-	            				f.walletAddr = w.addr;
+	            				f.login(w);
 	            				ForkView.update(f);
 	            				f.loadWallet();
 	            			}).start();
@@ -192,9 +193,6 @@ public class ForkController {
 		POPUP_MENU.add(TOOLS_SUBMENU);
 			TOOLS_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.ports, 	Ico.PORTS, ForkController::runPortChecker));
 			TOOLS_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.missing,Ico.QUESTION, () -> ForkFarmer.newFrame(I18n.ForkController.missingFrameTitle, Ico.QUESTION, new MissingForks())));
-			JMenuItem update = new SwingEX.JMI(I18n.ForkController.forceUpdate, 	Ico.DOLLAR,  	() -> new Thread(ForkController::webUpdateForced).start());
-			update.setToolTipText(I18n.ForkController.forceUpdateTipText);
-			TOOLS_SUBMENU.add(update);
 			TOOLS_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.plotCalc,Ico.EXPAND, () -> ForkFarmer.newFrame(I18n.ForkController.plotCalcFrameTitle, Ico.EXPAND, new PlotCalc()).setResizable(false)));
 			
 		POPUP_MENU.add(COMMUNITY_SUBMENU);
@@ -209,7 +207,12 @@ public class ForkController {
 			SETUP_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.actionSetPassFile,	    Ico.KEY, () -> new Thread(ForkController::setPassKey).start()));
 			SETUP_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.copyPlotDirsFromChia, 	Ico.COPY_DIR,() -> new Thread(ForkController::copyPlotDirsFromChia).start()));
 			SETUP_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.copyPrivateKeyFromChia, 	Ico.PLUS,() -> new Thread(ForkController::copyPrivateKeysFromChia).start()));
+		
+		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.setColor, 	Ico.PAINT,() -> new Thread(ForkController::setColor).start()));
 
+//		POPUP_MENU.add(new SwingEX.JMI("Exchange Client", 	Ico.HANDSHAKE,  	() -> ForkFarmer.newFrame("Exchange Client", Ico.HANDSHAKE, new ClientView())));
+//		POPUP_MENU.add(new SwingEX.JMI("Exchange Server", 	Ico.HANDSHAKE,  	() -> ForkFarmer.newFrame("Exchange Server", Ico.HANDSHAKE, new ExchangeServer())));
+		
 		POPUP_MENU.addSeparator();
 		
 		POPUP_MENU.add(new SwingEX.JMI(I18n.ForkController.addColdWallet,	Ico.SNOW,  	() -> ForkController.addColdWallet(null)));
@@ -236,6 +239,19 @@ public class ForkController {
 				f.loadWallet();
 			}
 		});
+	}
+	
+	static private void setColor() {
+		List<Fork> list = ForkView.getSelected();
+		if (list.size() < 1)
+			return;
+		
+		Color c = JColorChooser.showDialog(ForkView.TABLE, "Select Color", list.get(0).bgColor);
+		String hexColor = null != c ? Util.colorToHex(c) : "";
+		
+		ForkView.getSelected().forEach(f -> {f.bgColor = c; f.hexColor = hexColor;});
+		ForkView.update();
+		TransactionView.refresh();
 	}
 	
 	static private void addFork() {
@@ -369,13 +385,14 @@ public class ForkController {
 		for (Fork f : selList) {
 			f.hidden = true;
 			SwingUtilities.invokeLater(() -> {
-				ForkView.MODEL.removeRow(f.getIndex().get());	
+				ForkView.MODEL.removeRow(f.getIndex().get());
+				ForkView.update();
+				MainGui.updateNumForks();
 			});
 			
 		}
 		
-		ForkView.update();
-		MainGui.updateNumForks();
+		
 	}
 	
 	static private void staggerStartDialog() {
@@ -394,13 +411,6 @@ public class ForkController {
 				ForkStarter.start(f); Util.sleep(delayInt * 1000);
 			});
 		}).start();
-	}
-	
-	static private void webUpdateForced() {
-		if (!javaOld()) {
-			XchForks.updatePricesForced();
-			AllTheBlocks.updateColdForced();
-		}
 	}
 	
 	public static void logReader() {

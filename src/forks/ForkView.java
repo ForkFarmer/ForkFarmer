@@ -13,6 +13,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 
@@ -163,11 +164,18 @@ public class ForkView extends JPanel {
 	            Component c = super.getTableCellRendererComponent(table,value,isSelected,hasFocus,row,column);
 
 	            c.setForeground(Color.WHITE);
-	            Fork f = Fork.LIST.get(row);
+	            
+	            Fork f = Fork.LIST.get(TABLE.convertRowIndexToModel(row));
+	            
+	            if (null != f.bgColor)
+	            	c.setBackground(isSelected ? f.bgColor.darker() : f.bgColor);
+	            else
+	            	c.setBackground(isSelected ? UIManager.getColor("Table.selectionBackground") : UIManager.getColor("Table.background"));
+	            
 	            Wallet w =  f.wallet;
 	            if (f.cold || (null != w && w.cold))
 	            	c.setForeground(new Color(140,171,255));
-	
+	            
 	            return c;
 	        }
 	    };

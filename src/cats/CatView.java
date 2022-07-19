@@ -78,6 +78,12 @@ public class CatView extends JPanel {
 		discordColumn.setHeaderValue(new JLabel("", Ico.DISCORD, JLabel.CENTER));
 		
 		JSP.setPreferredSize(new Dimension(600,250));
+		
+		//new Thread(() -> loadStayCats()).start();
+	}
+	
+	public void loadStrayCats() {
+		
 	}
 	
 }

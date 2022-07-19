@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import util.FFUtil;
+
 public class TimeU implements Comparable<TimeU> {
 	private static final long BIG = 999999;
 	public static final TimeU NEVER = new TimeU("Never",BIG);
@@ -43,7 +45,7 @@ public class TimeU implements Comparable<TimeU> {
 	}
 	
 	public TimeU() {
-		// TODO Auto-generated constructor stub
+		str = LocalDateTime.now().format(FFUtil.DTF);
 	}
 	
 	public TimeU(String s, long m) {
@@ -124,12 +126,8 @@ public class TimeU implements Comparable<TimeU> {
 		return new TimeU(Duration.between(before,now).getSeconds());
 	}
 
-
-
 	public boolean known() {
 		return BIG != minutes;
 	}
-	
-	
 
 }

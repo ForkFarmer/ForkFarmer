@@ -44,7 +44,10 @@ public class Peer {
 		int sep = lines[7].indexOf("|");
 		double ul = Double.parseDouble(lines[7].substring(0, sep));
 		double dl = Double.parseDouble(lines[7].substring(sep+1));
-		int height = Integer.parseInt(lines[9]);
+		
+		int height = 0;
+		if (!lines[9].equals("No"))
+			height = Integer.parseInt(lines[9]);
 		
 		return new Peer(address,nodeID, time, ul, dl, height);
 	}

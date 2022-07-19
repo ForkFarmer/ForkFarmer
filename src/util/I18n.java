@@ -351,6 +351,7 @@ public class I18n {
         public static final String addColdWalletTitle = I18n.get("ForkController.menu.wallet.addColdWallet.title");
         public static final String addCodeWalletLabel = I18n.get("ForkController.menu.wallet.addColdWallet.input.label");
         public static final String javaOldTipTitle = I18n.get("ForkController.javaOldTipTitle");
+        public static final String setColor = I18n.get("ForkController.menu.setColor");
 
         public static final String javaOldTipContent(int jversion) {
             return I18n.getWithVariable("ForkController.javaOldTipContent", "" + jversion);

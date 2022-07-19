@@ -203,7 +203,9 @@ public class MainGui extends JPanel {
 		String address = targetAddress.getText();
 		
 		Fork.getByAddress(address).ifPresentOrElse(f -> {
-			f.sendTX(address,targetAmt.getText(),targetFee.getText());
+			String addr = new String(targetAmt.getText());
+			String fee = new String(targetFee.getText());
+			new Thread(() -> f.sendTX(address,addr,fee)).start();
 			targetAddress.setText("");
 			targetAmt.setText("");
 		}, 	() -> ForkFarmer.showMsg(I18n.MainGui.errorTitle, I18n.MainGui.errorContent));

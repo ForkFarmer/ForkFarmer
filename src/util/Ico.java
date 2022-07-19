@@ -52,6 +52,7 @@ public final class Ico {
 	public static final ImageIcon PEOPLE 	= loadIcon("icons/people.png");
 	public static final ImageIcon SNOW		= loadIcon("icons/snow.png",16);
 	public static final ImageIcon CAT		= loadIcon("icons/cat.png");
+	public static final ImageIcon EXCHANGE	= loadIcon("icons/exchange.png");
 	
 	public static final ImageIcon ROULETTE 	= loadIcon("icons/roulette.png");
 	
@@ -66,13 +67,15 @@ public final class Ico {
 	public static final ImageIcon TWITTER	= loadIcon("icons/twitter.png");
 	public static final ImageIcon FFLOGO	= loadIcon("icons/fflogo.png",16);
 	
+	public static final ImageIcon PAINT	= loadIcon("icons/paint.png");
+	
 	public static final ImageIcon TROPHY	= loadIcon("icons/trophy.png",14);
 	public static final ImageIcon TROPHY_GR	= loadIcon("icons/trophy_g.png",14);
 	
 	public static final ImageIcon EXPAND	= loadIcon("icons/expand.png",16);
 	public static final ImageIcon KEY		= loadIcon("icons/key.png",16);
 	public static final ImageIcon COPY_DIR	= loadIcon("icons/folder_new.png",16);
-
+	
 	//circle icons
 	public static final ImageIcon GREEN 	= Ico.loadIcon("icons/circles/green.png");
 	public static final ImageIcon RED 		= Ico.loadIcon("icons/circles/red.png");

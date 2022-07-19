@@ -169,6 +169,12 @@ public class SwingEX {
 	public static class LTPanel extends JPanel {
 		private JLabel lbl;
 		public JTextField field;
+
+		public LTPanel(int width) {
+			setLayout(new BorderLayout());
+			field = new JTextField(width);
+			add(field, BorderLayout.CENTER);
+		}
 		
 		public LTPanel(String s) {
 			this (s, null);

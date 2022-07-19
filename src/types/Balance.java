@@ -53,11 +53,6 @@ public class Balance implements Comparable<Balance> {
 		updateStr();
 	}
 
-	public void add(Balance b) {
-		amt += b.amt;
-		updateStr();
-	}
-
 	private void updateStr() {
 		try {
 			DecimalFormat df = null;

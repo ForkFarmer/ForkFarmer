@@ -150,6 +150,11 @@ public class ForkData {
 			configPath = USER_HOME + "\\.chia\\ext9\\config\\config.yaml";
 		}
 		
+		if (coinPrefix.equals("HCX")) {
+			logPath = USER_HOME + "\\.chinilla\\vanillanet\\log\\debug.log";
+			configPath = USER_HOME + "\\.chinilla\\vanillanet\\config\\config.yaml";
+		}
+		
 		if (!new File(configPath).exists()) { // try environment keys
 			String envKey = displayName.toUpperCase() + "_ROOT";
 			rootPath = System.getenv().get(envKey);
@@ -209,6 +214,7 @@ public class ForkData {
 	public static void loadFix() {
 		// first see if we need to patch exePath for any forks
 		for (Fork f: Fork.LIST) {
+			f.bgColor = Util.hexToColor(f.hexColor);
 			if (f.cold) {
 				f.statusIcon = Ico.SNOW;
 				f.wallet = new Wallet(f.walletAddr);

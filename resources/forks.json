@@ -20,8 +20,7 @@
     "websiteURL": "https://www.chia.net/",
     "twitterURL": "https://twitter.com/chia_project",
     "prefarm": 21000000
-  },
-  {
+  },{
     "displayName": "Flax",
     "pathName": "flax",
     "coinPrefix": "xfx",
@@ -42,8 +41,7 @@
     "websiteURL": "https://flaxnetwork.org/",
     "twitterURL": null,
     "prefarm": 300000
-  },
-  {
+  },{
     "displayName": "Chaingreen",
     "pathName": "chaingreen",
     "coinPrefix": "cgn",
@@ -64,8 +62,7 @@
     "websiteURL": "https://www.chaingreen.org/",
     "twitterURL": "https://twitter.com/chaingreen_org",
     "prefarm": 25000000
-  },
-  {
+  },{
     "displayName": "Spare",
     "pathName": "spare",
     "coinPrefix": "spare",
@@ -86,8 +83,7 @@
     "websiteURL": "https://spare.farm/",
     "twitterURL": "https://twitter.com/Socks_Network",
     "prefarm": 5000000
-  },
-  {
+  },{
     "displayName": "Goji",
     "pathName": "goji",
     "coinPrefix": "xgj",
@@ -108,8 +104,7 @@
     "websiteURL": "https://getgoji.net/",
     "twitterURL": null,
     "prefarm": 300000
-  },
-  {
+  },{
     "displayName": "Flora",
     "pathName": "flora",
     "coinPrefix": "xfl",
@@ -130,8 +125,7 @@
     "websiteURL": "http://floracoin.farm/",
     "twitterURL": "https://twitter.com/CoinFlora",
     "prefarm": 1000000
-  },
-  {
+  },{
     "displayName": "Seno",
     "pathName": "seno",
     "coinPrefix": "xse",
@@ -151,8 +145,7 @@
     "discordURL": "https://discord.gg/9c3Tq3kzWG",
     "websiteURL": "https://seno.uno/",
     "prefarm": 2
-  },
-  {
+  },{
     "displayName": "HDDcoin",
     "pathName": "hddcoin",
     "coinPrefix": "hdd",
@@ -173,8 +166,7 @@
     "websiteURL": "https://hddcoin.org/",
     "twitterURL": "https://twitter.com/HDDcoin",
     "prefarm": 3000000
-  },
-  {
+  },{
     "displayName": "DogeChia",
     "pathName": "dogechia",
     "coinPrefix": "xdg",
@@ -196,8 +188,7 @@
     "websiteURL": "https://dogechia.org/",
     "twitterURL": "https://twitter.com/dogechia/",
     "prefarm": 300000
-  },
-  {
+  },{
     "displayName": "Avocado",
     "pathName": "avocado",
     "coinPrefix": "avo",
@@ -218,8 +209,7 @@
     "websiteURL": "https://avocadonetwork.net/",
     "twitterURL": null,
     "prefarm": 250000
-  },
-  {
+  },{
     "displayName": "CryptoDoge",
     "pathName": "cryptodoge",
     "coinPrefix": "xcd",
@@ -240,8 +230,7 @@
     "websiteURL": "http://cryptodoge.cc/",
     "twitterURL": "https://twitter.com/cryptodoge_coin",
     "prefarm": 21000000000
-  },
-  {
+  },{
     "displayName": "Kale",
     "pathName": "kale",
     "coinPrefix": "xka",
@@ -262,8 +251,7 @@
     "websiteURL": "https://kalenetwork.org/",
     "twitterURL": "https://twitter.com/KaleCrypto1",
     "prefarm": 300000
-  },
-  {
+  },{
     "displayName": "GreenDoge",
     "pathName": "greendoge",
     "coinPrefix": "gdog",
@@ -284,8 +272,7 @@
     "websiteURL": "https://greendoge.dog/",
     "twitterURL": "https://twitter.com/Green_Dogecoin",
     "prefarm": 21000000
-  },
-  {
+  },{
     "displayName": "Chives",
     "pathName": "chives",
     "coinPrefix": "xcc",
@@ -306,8 +293,7 @@
     "websiteURL": "https://www.chivescoin.org/",
     "twitterURL": "https://twitter.com/chives_project",
     "prefarm": 0
-  },
-  {
+  },{
     "displayName": "Melati",
     "pathName": "melati",
     "coinPrefix": "xmx",
@@ -328,8 +314,7 @@
     "websiteURL": "https://melatinetwork.org/",
     "twitterURL": null,
     "prefarm": 300000
-  },
-  {
+  },{
     "displayName": "Taco",
     "pathName": "taco",
     "coinPrefix": "xtx",
@@ -350,8 +335,7 @@
     "websiteURL": "https://taconetwork.net/",
     "twitterURL": null,
     "prefarm": 0
-  },
-  {
+  },{
     "displayName": "Wheat",
     "pathName": "wheat",
     "coinPrefix": "wheat",
@@ -372,8 +356,7 @@
     "websiteURL": "http://wheat.network/",
     "twitterURL": null,
     "prefarm": 300000
-  },
-  {
+  },{
     "displayName": "Socks",
     "pathName": "socks",
     "coinPrefix": "sock",
@@ -394,8 +377,7 @@
     "websiteURL": "http://socks.works/",
     "twitterURL": "https://twitter.com/Socks_Network",
     "prefarm": 500000
-  },
-  {
+   },{
     "displayName": "Cactus",
     "pathName": "cactus",
     "coinPrefix": "cac",
@@ -416,8 +398,7 @@
     "websiteURL": "https://www.cactus-network.net/",
     "twitterURL": null,
     "prefarm": 210000
-  },
-  {
+  },{
     "displayName": "Silicoin",
     "pathName": "silicoin",
     "coinPrefix": "sit",
@@ -441,8 +422,7 @@
     "websiteURL": "https://www.silicoin.cc/",
     "twitterURL": "https://twitter.com/SilicoinProject",
     "prefarm": 1000000
-  },
-  {
+  },{
     "displayName": "Sector",
     "pathName": "sector",
     "coinPrefix": "xsc",
@@ -463,8 +443,7 @@
     "websiteURL": null,
     "twitterURL": null,
     "prefarm": 100000
-  },
-  {
+  },{
     "displayName": "Tad",
     "pathName": "tad",
     "coinPrefix": "tad",
@@ -485,8 +464,7 @@
     "websiteURL": "https://tadcoin.xyz/",
     "twitterURL": "https://twitter.com/TadCoin",
     "prefarm": 300000
-  },
-  {
+  },{
     "displayName": "Apple",
     "pathName": "apple",
     "coinPrefix": "apple",
@@ -507,8 +485,7 @@
     "websiteURL": "https://applecoin.in/",
     "twitterURL": null,
     "prefarm": 300000
-  },
-  {
+  },{
     "displayName": "Cannabis",
     "pathName": "cannabis",
     "coinPrefix": "cans",
@@ -529,8 +506,7 @@
     "websiteURL": "https://cannabischain.net/",
     "twitterURL": null,
     "prefarm": 2400000
-  },
-  {
+  },{
     "displayName": "Maize",
     "pathName": "maize",
     "coinPrefix": "xmz",
@@ -551,8 +527,25 @@
     "websiteURL": "https://maize.farm/",
     "twitterURL": "https://twitter.com/coinmaize",
     "prefarm": 3000000
-  },
-  {
+  },{
+    "displayName": "Fork",
+    "pathName": "fork",
+    "coinPrefix": "xfk",
+    "userFolder": ".fork",
+    "daemonFolder": "fork-blockchain",
+    "price": 0.00,
+    "baseRatio": 0.125,
+    "reward": 50.0,
+    "mojoPerCoin": 1000000000000,
+    "zeroBitsFilter": 9,
+    "difficultyConstantFactorExponent": 64,
+    "blockPerDay": 4608,
+    "nftEnabled": true,
+    "gitPath": "Fork-Network/fork-blockchain",
+    "xchForksURL": "https://xchforks.com/fork",
+    "cfcalc": "https://chiaforkscalculator.com/fork",
+    "prefarm": 200000
+  },{
     "displayName": "Covid",
     "pathName": "covid",
     "coinPrefix": "cov",
@@ -573,8 +566,7 @@
     "websiteURL": "https://www.pinksheetscrypto.com/",
     "twitterURL": null,
     "prefarm": 100000
-  },
-  {
+  },{
     "displayName": "BTCgreen",
     "pathName": "btcgreen",
     "coinPrefix": "xbtc",
@@ -595,8 +587,7 @@
     "websiteURL": "https://www.btcgreen.us/",
     "twitterURL": null,
     "prefarm": 30000
-  },
-  {
+  },{
     "displayName": "N-Chain",
     "pathName": "nchain",
     "coinPrefix": "nch",
@@ -617,8 +608,7 @@
     "websiteURL": "http://n-chain.org/",
     "twitterURL": "https://twitter.com/rootnchain",
     "prefarm": 2
-  },
-  {
+  },{
     "displayName": "Scam",
     "pathName": "scam",
     "coinPrefix": "scm",
@@ -639,8 +629,7 @@
     "websiteURL": "http://scamnetwork.net/",
     "twitterURL": null,
     "prefarm": 3000000
-  },
-  {
+  },{
     "displayName": "Cunt",
     "pathName": "c_nt",
     "coinPrefix": "vag",
@@ -661,8 +650,7 @@
     "websiteURL": null,
     "twitterURL": null,
     "prefarm": 3000000
-  },
-  {
+  },{
     "displayName": "Fishery",
     "pathName": "fishery",
     "coinPrefix": "ffk",
@@ -683,8 +671,7 @@
     "websiteURL": "http://fisherychian.net/",
     "twitterURL": null,
     "prefarm": 600000
-  },
-  {
+  },{
     "displayName": "LittleLamboCoin",
     "pathName": "littlelambocoin",
     "coinPrefix": "llc",
@@ -706,8 +693,7 @@
     "websiteURL": "https://littlelambocoin.com/",
     "twitterURL": null,
     "prefarm": 5000000
-  },
-  {
+  },{
     "displayName": "Olive",
     "pathName": "olive",
     "coinPrefix": "xol",
@@ -728,8 +714,7 @@
     "websiteURL": "https://oliveblockchain.co/",
     "twitterURL": "https://twitter.com/Oliveblockchain",
     "prefarm": 300000
-  },
-  {
+  },{
     "displayName": "Lucky",
     "pathName": "lucky",
     "coinPrefix": "six",
@@ -750,8 +735,7 @@
     "websiteURL": "https://www.luckysix.top/",
     "twitterURL": null,
     "prefarm": 666000
-  },
-  {
+  },{
     "displayName": "Achi",
     "pathName": "achi",
     "coinPrefix": "ach",
@@ -772,8 +756,7 @@
     "websiteURL": "https://achicoin.org/",
     "twitterURL": null,
     "prefarm": 0
-  },
-  {
+  },{
     "displayName": "Pipscoin",
     "pathName": "pipscoin",
     "coinPrefix": "pips",
@@ -794,8 +777,7 @@
     "websiteURL": "https://www.pipscoin.net/",
     "twitterURL": null,
     "prefarm": 5000000
-  },
-  {
+  },{
     "displayName": "Beer",
     "pathName": "beer",
     "coinPrefix": "xbr",
@@ -816,8 +798,7 @@
     "websiteURL": null,
     "twitterURL": null,
     "prefarm": 3000000
-  },
-  {
+  },{
     "displayName": "Thyme",
     "pathName": "thyme",
     "coinPrefix": "xth",
@@ -838,8 +819,7 @@
     "websiteURL": null,
     "twitterURL": null,
     "prefarm": 2100000
-  },
-  {
+  },{
     "displayName": "Xcha",
     "pathName": "xcha",
     "coinPrefix": "xca",
@@ -860,8 +840,7 @@
     "websiteURL": "http://xcha.io/",
     "twitterURL": null,
     "prefarm": 8000000
-  },
-  {
+  },{
     "displayName": "Stor",
     "pathName": "stor",
     "coinPrefix": "stor",
@@ -882,8 +861,7 @@
     "websiteURL": "https://stor.network/",
     "twitterURL": "https://twitter.com/stor_network",
     "prefarm": 240000
-  },
-  {
+  },{
     "displayName": "Goldcoin",
     "pathName": "goldcoin",
     "coinPrefix": "ozt",
@@ -904,8 +882,7 @@
     "websiteURL": "https://goldcoin-network.net/",
     "twitterURL": null,
     "prefarm": 2000000
-  },
-  {
+  },{
     "displayName": "Beet",
     "pathName": "beet",
     "coinPrefix": "xbt",
@@ -925,8 +902,7 @@
     "discordURL": "https://discord.gg/DFpak3DcW6",
     "websiteURL": null,
     "prefarm": 300000
-  },
-  {
+  },{
     "displayName": "Kiwi",
     "pathName": "kiwi",
     "coinPrefix": "xkw",
@@ -947,8 +923,7 @@
     "websiteURL": null,
     "twitterURL": null,
     "prefarm": 3000000
-  },
-  {
+  },{
     "displayName": "Lotus",
     "pathName": "lotus",
     "coinPrefix": "lch",
@@ -969,8 +944,7 @@
     "websiteURL": "https://agem.ae/",
     "twitterURL": null,
     "prefarm": 21000000
-  },
-  {
+  },{
     "displayName": "Mint",
     "pathName": "mint",
     "coinPrefix": "xkm",
@@ -991,8 +965,7 @@
     "websiteURL": "https://mintnet.work/",
     "twitterURL": null,
     "prefarm": 21000000
-  },
-  {
+  },{
     "displayName": "Mogua",
     "pathName": "mogua",
     "coinPrefix": "mga",
@@ -1013,8 +986,7 @@
     "websiteURL": "https://moguaworld.godaddysites.com/",
     "twitterURL": "https://twitter.com/Mogua_office",
     "prefarm": 21000000
-  },
-  {
+  },{
     "displayName": "Tranzact",
     "pathName": "tranzact",
     "coinPrefix": "trz",
@@ -1036,8 +1008,7 @@
     "twitterURL": "https://twitter.com/TranzactB",
     "twitterURL": null,
     "prefarm": 500000
-  },
-  {
+  },{
     "displayName": "Stai",
     "pathName": "stai",
     "coinPrefix": "stai",
@@ -1058,8 +1029,7 @@
     "websiteURL": "https://www.station-i.de/stai",
     "twitterURL": null,
     "prefarm": 55900000
-  },
-  {
+  },{
     "displayName": "Salvia",
     "pathName": "salvia",
     "coinPrefix": "xslv",
@@ -1080,8 +1050,7 @@
     "websiteURL": "https://salvianetwork.net/",
     "twitterURL": null,
     "prefarm": 21000000
-  },
-  {
+  },{
     "displayName": "Peas",
     "pathName": "peas",
     "coinPrefix": "pea",
@@ -1102,8 +1071,7 @@
     "websiteURL": null,
     "twitterURL": null,
     "prefarm": 666000
-  },
-  {
+   },{
     "displayName": "mELON",
     "pathName": "melon",
     "coinPrefix": "melon",
@@ -1124,8 +1092,7 @@
     "websiteURL": null,
     "twitterURL": null,
     "prefarm": 13400000
-  },
-  {
+  },{
     "displayName": "Kujenga",
     "pathName": "kujenga",
     "coinPrefix": "xkj",
@@ -1146,8 +1113,7 @@
     "websiteURL": "https://kujenga.xyz/",
     "twitterURL": null,
     "prefarm": 2000000
-  },
-  {
+  },{
     "displayName": "Skynet",
     "coinPrefix": "xnt",
     "pathName": "skynet",
@@ -1163,8 +1129,7 @@
     "discordURL": "https://discord.gg/8atUub5E5h",
     "twitterURL": null,
     "prefarm": 5000000
-  }, 
-  {
+  },{
     "displayName": "Venidium",
     "coinPrefix": "xvm",
     "pathName": "venidium",
@@ -1179,8 +1144,7 @@
     "discordURL": "https://discord.com/invite/wYdtEbBt2j",
     "twitterURL": null,
     "prefarm": 502000000
-  }, 
-  {
+  },{
     "displayName": "Aedge",
     "coinPrefix": "aec",
     "mojoPerCoin": 1000000000000,
@@ -1196,8 +1160,7 @@
     "discordURL": "https://discord.gg/m569ExDwXY",
     "twitterURL": null,
     "prefarm": 15100000
-  },
- {
+  },{
     "displayName": "SHIBgreen",
     "coinPrefix": "XSHIB",
     "mojoPerCoin": 1000,
@@ -1212,8 +1175,7 @@
     "discordURL": "https://discord.gg/yZSKtPf8",
     "twitterURL": null,
     "prefarm": 100000000
-  },
-   {
+  },{
     "displayName": "ETHgreen",
     "coinPrefix": "XETH",
     "mojoPerCoin": 1000000000,
@@ -1228,8 +1190,7 @@
     "discordURL": "https://discord.gg/KJc2hp7r",
     "twitterURL": "https://twitter.com/ethgreenproject",
     "prefarm": 21000000
-  },
-   {
+  },{
     "displayName": "PecanRolls",
     "coinPrefix": "ROLLS",
     "exeName": "rolls",
@@ -1245,8 +1206,7 @@
     "discordURL": "https://discord.gg/xA9FHJpfEB",
     "twitterURL": "https://twitter.com/pecanrolls",
     "prefarm": 1000000
-  },
- {
+  },{
     "displayName": "BPX",
     "coinPrefix": "BPX",
     "mojoPerCoin": 1000000000000,
@@ -1260,8 +1220,7 @@
     "gitPath": "bpx-network/bpx-blockchain",
     "discordURL": "https://discord.gg/aKdG6UvTnG",
     "prefarm": 20000000
-  },
- {
+  },{
     "displayName": "Gold",
     "coinPrefix": "gl",
     "mojoPerCoin": 1000000000000,
@@ -1275,8 +1234,7 @@
     "gitPath": "goldcoin-gl/gold-blockchain",
     "discordURL": "https://discord.gg/aztfwHdvjN",
     "prefarm": 1000000
-  },
-{
+  },{
     "displayName": "Profit",
     "coinPrefix": "profit",
     "mojoPerCoin": 1000000000000,
@@ -1291,8 +1249,7 @@
     "discordURL": "https://discord.gg/wVAd75mJYR",
     "twitterURL": "https://twitter.com/ProfitCryptoNet",
     "prefarm": 5000000
-  },
-{
+  },{
     "displayName": "Joker",
     "coinPrefix": "xjk",
     "mojoPerCoin": 100000000,
@@ -1305,8 +1262,7 @@
     "gitPath": "joker-network/joker-blockchain",
     "discordURL": "https://discord.gg/QhK8yCZpBf",
     "prefarm": 5000000
-  },
-{
+  },{
     "displayName": "Ecostake",
     "coinPrefix": "eco",
     "mojoPerCoin": 1000000000000,
@@ -1320,8 +1276,7 @@
     "gitPath": "Ecostake-Network/ecostake-blockchain",
     "discordURL": "https://discord.gg/wVAd75mJYR",
     "prefarm": 5000000
-  }, 
-{
+  },{
     "displayName": "Petroleum",
     "coinPrefix": "xpt",
     "mojoPerCoin": 1000000000000,
@@ -1335,8 +1290,7 @@
     "gitPath": "Petroleum-Network/petroleum-blockchain",
     "discordURL": "https://discord.gg/7bFQxmtjHx",
     "prefarm": 5000000
-  },
-{
+  },{
     "displayName": "Chinilla",
     "coinPrefix": "hcx",
     "mojoPerCoin": 1000000000000,
@@ -1349,5 +1303,26 @@
     "websiteURL": "https://chinilla.com/",
     "gitPath": "chinilla/chinilla-blockchain",
     "prefarm": 5000000
+  },{
+    "displayName": "Chiarose",
+    "pathName": "rose",
+    "coinPrefix": "xcr",
+    "userFolder": ".chiarose",
+    "daemonFolder": "chia-rosechain",
+    "price": 0.0004,
+    "baseRatio": 0.125,
+    "reward": 200.0,
+    "mojoPerCoin": 1000000000,
+    "zeroBitsFilter": 9,
+    "difficultyConstantFactorExponent": 29,
+    "blockPerDay": 4608,
+    "nftEnabled": true,
+    "gitPath": "snight1983/chia-rosechain",
+    "xchForksURL": "https://xchforks.com/chiarose",
+    "cfcalc": "https://chiaforkscalculator.com/chiarose",
+    "discordURL": "https://discord.gg/JnPsu49z5n",
+    "websiteURL": "https://www.rosechain.net/",
+    "twitterURL": "https://twitter.com/wang21928445",
+    "prefarm": 201700000
   }
 ]

@@ -1,11 +1,13 @@
 package util;
 
+import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -348,7 +350,33 @@ public class Util {
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
-
+	}
+	
+	public static String colorToHex (Color color) {
+	   String hex = String.format("#%02x%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha() );
+	   hex=hex.toUpperCase();
+       return hex;
+	}
+	
+	public static Color hexToColor(String hex) 
+	{
+		if (null == hex)
+			return null;
+	    hex = hex.replace("#", "");
+	    switch (hex.length()) {
+	        case 6:
+	            return new Color(
+	            Integer.valueOf(hex.substring(0, 2), 16),
+	            Integer.valueOf(hex.substring(2, 4), 16),
+	            Integer.valueOf(hex.substring(4, 6), 16));
+	        case 8:
+	            return new Color(
+	            Integer.valueOf(hex.substring(0, 2), 16),
+	            Integer.valueOf(hex.substring(2, 4), 16),
+	            Integer.valueOf(hex.substring(4, 6), 16),
+	            Integer.valueOf(hex.substring(6, 8), 16));
+	    }
+	    return null;
 	}
 	
 }

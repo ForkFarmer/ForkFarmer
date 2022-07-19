@@ -1,19 +1,25 @@
 package transaction;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.util.List;
 
 import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 
+import forks.Fork;
 import main.ForkFarmer;
 import main.Settings;
 import types.Balance;
@@ -43,15 +49,16 @@ public class TransactionView extends JPanel {
 			
 			addColumn("",   		22,		Icon.class,		t->t.getIcon()).showMandatory().fixed();
 			addColumn("Date",   	140,	String.class, 	t->t.date).showMandatory().colName(I18n.TransactionView.dateColName);
-			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).fixed();
+			addColumn(" ",  		22,		Icon.class,		t->t.f.ico).show().fixed();
 			addColumn("Symbol",  	50,		String.class,	t->t.f.symbol).colName(I18n.TransactionView.symbolColName);
 			addColumn("Name", 		80,		String.class, 	t->t.f.name).colName(I18n.TransactionView.nameColName);
 			addColumn("Effort",		80,		Percentage.class, 	t->t.effort).colName(I18n.TransactionView.effortColName);
 			addColumn("Prev Win",	90, 	TimeU.class, 	t->t.lastWinTime).colName(I18n.TransactionView.lastWinTimeColName);
-			addColumn("To",   		450,	String.class, 	t->t.target).flex().colName(I18n.TransactionView.targetColName);
+			addColumn("To",   		450,	String.class, 	t->t.str).flex().colName(I18n.TransactionView.targetColName);
 			addColumn("Amount", 	80,		Balance.class, 	t->t.amount).colName(I18n.TransactionView.amountColName);
-			addColumn("$", 			60,		Balance.class, 	t->t.value);
-			addColumn("RW", 		22,		Icon.class, 	Transaction::getIco).fixed();
+//			addColumn("Hash", 		80,		String.class, 	t->t.hash);
+			addColumn("$", 			60,		Balance.class, 	t->t.value).show();
+			addColumn("RW", 		22,		Icon.class, 	Transaction::getIco).fixed().show();
 		
 			onGetRowCount(() -> Transaction.LIST.size());
 			onGetValueAt((r, c) -> colList.get(c).apply(Transaction.LIST.get(r)));
@@ -88,11 +95,46 @@ public class TransactionView extends JPanel {
 		});
 		
 		TABLE.getTableHeader().setComponentPopupMenu(MODEL.finalizeColumns(TABLE));
+		TABLE.setDefaultRenderer(Object.class, colorRenderer);
+		TABLE.setDefaultRenderer(Icon.class, colorRenderer);
+		TABLE.setDefaultRenderer(TimeU.class, colorRenderer);
+		TABLE.setDefaultRenderer(Balance.class, colorRenderer);
+		TABLE.setDefaultRenderer(Percentage.class, colorRenderer);
 		
-		SwingUtil.setColRight(TABLE, MODEL.getIndex("Amount"));
-		SwingUtil.setColRight(TABLE, MODEL.getIndex("$"));
+		
+		//SwingUtil.setColRight(TABLE, MODEL.getIndex("Amount"));
+		//SwingUtil.setColRight(TABLE, MODEL.getIndex("$"));
 	}
 	
+	DefaultTableCellRenderer colorRenderer = new DefaultTableCellRenderer(){
+        @Override
+        public Component getTableCellRendererComponent(JTable table,Object value,boolean isSelected,boolean hasFocus,int row,int column) {
+            Component c = super.getTableCellRendererComponent(table,value,isSelected,hasFocus,row,column);
+
+            
+            if (null != value) {
+	            if (value.getClass() == ImageIcon.class) {
+	            	((JLabel)c).setIcon((Icon)value);
+	            	((JLabel)c).setText(null);
+	            } else {
+	            	((JLabel)c).setIcon(null);
+	            	((JLabel)c).setText(value.toString());
+	            }
+	            
+	            ((JLabel)c).setHorizontalAlignment(value.getClass() == Balance.class ? JLabel.RIGHT : JLabel.LEFT);
+            }
+            	
+            Transaction t = Transaction.LIST.get(TABLE.convertRowIndexToModel(row));
+            
+            Fork f = t.f;
+            if (null != f.bgColor)
+            	c.setBackground(isSelected ? f.bgColor.darker() : f.bgColor);
+            else
+            	c.setBackground(isSelected ? UIManager.getColor("Table.selectionBackground") : UIManager.getColor("Table.background"));
+            return c;
+        }
+    };
+ 	
 	private static List<Transaction> getSelected() {
 		return SwingUtil.getSelected(TABLE, Transaction.LIST);
 	}
@@ -113,8 +155,8 @@ public class TransactionView extends JPanel {
 		List<Transaction> list = getSelected();
 		StringBuilder sb = new StringBuilder();
 		for (Transaction t: list)
-			if (null != t.target)
-				sb.append(t.target + "\n");
+			if (null != t.str)
+				sb.append(t.str + "\n");
 		
 		StringSelection stringSelection = new StringSelection(sb.toString());
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -123,6 +165,14 @@ public class TransactionView extends JPanel {
 	
 	static private void report() {
 		ForkFarmer.newFrame(I18n.TransactionView.title, Ico.LOGO, new TxReportView(getSelected()));
+	}
+
+	public static void update(Transaction t) {
+		SwingUtilities.invokeLater(() -> {
+			t.getIndex().ifPresent(row -> {
+				MODEL.fireTableRowsUpdated(row, row);
+			});
+		});
 	}
 	
 }

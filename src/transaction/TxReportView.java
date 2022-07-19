@@ -55,11 +55,8 @@ public class TxReportView extends JPanel {
 		JSP.setPreferredSize(new Dimension(320,500));
 		
 		JPanel topPanel = new JPanel(new BorderLayout());
-		//JPanel topCenter = new JPanel(new BorderLayout());
-		//topCenter.add(forklbl, BorderLayout.CENTER);
 	        
 		topPanel.add(valueLbl,BorderLayout.LINE_START);
-		//topPanel.add(topCenter, BorderLayout.CENTER);
 		topPanel.add(effortLbl,BorderLayout.LINE_END);
 		
 		TABLE.setAutoCreateRowSorter(true);
@@ -71,17 +68,14 @@ public class TxReportView extends JPanel {
 			Transaction tx = MAP.get(t.f.symbol);
 			if (null == tx) {
 				LIST.add(t);
-				t.updateValue();
 				MAP.put(t.f.symbol, t);
 			} else {
-				tx.amount.add(t.amount);
-				tx.updateValue();
+				tx.setAmount(tx.getAmount() + t.getAmount());
 			}
 		}
+
+		Balance total = new Balance(LIST.stream().mapToDouble(t -> t.value.amt).sum());
 		
-		Balance total = new Balance();
-		for (Transaction t : LIST)
-			total.add(t.value);
 		valueLbl.setText(I18n.TxReportView.value + Settings.GUI.currencySymbol + total.toString());
 		
 		double avg = LIST.stream().map(t -> t.effort.effort).filter(e -> e >= 0).collect(Collectors.averagingDouble(num -> num));

@@ -21,66 +21,100 @@ import types.TimeU;
 import util.FFUtil;
 import util.Ico;
 import util.Util;
+import web.AllTheBlocks;
 
 public class Transaction {
+	public enum TYPE {IN, OUT, REWARD, MEMPOOL, ERROR ,PENDING}
+	
 	ImageIcon L_ARROW = Ico.loadIcon("icons/arrows/left.png");
 	ImageIcon R_ARROW = Ico.loadIcon("icons/arrows/right.png");
+	ImageIcon MP 	  = Ico.loadIcon("icons/mp.png");
 	
 	private static final Set<String> TSET = new HashSet<>();
 	public static final List<Transaction> LIST = new ArrayList<>();
 	
 	public final Fork   f;
+	
 	public String hash = "" ;
 	public Balance amount;
 	public Balance value;
-	public String target ="";
+	public String str ="";
 	public String date = "";
-	public boolean blockReward;
 	public TimeU lastWinTime = TimeU.BLANK;
+	public TYPE t;
 	Percentage effort = Percentage.EMPTY;
 	
-	
-	public Transaction(Fork f, String hash, double amount, String target, String date, boolean blockReward) {
+	public Transaction(Fork f, String hash, double amt, String str, String date, TYPE t) {
 		this.f = f;
 		this.hash = hash;
-		this.amount = new Balance(amount);
-		this.target = target;
+		this.str = str;
 		this.date = date;
-		this.blockReward = blockReward;
-		this.updateValue();
-		//new TimeU(date);
+		this.t = t;
+		setAmount(amt);
 		
-		if (blockReward && getTimeSince().inMinutes() < 5)
-			effort = f.getEffort();
+		if (0 == amt)
+			return;
+		
+		synchronized(LIST) {
+			LIST.add(this);
+		}
+		
+		updateWinEffort();
 	}
 	
-	public void updateValue() {
-		this.value = new Balance(amount.amt * f.price,2);
+	public void updateWinEffort() {
+		if (TYPE.REWARD != t || TimeU.BLANK != this.lastWinTime)
+			return;
+		
+		if (null == f.lastWin)
+			f.lastWin = this;
+		
+		lastWinTime = f.lastWin.getTimeSince();
+		effort = f.getEffort();
+		
+		synchronized(LIST) {
+			f.lastWin = LIST.stream()
+				.filter(tx -> f == tx.f && TYPE.REWARD == tx.t)
+				.reduce((a,b) -> a.getTimeSince().inMinutes() < b.getTimeSince().inMinutes() ? a:b).orElse(null);
+		}
+		ForkView.update(f);
+	}
+	
+	public void setAmount(double amt) {
+		amount = new Balance(amt);
+		value = new Balance(amt * f.price,2);
 	}
 	
 	public ImageIcon getIco() {
-		return blockReward ? Ico.TROPHY : null;
+		return (TYPE.REWARD == t) ? Ico.TROPHY : null;
 	}
 	
 	
 	// copy constructor for TxReport
 	public Transaction(Transaction t) {
 		this.f = t.f;
-		this.amount = new Balance(t.amount.amt);
+		setAmount(t.getAmount());
 	}
 
 	public double getAmount() {
 		return amount.amt;
 	}
 	
+	public Optional<Integer> getIndex() {
+		int idx = LIST.indexOf(this);
+		return (-1 != idx) ? Optional.of(idx) : Optional.empty();
+	}
+	
 	public ImageIcon getIcon() {
-		if (blockReward)
-			return R_ARROW;
-		
-		if (null != f.wallet.addr)
-			if (f.wallet.addr.equals(target))
-				return R_ARROW;
-		return L_ARROW;
+		switch (t) {
+		case IN: 		return R_ARROW;
+		case MEMPOOL: 	return MP;
+		case OUT:		return L_ARROW;
+		case REWARD:	return R_ARROW;
+		case ERROR:		return Ico.STOP;
+		case PENDING:	return Ico.TARGET;
+		default:		return null;
+		}
 	}
 	
 	public TimeU getTimeSince() {
@@ -88,6 +122,10 @@ public class Transaction {
 	}
 	
 	public static Transaction load(Fork f) {
+		return load(f,50);
+	}
+	
+	public static Transaction load(Fork f, int pages) {
 		Transaction newTX = null;
 		
 		int txRead = 0;
@@ -105,13 +143,14 @@ public class Transaction {
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		
 			pw.println(f.wallet.index); // hack to 
-			for (int i = 0; i < 50; i++)
+			for (int i = 0; i < pages; i++)
 				pw.println("c");
+			pw.println("q");
 			pw.close();
 			
 			String l = null;
 			while ( null != (l = br.readLine())) {
-				boolean blockReward = false;
+				TYPE blockType = TYPE.IN;
 				if (l.contains("c to continue")) {
 					pw.println("c");
 					pw.flush();
@@ -129,8 +168,10 @@ public class Transaction {
 						break;
 					}
 					String tHash   = l.replace("Transaction ", "");
-					if (TSET.contains(tHash)) // stop parsing if we already have this transaction
+					
+					if (TSET.contains(tHash)) {
 						continue;
+					}
 					TSET.add(tHash);
 					
 					@SuppressWarnings("unused")
@@ -139,10 +180,16 @@ public class Transaction {
 							
 					if (amountStr.startsWith("Amount: "))
 						amountStr = amountStr.substring("Amount: ".length());
-					else if (amountStr.startsWith("Amount sent: "))
+					else if (amountStr.startsWith("Amount sent: ")) {
 						amountStr = amountStr.substring("Amount sent: ".length());
-					else if (amountStr.startsWith("Amount received: "))
+						blockType = TYPE.OUT;
+					} else if (amountStr.startsWith("Amount received: ")) {
 						amountStr = amountStr.substring("Amount received: ".length());
+						blockType = TYPE.IN;
+					} else if (amountStr.startsWith("Amount rewarded: ")) {
+						amountStr = amountStr.substring("Amount rewarded: ".length());
+						blockType = TYPE.IN;
+					} 
 					
 					String firstWord = amountStr.substring(0, amountStr.indexOf(' '));
 					firstWord.replace(",", ".");
@@ -151,34 +198,34 @@ public class Transaction {
 					String address = br.readLine().substring(12);
 					String date = br.readLine().substring(12);
 					
-					
 					synchronized (Transaction.LIST) { 
- 						Optional<Transaction> oT = LIST.stream().filter(z -> z.f.symbol.equals(f.symbol) && z.date.equals(date)).findAny();
-					
-						if (Math.abs(amount - f.fd.nftReward) < .02)
-							blockReward = true;
-						else if (firstWord.equals("1E-10")) // probably faucet?
-							blockReward = true;
-						else if (firstWord.equals("1E-7")) // probably faucet?
-							blockReward = true;
-					
+						Optional<Transaction> oT = LIST.stream().filter(z -> z.hash.equals(tHash)).findAny();
 						if (oT.isPresent()) {
 							Transaction t = oT.get();
-							newTX = t;
-							t.amount.add(amount);
-							t.updateValue();
-							t.blockReward |= blockReward;
-							if (Math.abs(t.getAmount() - f.fullReward) < .02)
-								t.blockReward = true;
-							if (t.effort == Percentage.EMPTY)
-								t.effort = f.getEffort();
-						} else {
-							Transaction t = new Transaction(f, tHash,amount,address,date, blockReward);
-							newTX = t;
-							if (0 != amount)
-								LIST.add(t);
+							t.t = TYPE.OUT;
+							t.update();
+							continue;
 						}
 						
+ 						oT = LIST.stream().filter(z -> z.f.symbol.equals(f.symbol) && z.date.equals(date)).findAny();
+					
+ 						if (Math.abs(amount - f.fd.nftReward) < .02)
+							blockType = TYPE.REWARD;
+ 						
+						if (oT.isPresent()) {
+							newTX = oT.get();
+							
+							newTX.setAmount(newTX.getAmount() + amount);
+							
+							if (TYPE.REWARD == newTX.t || TYPE.REWARD == blockType)
+								newTX.t = TYPE.REWARD;
+							
+							if (Math.abs(amount - f.fd.nftReward) < .02)
+								newTX.t = TYPE.REWARD;
+							newTX.updateWinEffort();
+						} else {
+							newTX = new Transaction(f, tHash,amount,address,date, blockType);
+						}
 					}
 
 				}
@@ -194,39 +241,16 @@ public class Transaction {
 		Util.closeQuietly(pw);
 		Util.waitForProcess(p);
 		
-		update(f, newTX);
-		
 		ForkFarmer.LOG.add(f.name + " done getting transactions");
 
-		return newTX;
+		if (null != newTX)
+			TransactionView.refresh();
 		
+		return newTX;
 	}
 	
-	private static void update(Fork f, Transaction newTX) {
-		if (null == newTX)
-			return;
-		synchronized(Transaction.LIST) {
-			// update fork last win handle
-			if (null != f.lastWin && newTX.blockReward)
-				newTX.lastWinTime = f.lastWin.getTimeSince();
-				
-			f.lastWin = LIST.stream()
-				.filter(t -> f == t.f && t.blockReward)
-				.reduce((a,b) -> a.getTimeSince().inMinutes() < b.getTimeSince().inMinutes() ? a:b).orElse(null);
-		}
-			
-		ForkView.update(f);
-		TransactionView.refresh();
-	}
-		
-		
 	public void browse() {
-		
-		String atbPath = f.fd.atbPath;
-		if (null != atbPath) {
-			String addr = target;
-			Util.openLink("https://alltheblocks.net/" + atbPath + "/address/" + addr);
-		}
+		AllTheBlocks.browseTX(f.fd.atbPath, str);
 	}
 
 	public static void fromLog(Fork f, String s) {
@@ -235,12 +259,55 @@ public class Transaction {
 		
 		String txHAsh = Util.getWordAfter(s, "Farmed unfinished_block ");
 
-		Transaction t = new Transaction(f,txHAsh,f.fd.fullReward,"Log Farming Reward",timeStamp,true);
-		synchronized(Transaction.LIST) {
-			LIST.add(t);
-		}
-		update(f,t);
+		new Transaction(f,txHAsh,f.fd.fullReward,"Log Farming Reward",timeStamp,TYPE.REWARD);
+		TransactionView.refresh();
+	}
+	
+	public void update() {
+		TransactionView.update(this);
+	}
+
+	public void setStatus(String msg, TYPE type) {
+		t = type;
+		str = msg;
+		this.update();
 		
 	}
+
+	/* not used currently
+	public static void check(Fork f, String txHash) {
+		Process p = null;
+		BufferedReader br = null;
+		
+		try {
+			p = Util.startProcess(f.exePath,"wallet","get_transaction","-tx",txHash);
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		
+			String amountStr = null;
+			String l = null;
+			while ( null != (l = br.readLine())) {
+				if (l.startsWith("Amount sent: ")) {
+					amountStr = l.substring("Amount sent: ".length());
+					
+					String firstWord = amountStr.substring(0, amountStr.indexOf(' '));
+					firstWord.replace(",", ".");
+					
+					double amount = Double.parseDouble(firstWord);
+					String address = br.readLine().substring(12);
+					String date = br.readLine().substring(12);
+					
+					Transaction t = new Transaction(f,txHash,amount,address,date,TYPE.OUT);
+					add(t);
+				}
+				
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		Util.closeQuietly(br);
+		Util.waitForProcess(p);
+	}
+	*/
+	
 	
 }

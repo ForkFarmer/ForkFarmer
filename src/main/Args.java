@@ -27,7 +27,7 @@ public class Args {
 		String sVal = ARG_MAP.get("-stagger");
 		
 		if(null != sVal) {
-			//System.out.println("stagger start: " + Fork.LIST.size() + "delayInt: " + Integer.parseInt(sVal));
+			System.out.println("stagger start: " + Fork.LIST.size() + "delayInt: " + Integer.parseInt(sVal));
 			ForkController.staggerStart(Fork.LIST, Integer.parseInt(sVal));
 		}
 		

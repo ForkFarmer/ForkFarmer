@@ -19,6 +19,7 @@ import main.MainGui;
 import types.Balance;
 import util.Ico;
 import util.NetSpace;
+import util.Util;
 import util.json.JsonArray;
 import util.json.JsonObject;
 import util.json.Jsoner;
@@ -189,5 +190,9 @@ public class AllTheBlocks {
 
 		return peerList;
 	}
-	
+
+	public static void browseTX(String atbPath, String address) {
+		if (null != atbPath)
+			Util.openLink("https://alltheblocks.net/" + atbPath + "/address/" + address);
+	}
 }

@@ -74,6 +74,7 @@ public class XchForks {
     			Fork.LIST.stream().filter(f -> f.symbol.equals(d.symbol)).forEach(f -> {
     				if (d.price > -1)
     					f.updatePrice(d.price * Settings.GUI.currencyRatio);
+    				
     				if (null != d.latestVersion && !d.latestVersion.equals("Unknown")) {
     					f.latestVersion = d.latestVersion;
     					f.published = d.published;
