@@ -5,12 +5,10 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 
@@ -18,7 +16,11 @@ import forks.Fork;
 import forks.ForkController;
 import forks.ForkView;
 import transaction.TransactionView;
-import util.*;
+import util.HttpServer;
+import util.I18n;
+import util.Ico;
+import util.NetSpace;
+import util.Util;
 import util.swing.SwingEX;
 import util.swing.SwingEX.LTPanel;
 import web.XchForks;
@@ -27,11 +29,8 @@ import web.XchForks;
 public class MainGui extends JPanel {
 	public static ForkView FV = new ForkView();
 	
-	// *** Transaction Panel ***
-	static JTextField targetAddress = new JTextField(20);
-	static JTextField targetAmt = new JTextField(10);
-	static JTextField targetFee = new JTextField(5);
-	static JButton sendBtn = new JButton(I18n.MainGui.sendBtn);
+	TransactionPanel tp = new TransactionPanel();
+	
 	private static NetSpace plotSize = new NetSpace("0 TiB");
 	private static final JLabel plotlbl = new JLabel(I18n.MainGui.farmSize+" ?");
 	private static final JLabel valuelbl = new JLabel(I18n.MainGui.value + Settings.GUI.currencySymbol + "0.0");
@@ -42,29 +41,9 @@ public class MainGui extends JPanel {
 	public MainGui() {
 		setLayout(new BorderLayout());
 	
-		// *** Transaction Panel ***
-		JPanel tPanel = new JPanel();
-		tPanel.setLayout(new GridBagLayout());
-		c = new GridBagConstraints();
-		tPanel.setBorder(new TitledBorder(I18n.MainGui.createTransaction));
-
-		c.fill = GridBagConstraints.BOTH;
-		targetFee.setText("0");
-		
-		c.gridx=1;
-        c.weightx=1;
-        tPanel.add(targetAddress,c);
-        c.gridx=2;
-        c.weightx=0;
-        tPanel.add(targetAmt,c);
-        c.gridx=3;
-        c.weightx=0;
-        tPanel.add(targetFee,c);
-        c.weightx=0;
-        c.gridx=4;
-        tPanel.add(sendBtn,c);
-        c.gridx=5;
-        tPanel.add(new SwingEX.Btn("",Ico.GEAR, () -> {
+		// *** Transaction Panel - setting button***
+		tp.c.gridx=5;
+        tp.add(new SwingEX.Btn("",Ico.GEAR, () -> {
         	JPanel settingPanel = new JPanel(new GridBagLayout());
         	
         	JPanel logReader = new JPanel(new GridLayout(2,1));
@@ -162,10 +141,10 @@ public class MainGui extends JPanel {
         if (Settings.GUI.lockColumns)
         	setColumnLock(Settings.GUI.lockColumns);
         
-        sendBtn.addActionListener(e -> sendTx());
+        tp.sendBtn.addActionListener(e -> sendTx());
         		
         JPanel PEPanel = new JPanel(new BorderLayout());
-        PEPanel.add(tPanel,BorderLayout.PAGE_START);
+        PEPanel.add(tp,BorderLayout.PAGE_START);
         PEPanel.add(new TransactionView(),BorderLayout.CENTER);
         
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -200,17 +179,18 @@ public class MainGui extends JPanel {
 	}
 	
 	private void sendTx() {
-		String address = targetAddress.getText();
+		String address = tp.targetAddress.getText();
 		
 		Fork.getByAddress(address).ifPresentOrElse(f -> {
-			String addr = new String(targetAmt.getText());
-			String fee = new String(targetFee.getText());
-			new Thread(() -> f.sendTX(address,addr,fee)).start();
-			targetAddress.setText("");
-			targetAmt.setText("");
+			String addr = new String(tp.targetAmt.getText());
+			String fee = new String(tp.targetFee.getText());
+			new Thread(() -> f.sendTX(1, address,addr,fee)).start();
+			tp.targetAddress.setText("");
+			tp.targetAmt.setText("");
 		}, 	() -> ForkFarmer.showMsg(I18n.MainGui.errorTitle, I18n.MainGui.errorContent));
 		
 	}
+	
 	public static void updatePlotSize(NetSpace ps) {
 		if (ps.szTB > plotSize.szTB) {
 			plotSize = ps;

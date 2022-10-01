@@ -176,6 +176,12 @@ public class ForkData {
 		if (new File(exePath).exists())
 			return;
 		
+		// check program files
+		exePath = System.getenv("ProgramFiles") + "\\" + displayName + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
+		
+		if (new File(exePath).exists())
+			return;
+		
 		List<String> dirs = Util.getDir(daemonBase, "app"); // check all the "app" folders
 		for (String appDir : dirs) {
 			if (null != exeName)

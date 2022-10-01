@@ -83,7 +83,7 @@ public class ForkView extends JPanel {
 			addColumn("Wallet Node", 30,	Boolean.class, 	f->f.walletNode).editable().fixed().colIco(Ico.WALLET_GRAY);
 			addColumn("", 			 22, 	Icon.class, 	f->f.statusIcon).showMandatory().fixed();
 			addColumn("Nothing", 	 30, 	Boolean.class, 	f->f.nothing).editable().fixed().colName("");
-			addColumn("ATB Status",	 22, 	Icon.class, 	f->f.fd.atbIcon).show().fixed().colIco(Ico.ATB_GRAY);
+			addColumn("ATB Status",	 22, 	Icon.class, 	Fork::getATBStatus).show().fixed().colIco(Ico.ATB_GRAY);
 			
 			BALANCE_COLUMN = getIndex("Balance");
 			PRICE_COLUMN = getIndex("$");

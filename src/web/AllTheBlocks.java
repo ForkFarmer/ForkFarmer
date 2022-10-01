@@ -159,7 +159,7 @@ public class AllTheBlocks {
         	    	if (0 == peakHeight)
         	    		fd.atbIcon = null;
         	    	else
-        	    		fd.atbIcon = peakAge < 600 ? Ico.ATB_G : Ico.ATB_R;  
+        	    		fd.atbIcon = peakAge < 600 ? Ico.ATB_G : Ico.ATB_R;
         	    });
         	});
         	

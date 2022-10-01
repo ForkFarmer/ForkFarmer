@@ -83,8 +83,8 @@ public class ForkController {
 
 				// clean sub-menus
 				WALLET_SUBMENU.removeAll();
-				while (COMMUNITY_SUBMENU.getItemCount() > 6)
-            		COMMUNITY_SUBMENU.remove(6);
+				while (COMMUNITY_SUBMENU.getItemCount() > 5)
+            		COMMUNITY_SUBMENU.remove(5);
             	
 				if (sel.size() < 2) {
 					STAGGER_JMI.setEnabled(false);
@@ -196,11 +196,10 @@ public class ForkController {
 			TOOLS_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.plotCalc,Ico.EXPAND, () -> ForkFarmer.newFrame(I18n.ForkController.plotCalcFrameTitle, Ico.EXPAND, new PlotCalc()).setResizable(false)));
 			
 		POPUP_MENU.add(COMMUNITY_SUBMENU);
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.xchforks, 			Ico.XCHF,() -> Util.openLink("https://xchforks.com/")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.xchforks, 			Ico.XCHF,() -> Util.openLink("https://xchuniverse.com/")));
 			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.alltheblocks, 		Ico.ATB, () -> Util.openLink("https://alltheblocks.net/")));
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.forkschiaexchange, 	Ico.FCX, () -> Util.openLink("https://forkschiaexchange.com/?ref=orfinkat")));
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.chiaforksblockchain, Ico.DOWNLOAD, () -> Util.openLink("https://chiaforksblockchain.com/")));
-			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.casinoMaizeFarm, 			Ico.ROULETTE, () -> Util.openLink("https://casino.maize.farm/?ref=241")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI("Vayamos Exchange", 						Ico.VAY, () -> Util.openLink("http://vayamos.cc/?r=45")));
+			COMMUNITY_SUBMENU.add(new SwingEX.JMI(I18n.ForkController.casinoMaizeFarm, 		Ico.ROULETTE, () -> Util.openLink("https://casino.maize.farm/?ref=241")));
 			COMMUNITY_SUBMENU.addSeparator();
 
 		POPUP_MENU.add(SETUP_SUBMENU);
@@ -326,7 +325,7 @@ public class ForkController {
 		for (Fork f : ForkView.getSelected()) {
 			sb.append(Util.toString(ForkView.MODEL.colList.get(ForkView.MODEL.getIndex("Symbol")).getValue.apply(f)) + ",");
 			sb.append(((Balance)(ForkView.MODEL.colList.get(ForkView.MODEL.getIndex("Balance")).getValue.apply(f))).amt +",");
-			sb.append(((Balance)(ForkView.MODEL.colList.get(ForkView.MODEL.getIndex("$")).getValue.apply(f))).amt +",");
+			sb.append(((ForkView.MODEL.colList.get(ForkView.MODEL.getIndex("$")).getValue.apply(f))) +",");
 			sb.append(Util.toString(ForkView.MODEL.colList.get(ForkView.MODEL.getIndex("ETW")).getValue.apply(f)) + "\n");
 		}
 		

@@ -36,6 +36,7 @@ public final class Ico {
 	public static final ImageIcon FCX		= loadIcon("icons/fcx.png",16);
 	public static final ImageIcon XCHF		= loadIcon("icons/xchforks.png",16);
 	public static final ImageIcon ATB		= loadIcon("icons/alltheblocks.png",16);
+	public static final ImageIcon VAY		= loadIcon("icons/vayamos.png");
 	public static final ImageIcon ATB_G		= loadIcon("icons/atb_green.png",16);
 	public static final ImageIcon ATB_GRAY	= getDisabled(ATB);
 	public static final ImageIcon ATB_R		= loadIcon("icons/atb_red.png",16);
@@ -60,6 +61,7 @@ public final class Ico {
 	public static final ImageIcon POWERSHHELL	= loadIcon("icons/powershell.png");
 	public static final ImageIcon TERMINAL	= loadIcon("icons/bash.png",16);
 	
+	public static final ImageIcon TAIL_DB	= loadIcon("icons/taildb.png",16);
 	public static final ImageIcon GITHUB	= loadIcon("icons/github.png",16);
 	public static final ImageIcon XCHCALC	= loadIcon("icons/xchcalc.png");
 	public static final ImageIcon HOME		= loadIcon("icons/home.png",16);

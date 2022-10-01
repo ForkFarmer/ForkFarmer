@@ -117,6 +117,10 @@ public class Transaction {
 		}
 	}
 	
+	public String getName() {
+		return f.name;
+	}
+	
 	public TimeU getTimeSince() {
 		return TimeU.getTimeSince(LocalDateTime.parse(date, FFUtil.DTF));
 	}
@@ -177,7 +181,7 @@ public class Transaction {
 					@SuppressWarnings("unused")
 					String status  = br.readLine();
 					String amountStr = br.readLine();
-							
+
 					if (amountStr.startsWith("Amount: "))
 						amountStr = amountStr.substring("Amount: ".length());
 					else if (amountStr.startsWith("Amount sent: ")) {
@@ -189,7 +193,13 @@ public class Transaction {
 					} else if (amountStr.startsWith("Amount rewarded: ")) {
 						amountStr = amountStr.substring("Amount rewarded: ".length());
 						blockType = TYPE.IN;
-					} 
+					} else if (amountStr.startsWith("Amount sent in trade: ")) {
+						amountStr = amountStr.substring("Amount sent in trade: ".length());
+						blockType = TYPE.OUT;
+					} else if (amountStr.startsWith("Amount received in trade: ")) {
+						amountStr = amountStr.substring("Amount received in trade: ".length());
+						blockType = TYPE.IN;
+					}
 					
 					String firstWord = amountStr.substring(0, amountStr.indexOf(' '));
 					firstWord.replace(",", ".");

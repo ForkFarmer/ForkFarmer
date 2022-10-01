@@ -26,6 +26,7 @@ import javax.swing.ImageIcon;
 
 import org.yaml.snakeyaml.Yaml;
 
+import cats.Cat;
 import debug.DebugView;
 import ffutilities.ForkPorts;
 import main.ForkFarmer;
@@ -46,6 +47,7 @@ import util.NetSpace;
 import util.Util;
 import util.YamlUtil;
 import util.apache.ReversedLinesFileReader;
+import util.json.JsonException;
 import util.json.JsonObject;
 import util.json.Jsoner;
 
@@ -65,6 +67,8 @@ public class Fork {
 	public String name;
 	
 	public List<String> coldAddrList = new ArrayList<>();
+	
+	transient public Map<Integer,Cat> assetMap = new HashMap<>();
 	
 	transient public ForkData fd;
 	transient public ForkPorts fp = new ForkPorts();
@@ -230,6 +234,7 @@ public class Fork {
 					syncStatus = "";
 				
 			} else {
+				boolean startBalances = false;
 				p = Util.startProcess(exePath, "wallet", "show");
 				br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 				
@@ -264,7 +269,10 @@ public class Fork {
 						walletHeight = new Balance(Integer.parseInt(heightStr));
 					} else if (l.contains("Sync status: ")) {
 						syncStatus = l.substring("Sync status: ".length());
+					} else if (l.contains("Balances,")) {
+						startBalances = true;
 					}
+						
 					
 					if (l.startsWith("Wallet ID")) {
 						String idNAme = l;
@@ -277,6 +285,8 @@ public class Fork {
 					
 				}
 			}
+		} catch (JsonException je) {
+			// issues with the json rpc query
 		} catch (Exception e) {
 			lastException = e;
 			statusIcon = Ico.RED;
@@ -566,14 +576,14 @@ public class Fork {
 		return (-1 != idx) ? Optional.of(idx) : Optional.empty();
 	}
 
-	public void sendTX(String address, String amt, String fee) {
+	public void sendTX(int index, String address, String amt, String fee) {
 		Process p = null;
 		BufferedReader br = null;
 		String txHash = null;
 		
 		try {
-			Transaction t = new Transaction(this,"",Double.parseDouble(amt),"Pending Transaction",new TimeU().toString(),TYPE.PENDING);
-			p = Util.startProcess(exePath,"wallet","send","-i",Integer.toString(wallet.index),"-a",amt,"-m",fee,"-t",address);
+			Transaction t = new Transaction(this,"",Double.parseDouble(amt),"Pending Asset Transaction",new TimeU().toString(),TYPE.PENDING);
+			p = Util.startProcess(exePath,"wallet","send","-i",Integer.toString(index),"-a",amt,"-m",fee,"-t",address);
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			StringBuilder sb = new StringBuilder();
 			
@@ -616,6 +626,10 @@ public class Fork {
 		TimeU etw = fd.etw;
 		return (etw.known() && null != lastWin) ?
 				new Percentage((int) (((double)lastWin.getTimeSince().inMinutes() / (double)etw.inMinutes()) * (double)100)) : Percentage.EMPTY;
+	}
+	
+	public ImageIcon getATBStatus() {
+		return statusIcon.equals(Ico.GREEN) ? Ico.ATB_G : fd.atbIcon; 
 	}
 		
 	public void updatePrice(double p) {

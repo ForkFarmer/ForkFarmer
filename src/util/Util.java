@@ -5,12 +5,13 @@ import java.awt.Desktop;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URI;
@@ -30,6 +31,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import util.json.JsonException;
+import util.json.JsonObject;
+import util.json.Jsoner;
 
 public class Util {
 	
@@ -377,6 +382,15 @@ public class Util {
 	            Integer.valueOf(hex.substring(6, 8), 16));
 	    }
 	    return null;
+	}
+
+	public static JsonObject completeJsonRPC(Process p) throws JsonException {
+		BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		JsonObject jo = (JsonObject)Jsoner.deserialize(br);
+		Util.waitForProcess(p);
+		Util.closeQuietly(br);
+		boolean success = (boolean) jo.get("success");
+		return (success) ? jo : null;
 	}
 	
 }
