@@ -45,6 +45,7 @@ public class ForkData {
 	public String configPath;
 	public String exePath;
 	public ImageIcon ico;
+	public boolean rpc;
 	
 	public String discordURL;
 	public String gitPath;
@@ -59,6 +60,8 @@ public class ForkData {
 	public long peakAge;
 	public ImageIcon atbIcon;
 	public boolean hidden;
+	public boolean localFN;
+	public boolean newPeer;
 	
 	public NetSpace netspace;
 	public TimeU etw = TimeU.BLANK;
@@ -88,7 +91,6 @@ public class ForkData {
 			websiteURL = (String) jo.get("websiteURL");
 			twitterURL = (String) jo.get("twitterURL");
 			exeName = (String) jo.get("exeName");
-			
 			
 			calculatorURL = (String) jo.get("cfcalc");
 			mojoPerCoin = jo.containsKey("mojoPerCoin") ? ((BigDecimal)jo.get("mojoPerCoin")).longValue() : 0;
@@ -182,6 +184,13 @@ public class ForkData {
 		if (new File(exePath).exists())
 			return;
 		
+		// check appdata/local/programs 1.6+ 
+		exePath = USER_HOME + "\\AppData\\Local\\Programs\\" + displayName + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
+		
+		if (new File(exePath).exists())
+			return;
+
+		
 		List<String> dirs = Util.getDir(daemonBase, "app"); // check all the "app" folders
 		for (String appDir : dirs) {
 			if (null != exeName)
@@ -207,7 +216,6 @@ public class ForkData {
 		f.name = displayName;
 		f.fullReward = fullReward;
 		f.symbol = coinPrefix;
-		f.exePath = exePath;
 		f.price = price;
 		f.configPath = configPath;
 		f.logPath = logPath;

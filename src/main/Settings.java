@@ -31,8 +31,6 @@ import util.swing.SwingUtil;
 public class Settings {
 	private static final String SETTINGS_PATH = "FF_Settings.yaml";
 	
-	
-	
 	public class Currency {
 		String name;
 		char symbol;

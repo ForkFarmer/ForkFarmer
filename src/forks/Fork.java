@@ -47,6 +47,8 @@ import util.NetSpace;
 import util.Util;
 import util.YamlUtil;
 import util.apache.ReversedLinesFileReader;
+import util.crypto.Bech32;
+import util.json.JsonArray;
 import util.json.JsonException;
 import util.json.JsonObject;
 import util.json.Jsoner;
@@ -63,7 +65,6 @@ public class Fork {
 	public transient Balance maxpeerHeight = new Balance();
 
 	public String symbol;
-	public String exePath;
 	public String name;
 	
 	public List<String> coldAddrList = new ArrayList<>();
@@ -97,8 +98,7 @@ public class Fork {
 	transient public int numH;
 	transient public double upload;
 	transient public double download;
-	transient public boolean rpc;
-	
+		
 	public String walletAddr;
 	public boolean fullNode = true;
 	public boolean walletNode = true;
@@ -106,6 +106,7 @@ public class Fork {
 	public double fullReward;
 	public String passFile;
 	
+	public String exePath;
 	public String logPath;
 	public String configPath;
 	public boolean cold;
@@ -128,9 +129,9 @@ public class Fork {
 		BufferedReader br = null;
 		try {
 			if (null != passFile)
-				p = Util.startProcess(exePath, "--passphrase-file", passFile, "keys", "show");
+				p = Util.startProcess(fd.exePath, "--passphrase-file", passFile, "keys", "show");
 			else
-				p = Util.startProcess(exePath, "keys", "show");
+				p = Util.startProcess(fd.exePath, "keys", "show");
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
 			//check for passPhrase
@@ -187,7 +188,7 @@ public class Fork {
 		Process p = null;
 		BufferedReader br = null;
 		try {
-			p = Util.startProcess(exePath, "version");
+			p = Util.startProcess(fd.exePath, "version");
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			version = br.readLine();
 		} catch (Exception e) {
@@ -198,9 +199,66 @@ public class Fork {
 		
 		ForkFarmer.LOG.add(name + " done getting software verion");
 	}
+	
+	public void loadBalanceFN() {
+		if (!fd.rpc)
+			return;
+		if (null == wallet || Wallet.EMPTY == wallet || Wallet.SELECT == wallet || Wallet.NOT_SUPPORTED == wallet)
+			return;
+		
+		
+		byte[] ph = Bech32.decode(wallet.addr).toBA();
+		if (null == ph)
+			return;
+		
+		String phs = Util.getHexString(ph);
+				
+		String query =  Util.isHostWin()? "{\\\"puzzle_hash\\\": \\\"" + phs  +"\\\"}" : "{\"wallet_id\": \"" + phs + "\"}";
+
+		Process p = null;
+		BufferedReader br = null;
+		
+		try {
+			p = Util.startProcess(fd.exePath, "rpc", "full_node", "get_coin_records_by_puzzle_hash",query);
+			
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			JsonObject jo = (JsonObject)Jsoner.deserialize(br);
+			
+			boolean success = (boolean) jo.get("success");
+
+			long totalBalance = 0;
+			if (success) {
+				JsonArray cRecords = (JsonArray) jo.get("coin_records");
+				
+				for (Object item : cRecords) {
+					
+					jo = (JsonObject)item;
+					JsonObject co = (JsonObject) (jo).get("coin");
+					totalBalance += ((BigDecimal)co.get("amount")).longValue();
+				}
+				
+				Balance b = new Balance((double)totalBalance/(double)fd.mojoPerCoin);
+		    	updateBalance(b);
+		    	fd.localFN = true;
+			}
+			
+		} catch (JsonException je) {
+			// issues with the json rpc query
+		} catch (Exception e) {
+			lastException = e;
+		}
+		
+		Util.closeQuietly(br);
+		Util.waitForProcess(p);
+	}
 
 	@SuppressWarnings("unused")
 	public void loadWallet () {
+		if(cold || (!walletNode && fullNode)) {
+			loadBalanceFN();
+			return;
+		}
+					
 		if (!walletNode || -1 == wallet.index || wallet.cold)
 			return;
 		
@@ -215,9 +273,9 @@ public class Fork {
 		BufferedReader br = null;
 		Balance newBalance = new Balance();
 		try {
-			if (rpc) {
+			if (fd.rpc) {
 				String query =  Util.isHostWin()? "{\\\"wallet_id\\\": 1}" : "{\"wallet_id\": 1}";
-				p = Util.startProcess(exePath, "rpc", "wallet", "get_wallet_balance",query);
+				p = Util.startProcess(fd.exePath, "rpc", "wallet", "get_wallet_balance",query);
 				br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 				
 				JsonObject jo = (JsonObject)Jsoner.deserialize(br);
@@ -235,7 +293,7 @@ public class Fork {
 				
 			} else {
 				boolean startBalances = false;
-				p = Util.startProcess(exePath, "wallet", "show");
+				p = Util.startProcess(fd.exePath, "wallet", "show");
 				br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 				
 				String l = null;
@@ -322,7 +380,7 @@ public class Fork {
 		Process p = null;
 		BufferedReader br = null;
 		try {
-			p = Util.startProcess(exePath, "farm", "summary");
+			p = Util.startProcess(fd.exePath, "farm", "summary");
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			
 			String l = null;
@@ -481,11 +539,22 @@ public class Fork {
 		BufferedReader br = null;
 		
 		try {
-			p = Util.startProcess(exePath, "show", "-c");
+			if (fd.newPeer)
+				p = Util.startProcess(fd.exePath, "peer", "-c", "full_node");
+			else
+				p = Util.startProcess(fd.exePath, "show", "-c");
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 				
 			String l = null;
 			while ( null != (l = br.readLine())) {
+				if (l.contains("has been renamed")) { // 'chia show -c' has been renamed to 'chia peer -c'
+					fd.newPeer = true;
+					while ( null != (l = br.readLine())) {}
+					Util.waitForProcess(p);
+					Util.closeQuietly(br);
+					return loadPeers(); // TODO: warning potential infinite loop
+				}
+				
 				if (l.startsWith("Connections:")) {
 					l = br.readLine();
 					if (l.startsWith("Type") && l.contains("Hash"))
@@ -551,7 +620,7 @@ public class Fork {
 	}
 	
 	public void stop() {
-		Util.runProcessWait(exePath,"stop","farmer");
+		Util.runProcessWait(fd.exePath,"stop","farmer");
 		statusIcon = Ico.RED;
 		farmStatus = null;
 		ForkView.update(this);
@@ -583,7 +652,7 @@ public class Fork {
 		
 		try {
 			Transaction t = new Transaction(this,"",Double.parseDouble(amt),"Pending Asset Transaction",new TimeU().toString(),TYPE.PENDING);
-			p = Util.startProcess(exePath,"wallet","send","-i",Integer.toString(index),"-a",amt,"-m",fee,"-t",address);
+			p = Util.startProcess(fd.exePath,"wallet","send","-i",Integer.toString(index),"-a",amt,"-m",fee,"-t",address);
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			StringBuilder sb = new StringBuilder();
 			
@@ -683,39 +752,46 @@ public class Fork {
 		}
 	}
 	
-	public static void newColdWallet(String address) {
-		ForkData.getbyAddress(address).ifPresent(fd -> {
-			if (null != fd.atbPath) {
-				Fork f = new Fork();
-					
-				f.ico = fd.ico;
-				f.price = fd.price;
-				f.name = fd.displayName;
-				f.symbol = fd.coinPrefix;
-				f.wallet = new Wallet(address);
-				f.walletAddr = address;
-				f.statusIcon = Ico.SNOW;
-				f.cold = true;
-				f.farmStatus = "Cold";
-				f.readTime = new ReadTime(0);
-				f.fd = fd;
-				Fork.LIST.add(f);
-				ForkView.update();
-			}
-		});
+	public static Fork newColdWallet(String address) {
+		Optional<ForkData> ofd = ForkData.getbyAddress(address);
+		
+		if (!ofd.isPresent())
+			return null;
+		
+		ForkData fd = ofd.get();
+		if (null == fd.atbPath)
+			return null;
+		final Fork f = new Fork();
+		f.ico = fd.ico;
+		f.price = fd.price;
+		f.name = fd.displayName;
+		f.symbol = fd.coinPrefix;
+		f.wallet = new Wallet(address);
+		f.walletAddr = address;
+		f.walletNode = false;
+		f.statusIcon = Ico.SNOW;
+		f.cold = true;
+		f.farmStatus = "Cold";
+		f.readTime = new ReadTime(0);
+		f.fd = fd;
+		Fork.LIST.add(f);
+		ForkView.update();
+		return f;
 	}
 
 	public static Optional<Fork> getByAddress(String address) {
 		return LIST.stream().filter(f -> !f.cold && address.startsWith(f.symbol.toLowerCase())).findAny();	
 	}
-
+	
 	public void startup() {
 		loadVersion();
 		checkRPC();
 		loadWallets();
-		loadWallet();
-		loadFarmSummary();
-		loadPeers();
+		if (!hidden) {
+			loadWallet();
+			loadFarmSummary();
+			loadPeers();
+		}
 		ForkView.update(this);
 	}
 	
@@ -725,12 +801,12 @@ public class Fork {
 		String l;
 		
 		try {
-			p = Util.startProcess(exePath,"rpc");
+			p = Util.startProcess(fd.exePath,"rpc");
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			
 			while ( null != (l = br.readLine())) {
 				if (l.contains("Commands:")) {
-					rpc = true;
+					fd.rpc = true;
 				}
 			}
 		} catch (IOException e) {
@@ -758,7 +834,7 @@ public class Fork {
 
 	// map item: {fingerprint:[24 words]}
 	public List<Map<String, String>> getPrivateKeys() {
-		String chiaKeyResponseString = Util.runProcessWait(exePath, "keys", "show", "--show-mnemonic-seed");
+		String chiaKeyResponseString = Util.runProcessWait(fd.exePath, "keys", "show", "--show-mnemonic-seed");
 		List<Map<String, String>> keyList = new ArrayList<>();
 		if (chiaKeyResponseString != null) {
 			boolean startFlag = false;
@@ -792,7 +868,7 @@ public class Fork {
 	 */
 	public String importPrivateKey(String keyFilePath) {
 		try {
-			String execResult = Util.runProcessWait(exePath, "keys", "add", "-f", keyFilePath);
+			String execResult = Util.runProcessWait(fd.exePath, "keys", "add", "-f", keyFilePath);
 			if(execResult != null && execResult.indexOf("Added private key with public key fingerprint") > -1){
 				return execResult.substring("Added private key with public key fingerprint".length()+1).trim();
 			}
@@ -809,10 +885,10 @@ public class Fork {
 		@SuppressWarnings("unused")
 		String l = null;
 		
-		if (rpc) {
+		if (fd.rpc) {
 			String query = "{\\\"fingerprint\\\": " + w.fingerprint + "}";
 			try {
-				p = Util.startProcess(exePath, "rpc", "wallet", "log_in",query);		
+				p = Util.startProcess(fd.exePath, "rpc", "wallet", "log_in",query);		
 				br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 				
 				while ( null != (l = br.readLine()))

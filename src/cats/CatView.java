@@ -168,7 +168,7 @@ public class CatView extends JPanel {
 			for (Cat c : getSelected()) {
 				CVLOG.add("Adding " + c.name + " to " + f.name + "...");
 				try {
-					p = Util.startProcess(f.exePath, "wallet", "add_token","-id",c.assetID, "-n", c.name);
+					p = Util.startProcess(f.fd.exePath, "wallet", "add_token","-id",c.assetID, "-n", c.name);
 				} catch (Exception e) {
 					CVLOG.add("ERROR: " + e.toString());
 				}
@@ -279,7 +279,7 @@ public class CatView extends JPanel {
 		
 		try {
 			// 1) Load Named Tokens
-			p = Util.startProcess(f.exePath, "rpc", "wallet", "get_wallets");
+			p = Util.startProcess(f.fd.exePath, "rpc", "wallet", "get_wallets");
 			JsonObject jo = Util.completeJsonRPC(p);
 			
 			CVLOG.add("Calling rpc wallet get_wallets...");
@@ -308,7 +308,7 @@ public class CatView extends JPanel {
 				
 			updateCats();	
 
-			p = Util.startProcess(f.exePath, "rpc", "wallet", "get_stray_cats");
+			p = Util.startProcess(f.fd.exePath, "rpc", "wallet", "get_stray_cats");
 			jo = Util.completeJsonRPC(p);
 			
 			if (null == jo) {
@@ -350,7 +350,7 @@ public class CatView extends JPanel {
 		JsonObject jo;
 		try {
 			String query =  Util.isHostWin()? "{\\\"wallet_id\\\": " + c.wid + "}" : "{\"wallet_id\": " + c.wid + "}";
-			p = Util.startProcess(f.exePath, "rpc", "wallet", "get_wallet_balance",query);
+			p = Util.startProcess(f.fd.exePath, "rpc", "wallet", "get_wallet_balance",query);
 			jo = Util.completeJsonRPC(p);
 			
 			if (null == jo) {

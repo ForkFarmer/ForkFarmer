@@ -142,7 +142,7 @@ public class Transaction {
 		PrintWriter pw = null;
 		BufferedReader br = null;
 		try {
-			p = Util.startProcess(f.exePath, "wallet", "get_transactions");
+			p = Util.startProcess(f.fd.exePath, "wallet", "get_transactions");
 			pw = new PrintWriter(p.getOutputStream());
 			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		
@@ -220,6 +220,12 @@ public class Transaction {
  						oT = LIST.stream().filter(z -> z.f.symbol.equals(f.symbol) && z.date.equals(date)).findAny();
 					
  						if (Math.abs(amount - f.fd.nftReward) < .02)
+							blockType = TYPE.REWARD;
+
+ 						// added userdata checks from mystery3000
+ 						if (Math.abs(amount - f.fullReward) < .02)
+							blockType = TYPE.REWARD;
+ 						if (Math.abs(amount - f.fullReward * f.fd.baseRatio) < .02)
 							blockType = TYPE.REWARD;
  						
 						if (oT.isPresent()) {

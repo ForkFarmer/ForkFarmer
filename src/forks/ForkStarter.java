@@ -150,12 +150,12 @@ public class ForkStarter {
 			String[] varArgs = null;
 			if (null == f.passFile) {
 				varArgs = new String[args.length + 1];
-				varArgs[0] = f.exePath;
+				varArgs[0] = f.fd.exePath;
 				for (int i = 0; i < args.length; i++)
 					varArgs[i+1] = args[i];
 			} else {
 				varArgs = new String[args.length + 3];
-				varArgs[0] = f.exePath;
+				varArgs[0] = f.fd.exePath;
 				varArgs[1] = "--passphrase-file";
 				varArgs[2] = f.passFile;
 				for (int i = 0; i < args.length; i++)

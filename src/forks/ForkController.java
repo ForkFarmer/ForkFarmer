@@ -292,11 +292,12 @@ public class ForkController {
 			String[] addrArray = jtp.getText().split(System.lineSeparator());
 			
 			new Thread(() -> {
+				List <Fork> newForks = new ArrayList<>();
 				for (String addr : addrArray) {
 					addr = addr.toLowerCase();
-					if (null == f)
-						Fork.newColdWallet(addr);
-					else {
+					if (null == f) {
+						newForks.add(Fork.newColdWallet(addr));
+					} else {
 						if (!addr.startsWith(f.symbol.toLowerCase()))
 							return;
 						f.walletAddr = addr;
@@ -305,7 +306,12 @@ public class ForkController {
 						f.coldAddrList.add(addr);
 					}
 				}
-				Util.sleep(2000);
+				Util.sleep(1000);
+				
+				for (Fork ff : newForks)
+					if (null != ff)
+						ff.loadWallet();
+				
 				AllTheBlocks.updateColdForced();
 			}).start();
 			
@@ -334,7 +340,7 @@ public class ForkController {
 	
 	static private void openShell(SHELL s) {
 		for (Fork f : ForkView.getSelected()) {
-			String path = f.exePath;
+			String path = f.fd.exePath;
 			String nativeDir = path.substring(0, path.lastIndexOf(File.separator));
 			try {
 				if (SHELL.POWERSHELL == s)
@@ -441,7 +447,7 @@ public class ForkController {
 			return;
 		
 		ForkFarmer.LOG.add("Running web update");
-		
+	
 		XchForks.updatePrices();
 		AllTheBlocks.updateATB();
 		Github.getVersion(Fork.FULL_LIST);
@@ -470,6 +476,12 @@ public class ForkController {
 					Util.blockUntilAvail(SVC);
 					Util.sleep(Settings.GUI.daemonReaderDelay);
 				}
+				
+				List<Fork> coldList = Fork.LIST.stream().filter(f -> f.cold).collect(Collectors.toList());
+				coldList.removeAll(Fork.FULL_LIST);
+				System.out.println("Cold List Size: " + coldList.size());
+				for (Fork f : coldList)
+					f.loadBalanceFN();
 
 				Util.sleep(1000);
 				SVC.submit(ForkController::webUpdate);
@@ -505,7 +517,7 @@ public class ForkController {
 						keep++;
 					} else {
 						ForkFarmer.LOG.add(String.format(I18n.ForkController.copyPlotDirsFromChiaAdd, fork.name, chiaPlotDir));
-						Util.runProcessWait(fork.exePath, "plots", "add", "-d", chiaPlotDir);
+						Util.runProcessWait(fork.fd.exePath, "plots", "add", "-d", chiaPlotDir);
 						add++;
 					}
 				}
@@ -515,7 +527,7 @@ public class ForkController {
 
 					} else {
 						ForkFarmer.LOG.add(String.format(I18n.ForkController.copyPlotDirsFromChiaDel, fork.name, forkPlotDir));
-						Util.runProcessWait(fork.exePath, "plots", "remove", "-d", forkPlotDir);
+						Util.runProcessWait(fork.fd.exePath, "plots", "remove", "-d", forkPlotDir);
 						del++;
 					}
 				}

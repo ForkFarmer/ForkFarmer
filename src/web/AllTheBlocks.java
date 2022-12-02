@@ -17,6 +17,7 @@ import forks.ForkView;
 import main.ForkFarmer;
 import main.MainGui;
 import types.Balance;
+import types.Wallet;
 import util.Ico;
 import util.NetSpace;
 import util.Util;
@@ -52,10 +53,13 @@ public class AllTheBlocks {
 		try {
 			List<String> addrList = new ArrayList<>();
 			for (Fork f: Fork.LIST) {
-				if (null != f.wallet && f.wallet.cold)
-					addrList.add(f.wallet.addr);
-				else if (!f.walletNode)
-					addrList.add(f.wallet.addr);
+				if (null == f.wallet || Wallet.EMPTY == f.wallet || Wallet.SELECT == f.wallet || Wallet.NOT_SUPPORTED == f.wallet)
+					continue;
+				if (f.fd.localFN == true) // if we have updated locally, no more ATB 
+					continue;
+				if (f.walletNode)
+					continue;
+				addrList.add(f.wallet.addr);
 			}
 			
 			if (0 == addrList.size())
@@ -77,7 +81,7 @@ public class AllTheBlocks {
 			        HttpResponse.BodyHandlers.ofString());
 	        	
         	String jsonResponse = response.body();
-	        	
+        		
         	Object o = Jsoner.deserialize(jsonResponse);
         	
         	if (o instanceof JsonObject) {
@@ -96,6 +100,12 @@ public class AllTheBlocks {
 	
 	private static void updateForkWallet(JsonObject jo) {
 		String address = (String)jo.get("address");
+		long before = ((BigDecimal)jo.get("balanceBefore")).longValue();
+		
+		if (0 == before) {
+			return; // reject invalid atb returns
+		}
+		
 		for (Fork f: Fork.LIST) {
 				if (null != f.wallet && f.wallet.addr.equals(address))
 					updateFork(f,jo);

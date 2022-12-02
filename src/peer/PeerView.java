@@ -162,21 +162,32 @@ public class PeerView extends JPanel {
 		List<Peer> peerList = SwingUtil.getSelected(TABLE, LIST);
 		StringBuilder sb = new StringBuilder();
 		for (Peer p: peerList)
-			if (null != p.address)
-				sb.append(f.name.toLowerCase() + " show -a " + p.address + "\n");
+			if (null != p.address) {
+				if (f.fd.newPeer)
+					sb.append(f.name.toLowerCase() + " peer full_node -a " + p.address + "\n");
+				else
+					sb.append(f.name.toLowerCase() + " show -a " + p.address + "\n");
+			}
 		
 		Util.copyToClip(sb.toString());
 	}
 	
+	@SuppressWarnings("unused")
 	private void deletePeers() {
 		List<Peer> peerList = SwingUtil.getSelected(TABLE, LIST);
 		
 		PVLOG.add("Removing " + peerList.size() + " peers");
 		new Thread(() -> {
 			for (Peer p : peerList) {
-				PVLOG.add(f.name + " show -r " + p.nodeID);
-				@SuppressWarnings("unused")
-				String s = Util.runProcessWait(f.exePath,"show","-r", p.nodeID);
+				if (f.fd.newPeer) {
+					PVLOG.add(f.name + " peer full_node -r " + p.nodeID);
+					String s = Util.runProcessWait(f.fd.exePath,"peer","full_node","-r", p.nodeID);
+				} else {
+					PVLOG.add(f.name + " show -r " + p.nodeID);
+					String s = Util.runProcessWait(f.fd.exePath,"show","-r", p.nodeID);
+				}
+				
+				
 			}
 			PVLOG.add("Done removing peers");
 			loadPeers();
@@ -199,11 +210,17 @@ public class PeerView extends JPanel {
 	public void addPeers(List<String> peers) {
 		PVLOG.add("Trying " + peers.size() + " peers");
 		for (String p : peers) {
-			String s = Util.runProcessWait(f.exePath,"show","-a", p);
+			String s = addPeer(p);
 			s = s.replace("\n", " ").replace("\r", " ");
 			PVLOG.add(s);
 		}
 		PVLOG.add("Done adding peers... reloading table");
 		loadPeers();
+	}
+	
+	public String addPeer (String address) {
+		return (f.fd.newPeer) ? 
+			Util.runProcessWait(f.fd.exePath,"peer","full_node","-a", address) :
+			Util.runProcessWait(f.fd.exePath,"show","-a", address);
 	}
 }

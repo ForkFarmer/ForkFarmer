@@ -45,10 +45,10 @@ public class DebugView extends JPanel {
 			
 				if (f.walletNode) {
 					sb.append(I18n.DebugView.walletShowStartText+"\n");
-					sb.append(I18n.DebugView.exePath + f.exePath + "\n");
+					sb.append(I18n.DebugView.exePath + f.fd.exePath + "\n");
 					textArea.setText(sb.toString());
 					
-					ret = Util.runProcessDebug(f.exePath,"wallet","show");
+					ret = Util.runProcessDebug(f.fd.exePath,"wallet","show");
 					sb.append("\n" +  ret);
 					sb.append("--------------------------------\n\n");
 				} else {
@@ -56,10 +56,10 @@ public class DebugView extends JPanel {
 				}
 				
 				sb.append(I18n.DebugView.runningFarmSummary+"\n");
-				sb.append(I18n.DebugView.exePath + f.exePath + "\n");
+				sb.append(I18n.DebugView.exePath + f.fd.exePath + "\n");
 				textArea.setText(sb.toString());
 				
-				ret = Util.runProcessDebug(f.exePath,"farm","summary");
+				ret = Util.runProcessDebug(f.fd.exePath,"farm","summary");
 				sb.append("\n" +  ret);
 				sb.append("--------------------------------\n\n");
 			}
