@@ -157,6 +157,14 @@ public class ForkData {
 			configPath = USER_HOME + "\\.chinilla\\vanillanet\\config\\config.yaml";
 		}
 		
+		if (displayName.equals("BPX Beacon Client")) {
+			exePath = USER_HOME + "\\AppData\\Local\\Programs\\" + displayName + "\\resources\\app.asar.unpacked\\daemon\\bpx.exe";
+			logPath = USER_HOME + "\\.bpx\\beacon\\log\\debug.log";
+			configPath = USER_HOME + "\\.bpx\\beacon\\config\\config.yaml";
+			
+			return;
+		}
+		
 		if (!new File(configPath).exists()) { // try environment keys
 			String envKey = displayName.toUpperCase() + "_ROOT";
 			rootPath = System.getenv().get(envKey);
@@ -166,31 +174,31 @@ public class ForkData {
 			}
 		}
 		
+		// check program files
+		exePath = System.getenv("ProgramFiles") + "\\" + displayName + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
+		if (new File(exePath).exists())
+			return;
+		
+		// check appdata/local/programs 1.6+ 
+		exePath = USER_HOME + "\\AppData\\Local\\Programs\\" + displayName + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
+		if (new File(exePath).exists())
+			return;
+
+		exePath = USER_HOME + "\\AppData\\Local\\Programs\\sit\\resources\\app.asar.unpacked\\daemon\\sit.exe";
+		if (new File(exePath).exists())
+			return;
+		
 		checkDaemonWin(USER_HOME + "\\AppData\\Local\\" + daemonFolder + "\\");
 		if (new File(exePath).exists() || null == daemonFolder2)
 			return;
 		checkDaemonWin(USER_HOME + "\\AppData\\Local\\" + daemonFolder2 + "\\");
-		
 	}
 	
 	public void checkDaemonWin(String daemonBase) {
 		exePath = daemonBase + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
 		if (new File(exePath).exists())
 			return;
-		
-		// check program files
-		exePath = System.getenv("ProgramFiles") + "\\" + displayName + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
-		
-		if (new File(exePath).exists())
-			return;
-		
-		// check appdata/local/programs 1.6+ 
-		exePath = USER_HOME + "\\AppData\\Local\\Programs\\" + displayName + "\\resources\\app.asar.unpacked\\daemon\\" + displayName + ".exe";
-		
-		if (new File(exePath).exists())
-			return;
-
-		
+				
 		List<String> dirs = Util.getDir(daemonBase, "app"); // check all the "app" folders
 		for (String appDir : dirs) {
 			if (null != exeName)
@@ -222,6 +230,10 @@ public class ForkData {
 		f.ico = ico;
 		f.fd = this;
 		
+		if (displayName.equals("BPX Beacon Client")) {
+			f.walletNode = false;
+		}
+		
 		return f;
 	}
 
@@ -249,6 +261,9 @@ public class ForkData {
 				continue;
 			f.ico = f.fd.ico;
 			
+			if (null != f.exePath && new File(f.exePath).exists()) // copy from manually set to forkdata
+				f.fd.exePath = f.exePath;
+		
 			if (null != f.exePath && !new File(f.exePath).exists())
 				f.exePath = f.fd.exePath;
 			

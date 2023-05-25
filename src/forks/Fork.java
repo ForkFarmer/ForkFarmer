@@ -154,6 +154,11 @@ public class Fork {
 							walletList.add(new Wallet(fingerprint, address,walletIndex));
 							walletIndex++;
 							break;
+						} else if (l.contains("First wallet address (observer): ")) {
+							String address = Util.getWordAfter(l, "First wallet address (observer): ");
+							walletList.add(new Wallet(fingerprint, address,walletIndex));
+							walletIndex++;
+							break;
 						}
 					}
 				}
@@ -537,7 +542,7 @@ public class Fork {
 		boolean singleMode = false;
 		Process p = null;
 		BufferedReader br = null;
-		
+
 		try {
 			if (fd.newPeer)
 				p = Util.startProcess(fd.exePath, "peer", "-c", "full_node");

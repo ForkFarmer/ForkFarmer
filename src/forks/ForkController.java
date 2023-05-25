@@ -479,7 +479,7 @@ public class ForkController {
 				
 				List<Fork> coldList = Fork.LIST.stream().filter(f -> f.cold).collect(Collectors.toList());
 				coldList.removeAll(Fork.FULL_LIST);
-				System.out.println("Cold List Size: " + coldList.size());
+				//System.out.println("Cold List Size: " + coldList.size());
 				for (Fork f : coldList)
 					f.loadBalanceFN();
 
